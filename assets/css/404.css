@@ -93,7 +93,6 @@
         .quick-link:hover {
             background: var(--primary-light);
             border-color: var(--primary);
-            transform: translateY(-2px);
         }
         
         .quick-link i {

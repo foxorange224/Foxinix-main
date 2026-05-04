@@ -101,8 +101,6 @@ a.active {
 
 .enter-button:hover {
     background-color: var(--primary-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(179, 71, 0, 0.45);
 }
 
 /* Contenido principal - Mejorado para legibilidad */
@@ -179,9 +177,6 @@ a.active {
 }
 
 .feature-item:hover {
-    border-color: var(--primary);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
 }
 
 .feature-icon {
@@ -255,8 +250,6 @@ a.active {
 }
 
 .share-button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 .share-facebook {
@@ -319,8 +312,6 @@ a.active {
 
 .internal-link-item:hover {
     background-color: var(--primary-light);
-    border-color: var(--primary);
-    transform: translateY(-2px);
 }
 
 .internal-link-item a {
@@ -567,9 +558,6 @@ a.active {
 }
 
 .recent-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
 }
 
 .recent-icon {
@@ -618,7 +606,6 @@ a.active {
 }
 
 .recent-link:hover {
-    gap: var(--space-sm);
 }
 
 .recent-cta {

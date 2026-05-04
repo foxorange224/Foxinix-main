@@ -131,7 +131,6 @@
         }
 
         .blog-post-item:hover {
-            border-color: var(--primary);
         }
 
         .blog-post-link {
@@ -537,8 +536,6 @@
         }
 
         .filter-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
         }
 
         .filter-btn.active {
@@ -680,8 +677,6 @@
         }
 
         .main-nav .tablink:hover {
-            background-color: var(--bg-tab);
-            color: var(--text-main);
         }
 
         .main-nav .tablink.active {
@@ -830,8 +825,6 @@
         }
 
         .content-card .card-action-btn:hover {
-            color: var(--primary);
-            background: rgba(255, 69, 0, 0.1);
         }
 
         .content-card .card-content {

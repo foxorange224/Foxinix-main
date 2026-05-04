@@ -162,6 +162,7 @@
                         class="fa-solid fa-rotate-right"></i>Actualizar página</button></div>
         </div>
     </div>
+    <div id="modales-container"></div>
     <header class="main-header" id="header-placeholder" role="banner"></header>
     <nav class="main-nav" role="navigation" aria-label="Categorías de descargas FoxWeb">
         <div class="nav-container">
@@ -189,7 +190,10 @@
                     aria-label="Limpiar búsqueda"><i class="fa-solid fa-times"></i></button></span></div>
         </div>
     </section>
-    <main id="main-content" class="main-content" role="main">
+    <main id="main-content" class="main-content" role="main" style="position: relative; min-height: 60vh;">
+        <div id="global-loader" style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;">
+            <div class="custom-loader"></div>
+        </div>
         <section id="Programas" class="tab-content" role="tabpanel" aria-labelledby="tabProgramas" aria-hidden="true">
             <div class="content-header">
                 <div class="header-text">
@@ -282,11 +286,6 @@
         </section>
     </main>
     <footer class="main-footer" id="footer-placeholder" role="contentinfo"></footer><button
-        class="floating-btn collaborators-btn" onclick='openModal("collaboratorsModal")'
-        aria-label="Ver colaboradores del proyecto FoxWeb" title="Colaboradores"><i
-            class="fa-solid fa-users"></i></button> <button class="floating-btn upload-btn"
-        onclick='openModal("sugerenciaModal")' aria-label="Sugerir contenido nuevo a FoxWeb"
-        title="Sugerir contenido"><i class="fa-solid fa-cloud-upload-alt"></i></button> <button
         class="floating-btn scroll-top" id="scrollTopBtn" aria-label="Volver al inicio de la página FoxWeb"
         title="Ir arriba"><i class="fa-solid fa-arrow-up"></i></button>
     <div class="notification-center" id="notificationCenter" aria-hidden="true" inert>
@@ -313,8 +312,7 @@
             <div class="card-footer"><button class="download-btn" aria-label="Abrir enlace o ventana de descarga"><i
                         class="fa-solid fa-download"></i>Abrir enlace</button></div>
         </div>
-    </template><template id="badgeTemplate"><span class="item-badge" role="listitem"></span></template>
-    <div id="modales-container"></div><template id="notificationTemplate">
+    </template><template id="badgeTemplate"><span class="item-badge" role="listitem"></span></template><template id="notificationTemplate">
         <div class="notification-item" role="listitem"><i class="notification-icon"></i>
             <div class="notification-content"><strong></strong>
                 <p></p><small></small>

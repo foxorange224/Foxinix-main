@@ -356,9 +356,6 @@
         }
 
         .member-link:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
         }
 
         /* Botones de acción */
@@ -384,7 +381,6 @@
         }
 
         .action-btn:hover {
-            background: var(--primary-hover);
         }
 
         .action-btn.secondary {
@@ -394,7 +390,6 @@
         }
 
         .action-btn.secondary:hover {
-            background: var(--border);
         }
 
         /* ============================================================================
@@ -484,9 +479,6 @@
         }
 
         .stat-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
         }
 
         .stat-icon {
@@ -591,9 +583,6 @@
         }
 
         .tech-badge:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
         }
 
         .tech-badge i {
@@ -625,8 +614,6 @@
         }
 
         .faq-item:hover {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-md);
         }
 
         .faq-question {

@@ -67,33 +67,46 @@
             }
         }
         .config-container {
-            max-width: 420px;
+            max-width: 480px;
             width: 100%;
             background: var(--bg-card);
             border-radius: var(--radius-lg);
             border: 1px solid var(--border);
             box-shadow: var(--shadow-lg);
-            padding: 28px 24px;
-            transition: background-color 0.3s ease;
+            padding: 40px 32px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: slideUp 0.6s ease-out;
+            backdrop-filter: var(--glass-blur);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .config-header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
         }
         .config-icon {
-            font-size: 40px;
+            font-size: 50px;
             color: var(--primary);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
         .config-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.8rem;
+            font-weight: 800;
             color: var(--text-main);
-            margin-bottom: 4px;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         .config-subtitle {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 1rem;
+            line-height: 1.5;
         }
         .config-section {
             margin-bottom: 20px;
@@ -173,32 +186,42 @@
         }
         .action-btn {
             width: 100%;
-            padding: 14px 24px;
-            background: var(--primary);
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: #fff;
             border: none;
             border-radius: var(--radius-md);
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             margin-top: 8px;
+            box-shadow: 0 4px 12px rgba(255, 94, 0, 0.3);
         }
         .action-btn:hover {
-            background: var(--primary-hover);
-        }
-        .action-btn.secondary {
-            background: var(--bg-tab);
-            color: var(--text-main);
-            border: 1px solid var(--border);
+            filter: brightness(1.1);
         }
         .action-btn.secondary:hover {
             background: var(--primary-light);
             border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-tab);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+        .action-btn.secondary:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
         }
         .back-btn {
             position: absolute;

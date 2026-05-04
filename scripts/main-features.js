@@ -52,8 +52,30 @@ function renderAllTabs() {
     }
 }
 
+const SEARCH_PLACEHOLDERS = {
+    'Programas': 'Buscar programas...',
+    'Sistemas': 'Buscar sistemas...',
+    'Juegos': 'Buscar juegos...',
+    'Extras': 'Buscar extras...',
+    'APKs': 'Buscar APKs...'
+};
+
+function updateSearchPlaceholder() {
+    try {
+        const searchInput = document.getElementById('mainSearch');
+        if (!searchInput) return;
+        const placeholder = SEARCH_PLACEHOLDERS[AppState.currentTab] || 'Buscar programas, juegos, sistemas...';
+        searchInput.setAttribute('placeholder', placeholder);
+    } catch (error) {
+        console.error('Error actualizando placeholder de búsqueda:', error);
+    }
+}
+
 function activateCurrentTab() {
     try {
+        const loader = document.getElementById('global-loader');
+        if (loader) loader.style.display = 'none';
+
         document.querySelectorAll('.tab-content').forEach(tab => { tab.classList.remove('active'); tab.setAttribute('aria-hidden', 'true'); }); 
         const activeTab = document.getElementById(AppState.currentTab); 
         if (activeTab) { activeTab.classList.add('active'); activeTab.setAttribute('aria-hidden', 'false'); }
@@ -70,6 +92,8 @@ function activateCurrentTab() {
         if (typeof updateAllFavoriteIconsInTab === 'function') {
             updateAllFavoriteIconsInTab(AppState.currentTab);
         }
+        
+        updateSearchPlaceholder();
 
         // Si la pestaña es 'Programas' y la página se cargó sin query parameters,
         // nos aseguramos de que la URL esté limpia.
@@ -150,6 +174,14 @@ function renderTab(tabId, items) {
     const grid = document.getElementById(`grid-${tabId}`); 
     if (!grid) return; 
     try {
+        // Mostrar estado de carga mientras se procesa
+        grid.innerHTML = `
+            <div class="loading-placeholder" role="status">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Cargando...</p>
+            </div>
+        `;
+
         // Si el sistema de paginación está disponible, usarlo
         if (window.PaginationSystem && window.PaginationSystem.renderTab) {
             window.PaginationSystem.renderTab(tabId);
@@ -695,14 +727,13 @@ function handleSearchEmptyState(tabId, isEmpty, query) {
     }
 }
 
-function openTab(tabName) {
-     // Guard: AppState might not be loaded yet (race condition with inline scripts)
-     if (typeof AppState === 'undefined') {
-         console.warn('[openTab] AppState not yet loaded, deferring tab open:', tabName);
-         setTimeout(() => openTab(tabName), 50);
-         return;
-     }
-     if (AppState.navigationLock || AppState.currentTab === tabName) return;
+window.openTab = function(tabName) {
+    if (typeof AppState === 'undefined') {
+        console.warn('[openTab] AppState not yet loaded, deferring tab open:', tabName);
+        setTimeout(() => openTab(tabName), 50);
+        return;
+    }
+    if (AppState.navigationLock || AppState.currentTab === tabName) return;
     try {
         AppState.currentTab = tabName; 
         document.querySelectorAll('.tab-content').forEach(tab => { tab.classList.remove('active'); tab.setAttribute('aria-hidden', 'true'); }); 
@@ -716,6 +747,7 @@ function openTab(tabName) {
         }); 
         updateHash(tabName); 
         if (AppState.currentSearch) { setTimeout(performSearch, 50); }
+        updateSearchPlaceholder();
         saveAppState();
         
         // Disparar evento personalizado para cambio de pestaña
@@ -725,6 +757,11 @@ function openTab(tabName) {
     } catch (error) { 
         console.error(`Error abriendo pestaña ${tabName}:`, error); 
     }
+}
+
+function openTab(tabName) {
+    // Esta función ahora es un wrapper interno, la lógica principal está en window.openTab
+    window.openTab(tabName);
 }
 
 // =============================================================================
@@ -865,118 +902,9 @@ function resetSuggestionForm() {
 }
 
 // =============================================================================
-// SUGERENCIA A GITHUB - Enviar sugerencias como Issue
-// =============================================================================
-
-function handleSugerenciaSubmit() {
-    const nombre = document.getElementById('nombreSugerencia');
-    const descripcion = document.getElementById('descripcionSugerencia');
-    const categoria = document.getElementById('categoriaSugerencia');
-    const enlace = document.getElementById('enlaceSugerencia');
-    const web = document.getElementById('webSugerencia');
-    const email = document.getElementById('emailSugerencia');
-    
-    // Validate required fields
-    if (!nombre?.value?.trim() || !descripcion?.value?.trim() || 
-        !categoria?.value || !enlace?.value?.trim()) {
-        showToast('Por favor, completa todos los campos requeridos', 'warning');
-        return;
-    }
-    
-    // Validate URL format
-    const urlPattern = /^https?:\/\/.+/i;
-    if (!urlPattern.test(enlace.value.trim())) {
-        showToast('Por favor, ingresa un enlace válido (debe empezar por http:// o https://)', 'warning');
-        return;
-    }
-    
-    // Validate email if provided
-    if (email?.value?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-        showToast('Por favor, ingresa un email válido', 'warning');
-        return;
-    }
-    
-    // Validate web URL if provided
-    if (web?.value?.trim() && !urlPattern.test(web.value.trim())) {
-        showToast('Por favor, ingresa una URL válida para el sitio oficial', 'warning');
-        return;
-    }
-    
-    // Build GitHub issue URL
-    const repoUrl = 'https://github.com/foxorange224/FoxWeb/issues/new';
-    const title = `[Sugerencia] ${nombre.value.trim()}`;
-    const body = encodeURIComponent(
-        `## Sugerencia de Contenido\n\n` +
-        `**Nombre:** ${nombre.value.trim()}\n\n` +
-        `**Categoría:** ${categoria.value}\n\n` +
-        `**Descripción:**\n${descripcion.value.trim()}\n\n` +
-        `**Enlace de descarga:** ${enlace.value.trim()}\n\n` +
-        `${web?.value?.trim() ? `**Sitio oficial:** ${web.value.trim()}\n\n` : ''}` +
-        `${email?.value?.trim() ? `**Email de contacto:** ${email.value.trim()}\n\n` : ''}` +
-        `---\n` +
-        `*Enviado desde FoxWeb - ${new Date().toLocaleDateString('es-ES')}*`
-    );
-    
-    // Show confirmation and open GitHub
-    showConfirmationAndRedirect(repoUrl + `?title=${title}&body=${body}`);
-}
-
-function showConfirmationAndRedirect(githubUrl) {
-    const formulario = document.getElementById('formularioSugerencia');
-    const confirmacion = document.getElementById('confirmacionSugerencia');
-    
-    if (formulario && confirmacion) {
-        formulario.style.display = 'none';
-        confirmacion.style.display = 'block';
-        
-        // Add click handler to the close button to redirect to GitHub
-        const closeBtn = confirmacion.querySelector('button');
-        if (closeBtn) {
-            closeBtn.onclick = function() {
-                window.open(githubUrl, '_blank');
-                resetSugerenciaForm();
-                closeModal('sugerenciaModal');
-            };
-        }
-        
-        // Auto-redirect after 3 seconds if user doesn't click
-        window.sugerenciaAutoRedirect = setTimeout(function() {
-            window.open(githubUrl, '_blank');
-            resetSugerenciaForm();
-            closeModal('sugerenciaModal');
-        }, 3000);
-    }
-}
-
-function resetSugerenciaForm() {
-    // Clear the auto-redirect timeout if exists
-    if (window.sugerenciaAutoRedirect) {
-        clearTimeout(window.sugerenciaAutoRedirect);
-        window.sugerenciaAutoRedirect = null;
-    }
-    
-    // Reset form fields
-    const fields = ['nombreSugerencia', 'descripcionSugerencia', 'categoriaSugerencia', 
-                    'enlaceSugerencia', 'webSugerencia', 'emailSugerencia'];
-    fields.forEach(function(id) {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    
-    // Reset select to default
-    const select = document.getElementById('categoriaSugerencia');
-    if (select) select.selectedIndex = 0;
-    
-    // Show form, hide confirmation
-    const formulario = document.getElementById('formularioSugerencia');
-    const confirmacion = document.getElementById('confirmacionSugerencia');
-    if (formulario) formulario.style.display = 'block';
-    if (confirmacion) confirmacion.style.display = 'none';
-}
-
-// =============================================================================
 // UTILIDADES VARIAS
 // =============================================================================
+
 
 // Utilidad debounce para búsquedas
 function debounce(func, wait) {

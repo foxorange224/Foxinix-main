@@ -1356,13 +1356,12 @@ function copyItemLink(itemId) {
 
         let urlToCopy = item.enlace || '';
 
-        if (item.modal && item.modal !== 'null') {
-            showToast('Este contenido no tiene enlace directo para copiar', 'warning');
-            return;
-        }
-
         if (!urlToCopy || urlToCopy === '#') {
-            showToast('Este item no tiene enlace para copiar', 'warning');
+            if (item.modal && item.modal !== 'null') {
+                showToast('Este contenido no tiene enlace directo para copiar', 'warning');
+            } else {
+                showToast('Este item no tiene enlace para copiar', 'warning');
+            }
             return;
         }
 

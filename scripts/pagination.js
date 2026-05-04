@@ -437,9 +437,22 @@ function scrollToGridTop(tabId) {
  * @param {string} tabId - ID de la pestaña
  */
 function renderTabWithPagination(tabId) {
-    // Obtener todos los items de la pestaña
+    // Obtener configuración de la pestaña
     const tabConfig = TABS_CONFIG.find(t => t.id === tabId);
-    if (!tabConfig || !AppState.dbData) return;
+    if (!tabConfig) return;
+
+    if (!AppState.dbData) {
+        const grid = document.getElementById(`grid-${tabId}`);
+        if (grid) {
+            grid.innerHTML = `
+                <div class="loading-placeholder" role="status">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Cargando...</p>
+                </div>
+            `;
+        }
+        return;
+    }
 
     const allItems = AppState.dbData[tabConfig.key] || [];
     
@@ -544,7 +557,7 @@ function initPagination() {
         // Configurar eventos globales para cambio de pestaña
         document.addEventListener('tabChanged', function(e) {
             const tabId = e.detail?.tabId || AppState.currentTab;
-            if (tabId && AppState.dbData) {
+            if (tabId) {
                 // Pequeño delay para asegurar que el DOM esté listo
                 setTimeout(() => {
                     renderTabWithPagination(tabId);
