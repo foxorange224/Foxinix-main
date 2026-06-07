@@ -42,20 +42,6 @@
             max-width: 800px;
             margin: 0 auto;
         }
-        .error-tips {
-            background: rgba(255, 69, 0, 0.05);
-            border-radius: 10px;
-            padding: 25px;
-            margin-top: 30px;
-            text-align: left;
-            border: 1px solid rgba(255, 69, 0, 0.1);
-        }
-
-        .error-tips li i {
-            color: var(--primary);
-            min-width: 20px;
-            margin-top: 2px;
-        }
         
         .popular-links {
             background: rgba(255, 69, 0, 0.05);
@@ -111,4 +97,54 @@
             padding-top: 3px;
             width: 100%;
             max-width: 600px;
+        }
+
+        .error-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: var(--space-sm)
+        }
+
+        .error-message {
+            color: var(--text-dim);
+            font-size: .85rem;
+            line-height: 1.4;
+            margin-bottom: var(--space-md)
+        }
+
+        .error-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+            justify-content: center
+        }
+
+        .error-btn {
+            padding: var(--space-sm) var(--space-md);
+            background-color: var(--bg-tab);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            font-weight: 600;
+            font-size: .8rem;
+            text-decoration: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs)
+        }
+
+        .error-btn.primary {
+            background-color: var(--primary);
+            color: #fff;
+            border-color: var(--primary)
+        }
+
+        .error-icon {
+            margin-bottom: var(--space-md)
+        }
+
+        .error-icon i {
+            font-size: 2.5rem;
+            color: var(--primary);
         }

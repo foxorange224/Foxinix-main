@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
+    <script src="/scripts/404.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -34,23 +35,11 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/bg-main.css">
     <link rel="stylesheet" href="/assets/css/404.css">
-    <script src="/scripts/main-core.js" defer></script>
-    <script src="/scripts/app-init.js" defer></script>
-    <script src="/scripts/interface.js" defer></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 
 <body>
-    <noscript>
-        <div style="background: #ff4500; color: white; padding: 15px; text-align: center; font-family: system-ui, sans-serif;">
-            <strong>⚠️ JavaScript está desactivado</strong><br>
-            <span style="font-size: 14px;">FoxWeb requiere JavaScript para funcionar correctamente. Por favor, habilita JavaScript en tu navegador para disfrutar de todas las funcionalidades.</span>
-        </div>
-    </noscript>
-
-    <header class="main-header" id="header-placeholder" role="banner"></header>
     <main class="main-content">
         <div class="error-code">404</div>
         <h1 class="error-title">¡Ups! Esta página no existe</h1>
@@ -60,19 +49,6 @@
                 href="javascript:history.back()" class="error-btn secondary"><i class="fa-solid fa-arrow-left"></i>
                 Volver Atrás</a> <a href="https://github.com/foxorange224/FoxWeb/issues" class="error-btn secondary"
                 target="_blank"><i class="fa-solid fa-flag"></i> Reportar Problema</a></div>
-        <div class="error-tips">
-            <h4><i class="fa-solid fa-lightbulb"></i> ¿Qué puedes hacer?</h4>
-            <ul>
-                <li><i class="fa-solid fa-check"></i> Verifica que la URL sea correcta</li>
-                <li><i class="fa-solid fa-magnifying-glass"></i> Usa el buscador en la página principal</li>
-                <li><i class="fa-solid fa-folder"></i> Explora nuestras categorías: Programas, Sistemas, Juegos, APKs
-                </li>
-                <li><i class="fa-solid fa-flag"></i> Si crees que es un error del sitio, repórtalo</li>
-            </ul>
-        </div>
-        <script src="/scripts/404.js" defer></script>
     </main>
-
 </body>
-
 </html>

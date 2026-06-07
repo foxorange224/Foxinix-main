@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 8080;
 const CACHE_DURATION = 60 * 60 * 24 * 7; // 1 semana en segundos
 
 const mimeTypes = {
