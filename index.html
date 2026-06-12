@@ -4,6 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoxWeb | Descargas</title>
+    <meta name="description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb. Tu portal de descargas confiable y rápido.">
+    <meta name="keywords" content="descargas, software, juegos, aplicaciones, FoxWeb">
+    <link rel="canonical" href="https://foxweb.qzz.io">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" href="/assets/icon.webp" type="image/webp">
+    <link rel="apple-touch-icon" href="/assets/icon.webp">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://foxweb.qzz.io">
+    <meta property="og:title" content="FoxWeb | Descargas">
+    <meta property="og:description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb.">
+    <meta property="og:image" content="https://foxweb.qzz.io/assets/logo.webp">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://foxweb.qzz.io">
+    <meta property="twitter:title" content="FoxWeb | Descargas">
+    <meta property="twitter:description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb.">
+    <meta property="twitter:image" content="https://foxweb.qzz.io/assets/logo.webp">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
         body {
@@ -417,7 +439,7 @@
                 const btn = document.createElement('button');
                 btn.className = 'cat-btn';
                 btn.id = `btn-${cat}`;
-                btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+                btn.textContent = `${cat.charAt(0).toUpperCase() + cat.slice(1)} (${allData[cat].length})`;
                 btn.onclick = () => {
                     window.location.hash = cat;
                 };
