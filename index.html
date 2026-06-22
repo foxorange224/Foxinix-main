@@ -6,7 +6,7 @@
     <title>FoxWeb | Descargas</title>
     <meta name="description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb. Tu portal de descargas confiable y rápido.">
     <meta name="keywords" content="descargas, software, juegos, aplicaciones, FoxWeb">
-    <link rel="canonical" href="https://foxweb.qzz.io">
+    <link rel="canonical" href="https://foxinix.qzz.io">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#000000">
     <link rel="icon" href="/assets/icon.webp" type="image/webp">
@@ -14,17 +14,17 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://foxweb.qzz.io">
+    <meta property="og:url" content="https://foxinix.qzz.io">
     <meta property="og:title" content="FoxWeb | Descargas">
     <meta property="og:description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb.">
-    <meta property="og:image" content="https://foxweb.qzz.io/assets/logo.webp">
+    <meta property="og:image" content="https://foxinix.qzz.io/assets/logo.webp">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://foxweb.qzz.io">
+    <meta property="twitter:url" content="https://foxinix.qzz.io">
     <meta property="twitter:title" content="FoxWeb | Descargas">
     <meta property="twitter:description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb.">
-    <meta property="twitter:image" content="https://foxweb.qzz.io/assets/logo.webp">
+    <meta property="twitter:image" content="https://foxinix.qzz.io/assets/logo.webp">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
@@ -81,9 +81,9 @@
 
         .content-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            padding: 15px;
             max-width: 1200px;
             margin: 0 auto;
         }
@@ -92,7 +92,7 @@
             background: #111;
             border: 1px solid #333;
             border-radius: 8px;
-            padding: 15px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -404,9 +404,47 @@
     </div>
 
     <script>
-        const DB_URL = 'https://database.foxweb.qzz.io';
+        const DB_URL = 'https://db.foxinix.qzz.io';
         let allData = {};
         let allNotifications = [];
+
+        const _p = ['X9f2', 'K7wQ', 'M5pZ', 'V2tRt', 'XyZ99'];
+
+        function _b64decode(s) {
+            return Uint8Array.from(atob(s), c => c.charCodeAt(0));
+        }
+
+        async function _deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 2000, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-CBC', length: 256 },
+                false,
+                ['decrypt']
+            );
+        }
+
+        async function decryptEnlace(encryptedB64) {
+            try {
+                const raw = _b64decode(encryptedB64);
+                const salt = raw.slice(0, 16);
+                const iv = raw.slice(16, 32);
+                const ciphertext = raw.slice(32);
+                const password = _p.join('-');
+                const key = await _deriveKey(password, salt);
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-CBC', iv }, key, ciphertext
+                );
+                return new TextDecoder().decode(decrypted);
+            } catch (e) {
+                console.error('Decryption failed:', e);
+                return null;
+            }
+        }
 
         async function init() {
             try {
@@ -434,12 +472,19 @@
         function setupCategories() {
             const nav = document.getElementById('category-nav');
             const categories = Object.keys(allData);
+            const icons = {
+                programas: 'fa-solid fa-box',
+                sistemas: 'fa-solid fa-desktop',
+                juegos: 'fa-solid fa-gamepad',
+                apks: 'fa-brands fa-android',
+                extras: 'fa-solid fa-ellipsis-h'
+            };
             
             categories.forEach((cat, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'cat-btn';
                 btn.id = `btn-${cat}`;
-                btn.textContent = `${cat.charAt(0).toUpperCase() + cat.slice(1)} (${allData[cat].length})`;
+                btn.innerHTML = `<i class="${icons[cat] || 'fa-solid fa-folder'}"></i> ${cat.charAt(0).toUpperCase() + cat.slice(1)} (${allData[cat].length})`;
                 btn.onclick = () => {
                     window.location.hash = cat;
                 };
@@ -505,19 +550,80 @@
                     return `<a href="${link}" style="background-color: ${color}; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; margin: 10px 0; font-weight: bold;"><i class="${icon}"></i> ${title}</a>`;
                 });
 
-                renderedMd = renderedMd
-                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                    .replace(/`(.*?)`/g, '<code>$1</code>')
-                    .replace(/\n/g, '<br>');
+                function renderInline(text) {
+                    return text
+                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                        .replace(/`(.+?)`/g, '<code>$1</code>');
+                }
+
+                let lines = renderedMd.split('\n');
+                let html = '';
+                let inList = false;
+                let listTag = '';
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+
+                    if (/^#### (.+)/.test(line)) {
+                        if (inList) { html += `</${listTag}>`; inList = false; }
+                        html += `<h4>${renderInline(line.match(/^#### (.+)/)[1])}</h4>`;
+                        continue;
+                    }
+                    if (/^### (.+)/.test(line)) {
+                        if (inList) { html += `</${listTag}>`; inList = false; }
+                        html += `<h3>${renderInline(line.match(/^### (.+)/)[1])}</h3>`;
+                        continue;
+                    }
+                    if (/^## (.+)/.test(line)) {
+                        if (inList) { html += `</${listTag}>`; inList = false; }
+                        html += `<h2>${renderInline(line.match(/^## (.+)/)[1])}</h2>`;
+                        continue;
+                    }
+                    if (/^# (.+)/.test(line)) {
+                        if (inList) { html += `</${listTag}>`; inList = false; }
+                        html += `<h1>${renderInline(line.match(/^# (.+)/)[1])}</h1>`;
+                        continue;
+                    }
+
+                    if (/^---+\s*$/.test(line)) {
+                        if (inList) { html += `</${listTag}>`; inList = false; }
+                        html += '<hr>';
+                        continue;
+                    }
+
+                    if (/^\d+\. (.+)/.test(line)) {
+                        if (inList && listTag !== 'ol') { html += `</${listTag}>`; inList = false; }
+                        if (!inList) { html += '<ol>'; inList = true; listTag = 'ol'; }
+                        html += `<li>${renderInline(line.match(/^\d+\. (.+)/)[1])}</li>`;
+                        continue;
+                    }
+
+                    if (/^[-*] (.+)/.test(line)) {
+                        if (inList && listTag !== 'ul') { html += `</${listTag}>`; inList = false; }
+                        if (!inList) { html += '<ul>'; inList = true; listTag = 'ul'; }
+                        html += `<li>${renderInline(line.match(/^[-*] (.+)/)[1])}</li>`;
+                        continue;
+                    }
+
+                    if (line.trim() === '') {
+                        if (inList) { html += `</${listTag}>`; inList = false; }
+                        continue;
+                    }
+
+                    if (inList) { html += `</${listTag}>`; inList = false; }
+                    html += `<p>${renderInline(line)}</p>`;
+                }
+
+                if (inList) html += `</${listTag}>`;
+                renderedMd = html;
 
                 const downloadButton = item.enlace && item.enlace !== '#' 
-                    ? `<a href="#" class="btn-download" 
+                    ? `<button type="button" class="btn-download" 
                        onclick="handleDownload(event, '${item.enlace}')" 
-                       style="font-size: 1.2rem; padding: 15px 30px;">
+                       style="font-size: 1.2rem; padding: 15px 30px; border: none; cursor: pointer;">
                        Descargar ahora
-                    </a>` 
+                    </button>` 
                     : '';
 
                 container.innerHTML = `
@@ -545,10 +651,16 @@
             document.body.classList.remove('no-scroll');
         }
 
-        function handleDownload(e, enlace) {
+        async function handleDownload(e, enlace) {
             e.preventDefault();
-            if (enlace && enlace !== '#') {
+            if (!enlace || enlace === '#') return;
+            if (enlace.startsWith('http://') || enlace.startsWith('https://')) {
                 window.open(enlace, '_blank');
+                return;
+            }
+            const decrypted = await decryptEnlace(enlace);
+            if (decrypted) {
+                window.open(decrypted, '_blank');
             }
         }
 
@@ -557,17 +669,22 @@
                 const response = await fetch(`${DB_URL}/notifications.json`);
                 const data = await response.json();
                 allNotifications = data.notifications;
-                
-                const activeNotifs = getActiveNotifications();
+
+                const isNewUser = !localStorage.getItem('fw_visited');
+                localStorage.setItem('fw_visited', '1');
+
                 const seenNotifs = JSON.parse(localStorage.getItem('seen_notifications') || '[]');
-                
-                activeNotifs.forEach((notif, index) => {
-                    if (!seenNotifs.includes(notif.id)) {
-                        setTimeout(() => {
-                            showNotification(notif);
-                            markAsSeen(notif.id);
-                        }, index * 3000);
-                    }
+                const activeNotifs = getActiveNotifications();
+                const newNotifs = activeNotifs.filter(n =>
+                    !seenNotifs.includes(n.id) &&
+                    (isNewUser ? n.forNewUsers : n.forOldUsers)
+                );
+
+                newNotifs.forEach((notif, index) => {
+                    setTimeout(() => {
+                        showNotification(notif);
+                        markAsSeen(notif.id);
+                    }, index * 3000);
                 });
             } catch (e) {
                 console.error('Error loading notifications:', e);
