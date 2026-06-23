@@ -4,7 +4,6 @@ const path = require('path');
 const zlib = require('zlib');
 
 const PORT = process.env.PORT || 8080;
-const CACHE_DURATION = 60 * 60 * 24 * 7; // 1 semana en segundos
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -26,21 +25,15 @@ const mimeTypes = {
 };
 
 // Cache en memoria para componentes
-const componentCache = new Map();
 
 /**
  * Carga un componente desde la carpeta components/
  */
 async function loadComponent(componentName) {
-  if (componentCache.has(componentName)) {
-    return componentCache.get(componentName);
-  }
-  
   const componentPath = path.join(__dirname, 'components', `${componentName}.html`);
   
   try {
     const content = await fs.promises.readFile(componentPath, 'utf8');
-    componentCache.set(componentName, content);
     return content;
   } catch (err) {
     if (err.code !== 'ENOENT') {
@@ -88,27 +81,6 @@ function getEncoding(acceptEncoding) {
  * Obtiene headers de cache basados en el tipo de archivo
  */
 function getCacheHeaders(ext, mtime) {
-  const isStatic = ['.css', '.js', '.ico', '.webp', '.png', '.jpg', '.svg', '.woff2', '.ttf'].includes(ext);
-  
-  // No cachear JS durante desarrollo para evitar problemas
-  const isDev = process.env.NODE_ENV !== 'production';
-  
-  if (isDev && ext === '.js') {
-    return {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    };
-  }
-  
-  if (isStatic) {
-    return {
-      'Cache-Control': `public, max-age=${CACHE_DURATION}`,
-      'ETag': mtime ? `"${mtime}"` : `"${Date.now()}"`,
-      'Expires': new Date(Date.now() + CACHE_DURATION * 1000).toUTCString()
-    };
-  }
-  
   return {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
@@ -165,7 +137,7 @@ async function serveFile(filePath, res, acceptEncoding) {
         const encoding = getEncoding(acceptEncoding);
         
         if (encoding) {
-          res.writeHead(200, { 
+          res.writeHead(404, { 
             'Content-Type': 'text/html',
             'Content-Encoding': encoding.type,
             ...getCacheHeaders('.html', Date.now())
@@ -176,7 +148,7 @@ async function serveFile(filePath, res, acceptEncoding) {
           compressor.pipe(res);
           compressor.end(content404);
         } else {
-          res.writeHead(200, { 
+          res.writeHead(404, { 
             'Content-Type': 'text/html',
             ...getCacheHeaders('.html', Date.now())
           });
@@ -251,26 +223,22 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
-  // Verificar que el archivo existe
-  if (!fs.existsSync(fullPath)) {
-    res.writeHead(404, { 'Content-Type': 'text/html' });
-    res.end('<html><body><h1>404 Not Found</h1></body></html>');
-    return;
-  }
+   // Verificar que el archivo existe
+   if (!fs.existsSync(fullPath)) {
+     try {
+       const content404 = fs.readFileSync(path.join(__dirname, '404.html'));
+       res.writeHead(404, { 'Content-Type': 'text/html' });
+       res.end(content404);
+     } catch (err404) {
+       res.writeHead(404, { 'Content-Type': 'text/plain' });
+       res.end('404 Not Found');
+     }
+     return;
+   }
   
   await serveFile(fullPath, res, acceptEncoding);
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`,_____________________________________________________________,`);
-  console.log(`| FoxWeb Servidor Optimizado - Puerto: ${PORT}                |`);
-  console.log(`|                                                             |`);
-  console.log(`| Características activadas:                                  |`);
-  console.log(`| ✓ Compresión Brotli/Gzip                                    |`);
-  console.log(`| ✓ Includes para componentes (header/footer)                 |`);
-  console.log(`| ✓ Cache headers para archivos estáticos                     |`);
-  console.log(`| ✓ Headers de seguridad                                      |`);
-  console.log(`|_____________________________________________________________|`);
-  console.log(`| Presione Ctrl+C para Detener                                |`);
-  console.log(`|_____________________________________________________________|`);
+  console.log('Foxinix - Puerto: 8080')
 });

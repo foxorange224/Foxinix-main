@@ -3,56 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoxWeb | Descargas</title>
-    <meta name="description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb. Tu portal de descargas confiable y rápido.">
-    <meta name="keywords" content="descargas, software, juegos, aplicaciones, FoxWeb">
+    <title>Foxinix | Descargas</title>
+    <meta name="description" content="Descarga los mejores recursos, aplicaciones y juegos en Foxinix. Tu portal de descargas confiable y rápido.">
+    <meta name="keywords" content="descargas, software, juegos, aplicaciones, Foxinix">
     <link rel="canonical" href="https://foxinix.qzz.io">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#000000">
-    <link rel="icon" href="/assets/icon.webp" type="image/webp">
-    <link rel="apple-touch-icon" href="/assets/icon.webp">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://foxinix.qzz.io">
-    <meta property="og:title" content="FoxWeb | Descargas">
-    <meta property="og:description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb.">
+    <meta property="og:title" content="Foxinix | Descargas">
+    <meta property="og:description" content="Descarga los mejores recursos, aplicaciones y juegos en Foxinix.">
     <meta property="og:image" content="https://foxinix.qzz.io/assets/logo.webp">
 
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://foxinix.qzz.io">
-    <meta property="twitter:title" content="FoxWeb | Descargas">
-    <meta property="twitter:description" content="Descarga los mejores recursos, aplicaciones y juegos en FoxWeb.">
+    <meta property="twitter:title" content="Foxinix | Descargas">
+    <meta property="twitter:description" content="Descarga los mejores recursos, aplicaciones y juegos en Foxinix.">
     <meta property="twitter:image" content="https://foxinix.qzz.io/assets/logo.webp">
+
+    <meta name="author" content="Foxinix">
+    <meta name="application-name" content="Foxinix">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="robots" href="/robots.txt">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://db.foxinix.qzz.io">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Foxinix",
+        "url": "https://foxinix.qzz.io",
+        "description": "Descarga los mejores recursos, aplicaciones y juegos en Foxinix. Tu portal de descargas confiable y rápido.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://foxinix.qzz.io/?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
+        :root {
+            --bg: black;
+            --text: white;
+            --card-bg: #111;
+            --card-border: #333;
+            --card-border-hover: #666;
+            --btn-bg: #222;
+            --btn-border: #444;
+            --input-bg: #222;
+            --separator: #333;
+            --desc-bg: #111;
+            --desc-border: #222;
+            --overlay-bg: black;
+            --muted: #888;
+            --muted-text: #ccc;
+            --skeleton: #333;
+            --modal-bg: #111;
+            --modal-overlay: rgba(0,0,0,0.9);
+            --modal-border: #333;
+            --modal-item: #1a1a1a;
+            --modal-header-border: #333;
+            --modal-footer-border: #333;
+        }
+
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
-            background-color: black;
-            color: white;
+            background: url('/assets/background.webp') no-repeat center center / cover fixed;
+            background-color: var(--bg);
+            color: var(--text);
             font-family: sans-serif;
             margin: 0;
             padding: 0;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         header {
+            background-color: var(--bg);
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 20px;
-            padding: 10px 0;
-            border-bottom: 1px solid #333;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--separator);
         }
 
         header a {
             text-decoration: none;
-            color: white;
+            color: var(--text);
             display: flex;
             align-items: center;
         }
 
-        header p { margin: 0; }
+        header h1 { margin: 0; font-size: inherit; display: inline; }
 
         .nav-categories {
             display: flex;
@@ -60,48 +112,131 @@
             gap: 10px;
             padding: 20px 0;
             flex-wrap: wrap;
+            transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease, margin 0.35s ease;
+            max-height: 300px;
+            opacity: 1;
+            overflow: hidden;
+        }
+        .nav-categories.hidden {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .search-header {
+            display: flex;
+            flex-direction: column;
         }
 
         .cat-btn {
-            background: #222;
-            color: white;
-            border: 1px solid #444;
+            background: var(--btn-bg);
+            color: var(--text);
+            border: 1px solid var(--btn-border);
             padding: 10px 18px;
             cursor: pointer;
             border-radius: 6px;
             font-size: 14px;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
 
-        .cat-btn:hover { background: #333; border-color: #666; }
-        .cat-btn:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
+        .cat-btn:hover { background: var(--card-bg); border-color: var(--card-border-hover); }
+        .cat-btn:focus-visible { outline: 2px solid #d24500; outline-offset: 2px; }
 
         .cat-btn.active {
             background: #d24500;
-            border-color: #fff;
-            color: #fff;
+            border-color: var(--text);
+            color: white;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
 
         .search-bar {
             display: flex;
             justify-content: center;
             padding: 0 15px 20px;
-            max-width: 500px;
+            max-width: 800px;
+            width: 100%;
             margin: 0 auto;
+            transition: padding 0.35s ease;
+        }
+        .search-bar.compact {
+            padding: 10px 15px 10px;
         }
 
-        .search-bar input {
+        .search-input-wrapper {
+            position: relative;
             width: 100%;
-            padding: 10px 16px;
+            padding: 10px 0;
+        }
+
+        .search-input-wrapper .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+            font-size: 15px;
+        }
+
+        .search-input-wrapper .clear-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 6px;
+            display: none;
+            line-height: 1;
+        }
+        .search-input-wrapper .clear-btn:hover { color: var(--text); }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 10px 16px 10px 36px;
             border-radius: 8px;
-            border: 1px solid #444;
-            background: #222;
-            color: white;
+            border: 1px solid var(--btn-border);
+            background: var(--input-bg);
+            color: var(--text);
             font-size: 15px;
             transition: border-color 0.2s;
         }
+        .search-input-wrapper input:focus { outline: none; border-color: #d24500; }
+        .search-input-wrapper input::placeholder { color: var(--muted); }
 
-        .search-bar input:focus { outline: none; border-color: #3498db; }
-        .search-bar input::placeholder { color: #888; }
+        .search-cat-section {
+            margin-bottom: 30px;
+            width: 100%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 10px 12px;
+            background: var(--card-bg);
+            transition: box-shadow 0.2s;
+        }
+        .search-cat-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 20px 0 5px 0;
+            display: block;
+        }
+        .search-cat-line {
+            height: 2px;
+            background: #d24500;
+            width: 100%;
+            margin-bottom: 15px;
+            border-radius: 2px;
+        }
+        .search-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
 
         .content-grid {
             display: grid;
@@ -113,8 +248,8 @@
         }
 
         .card {
-            background: #111;
-            border: 1px solid #333;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
             border-radius: 8px;
             padding: 8px;
             display: flex;
@@ -122,14 +257,15 @@
             align-items: center;
             text-align: center;
             cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
         }
 
         .card:hover {
-            border-color: #666;
+            border-color: var(--card-border-hover);
         }
 
         .card:focus-visible {
-            outline: 2px solid #3498db;
+            outline: 2px solid #d24500;
             outline-offset: 2px;
             transform: translateY(-2px);
         }
@@ -139,6 +275,8 @@
             height: 84px;
             object-fit: contain;
             margin-bottom: 10px;
+            background: var(--card-bg);
+            transition: opacity 0.3s;
         }
 
         .card h3 {
@@ -155,8 +293,8 @@
         }
 
         .badge {
-            background: #333;
-            color: #ddd;
+            background: var(--card-border);
+            color: var(--muted-text);
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 3px;
@@ -164,8 +302,8 @@
         }
 
         .btn-download {
-            background: white;
-            color: black;
+            background: var(--text);
+            color: var(--bg);
             text-decoration: none;
             padding: 8px 16px;
             border-radius: 4px;
@@ -185,10 +323,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: black;
+            background: var(--overlay-bg);
             z-index: 3000;
             overflow-y: auto;
-            color: white;
+            color: var(--text);
             font-family: sans-serif;
             animation: fadeIn 0.2s ease-out;
         }
@@ -214,161 +352,152 @@
         .desc-header img { width: 100px; height: 100px; object-fit: contain; }
         .desc-header h1 { margin: 0; font-size: 2.5rem; }
 
-        .desc-separator { height: 1px; background: #333; width: 100%; margin: 20px 0; }
+        .desc-separator { height: 1px; background: var(--separator); width: 100%; margin: 20px 0; }
 
         .desc-body {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            color: #ccc;
-        }
-
-        .desc-md-content {
             text-align: left;
-            background: #111;
+            background: var(--desc-bg);
             padding: 20px;
             border-radius: 8px;
-            border: 1px solid #222;
+            border: 1px solid var(--desc-border);
             margin-top: 30px;
+            line-height: 1.7;
         }
 
-        .desc-md-content a { color: #3498db; }
+        .desc-md-content h1, .desc-md-content h2, .desc-md-content h3,
+        .desc-md-content h4, .desc-md-content h5, .desc-md-content h6 {
+            margin: 1.5em 0 0.5em;
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+        .desc-md-content h1 { font-size: 2em; border-bottom: 1px solid var(--separator); padding-bottom: 0.3em; }
+        .desc-md-content h2 { font-size: 1.5em; border-bottom: 1px solid var(--separator); padding-bottom: 0.25em; }
+        .desc-md-content h3 { font-size: 1.25em; }
+        .desc-md-content h4 { font-size: 1.1em; }
+        .desc-md-content h5, .desc-md-content h6 { font-size: 1em; }
+
+        .desc-md-content p { margin: 0 0 1em; }
+
+        .desc-md-content a { color: #d24500; }
+        .desc-md-content a:hover { text-decoration: underline; }
+
+        .desc-md-content strong { font-weight: 700; color: var(--text); }
+        .desc-md-content em { font-style: italic; }
+
+        .desc-md-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 1em 0;
+            display: block;
+        }
+
+        .desc-md-content ul, .desc-md-content ol {
+            margin: 0 0 1em 2em;
+            padding: 0;
+        }
+        .desc-md-content li { margin-bottom: 0.25em; }
+        .desc-md-content li > ul, .desc-md-content li > ol { margin-bottom: 0; }
+
+        .desc-md-content blockquote {
+            margin: 0 0 1em;
+            padding: 0.5em 1em;
+            border-left: 4px solid #d24500;
+            background: var(--modal-item);
+            color: var(--muted-text);
+        }
+        .desc-md-content blockquote p:last-child { margin-bottom: 0; }
+
+        .desc-md-content code {
+            background: var(--card-border);
+            color: var(--text);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        }
+
+        .desc-md-content pre {
+            background: var(--modal-item);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 1em;
+            overflow-x: auto;
+            margin: 0 0 1em;
+        }
+        .desc-md-content pre code {
+            background: none;
+            color: var(--text);
+            padding: 0;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .desc-md-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0 0 1em;
+            font-size: 0.9em;
+        }
+        .desc-md-content th, .desc-md-content td {
+            border: 1px solid var(--card-border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .desc-md-content th {
+            background: var(--modal-item);
+            color: var(--text);
+            font-weight: 600;
+        }
+        .desc-md-content tr:nth-child(even) { background: var(--modal-bg); }
+        .desc-md-content tr:hover { background: var(--modal-item); }
+
+        .desc-md-content hr {
+            border: none;
+            border-top: 1px solid var(--separator);
+            margin: 1.5em 0;
+        }
+
+        .desc-md-content .mermaid {
+            background: var(--modal-item);
+            border-radius: 6px;
+            padding: 1em;
+            margin: 0 0 1em;
+            overflow-x: auto;
+        }
 
         .close-desc {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #222;
-            color: white;
-            border: 1px solid #444;
+            background: var(--btn-bg);
+            color: var(--text);
+            border: 1px solid var(--btn-border);
             padding: 10px 20px;
             cursor: pointer;
             border-radius: 4px;
             z-index: 3100;
             font-size: 15px;
+            transition: background 0.2s, border-color 0.2s;
         }
 
-        .close-desc:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
+        .close-desc:focus-visible { outline: 2px solid #d24500; outline-offset: 2px; }
 
-        #notifications-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 4000;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease-out;
+        body        .no-scroll { overflow: hidden; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--card-border);
+            border-top: 4px solid #d24500;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 60px auto;
         }
-
-        .notif-modal-content {
-            background: #111;
-            border: 1px solid #333;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-
-        .notif-modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .notif-modal-header h2 { margin: 0; font-size: 1.5rem; }
-
-        .notif-list { padding: 10px; overflow-y: auto; flex-grow: 1; }
-
-        .notif-item {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 10px;
-            position: relative;
-            transition: background 0.2s;
-        }
-
-        .notif-item:hover { background: #222; }
-
-        .notif-item .notif-title {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-
-        .notif-item .notif-msg {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .notif-item .notif-date { font-size: 0.75rem; color: #666; }
-
-        .notif-item .btn-del {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: #ff4444;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .notif-modal-footer { padding: 15px; border-top: 1px solid #333; text-align: right; }
-
-        .btn-clear-all {
-            background: #8C0700;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        #notification-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .notification {
-            background: #333;
-            color: white;
-            padding: 15px;
-            border-radius: 4px;
-            border-left: 5px solid #fff;
-            min-width: 250px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .notification.info { border-left-color: #3498db; }
-        .notification.success { border-left-color: #2ecc71; }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
-
-        body.no-scroll { overflow: hidden; }
 
         .skeleton { opacity: 0.3; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.6; } }
@@ -376,9 +505,10 @@
         .no-results {
             grid-column: 1 / -1;
             text-align: center;
-            color: #666;
+            color: #fff;
             padding: 40px;
             font-size: 1.1rem;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
         .back-to-top {
@@ -387,15 +517,15 @@
             right: 30px;
             width: 44px;
             height: 44px;
-            background: #222;
-            color: white;
-            border: 1px solid #444;
+            background: var(--btn-bg);
+            color: var(--text);
+            border: 1px solid var(--btn-border);
             border-radius: 50%;
             cursor: pointer;
             font-size: 1.2rem;
             z-index: 1000;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s, background 0.2s;
             pointer-events: none;
             display: flex;
             align-items: center;
@@ -403,8 +533,8 @@
         }
 
         .back-to-top.visible { opacity: 1; pointer-events: auto; }
-        .back-to-top:hover { background: #333; }
-        .back-to-top:focus-visible { outline: 2px solid #3498db; outline-offset: 2px; }
+        .back-to-top:hover { background: var(--card-border); }
+        .back-to-top:focus-visible { outline: 2px solid #d24500; outline-offset: 2px; }
 
         .error-banner {
             text-align: center;
@@ -414,7 +544,7 @@
 
         .error-banner h2 { color: #e74c3c; margin-bottom: 10px; }
         .error-banner button {
-            background: #3498db;
+            background: #d24500;
             color: white;
             border: none;
             padding: 10px 24px;
@@ -424,63 +554,110 @@
             margin-top: 15px;
         }
         .error-banner button:hover { background: #2980b9; }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            background: var(--btn-bg);
+            color: var(--text);
+            border: 1px solid var(--btn-border);
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .pagination button:hover { background: var(--card-border-hover); }
+        .pagination button:disabled { opacity: 0.4; cursor: default; }
+        .pagination button.active-page {
+            background: #d24500;
+            border-color: var(--text);
+            color: white;
+        }
+
+        .pagination .page-info {
+            color: var(--muted);
+            font-size: 13px;
+            padding: 0 10px;
+        }
+
     </style>
 </head>
 <body>
     <header>
-        <a href="/">
-            <img src="/assets/logo.webp" alt="FoxWeb" height="80">
-        </a>
-        <a href="/about"><p>Acerca de</p></a>
-        <button class="cat-btn" onclick="openNotificationsModal()" style="margin-left:10px;" aria-label="Notificaciones">
-            <i class="fa-solid fa-bell" aria-hidden="true"></i> Notificaciones
-        </button>
+        <a href="/" aria-label="Foxinix - Inicio"><h1><img src="/assets/logo.webp" alt="Foxinix" height="80"></h1></a>
+        <a href="/about">Acerca de</a>
     </header>
 
-    <div class="nav-categories" id="category-nav">
-        <!-- Categories injected here -->
+    <div class="search-header">
+        <div class="nav-categories" id="category-nav">
+            <!-- Categories injected here -->
+        </div>
+        <div class="search-bar">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-input" placeholder="Buscar entre todos los elementos..." aria-label="Buscar elementos">
+                <button class="clear-btn" id="clear-btn" onclick="clearSearch()" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
     </div>
 
-    <div class="search-bar">
-        <input type="text" id="search-input" placeholder="Buscar entre todos los elementos..." oninput="filterCards()" aria-label="Buscar elementos">
+    <div style="display:none" aria-hidden="true">
+        <h2>Catálogo de descargas Foxinix</h2>
+        <p>En Foxinix encontrarás una amplia variedad de software, programas, sistemas operativos, juegos, aplicaciones APK para Android y contenido adicional. Todos los recursos están disponibles para descarga directa y organizados por categorías para facilitar tu búsqueda.</p>
+        <h3>Categorías disponibles</h3>
+        <ul>
+            <li><strong>Programas:</strong> Software de escritorio, utilidades, herramientas de productividad, suites ofimáticas, editores multimedia, programas de diseño gráfico, navegadores web y más.</li>
+            <li><strong>Sistemas:</strong> Sistemas operativos Windows, Linux, macOS, distribuciones, actualizaciones, drivers, parches de seguridad y herramientas de sistema.</li>
+            <li><strong>Juegos:</strong> Videojuegos para PC, juegos indie, títulos AAA, emuladores, ROMs, juegos clásicos y modernos de diversos géneros.</li>
+            <li><strong>APKs:</strong> Aplicaciones Android en formato APK, juegos móviles, herramientas, utilidades y apps exclusivas.</li>
+            <li><strong>Extras:</strong> Contenido adicional como temas, fondos de pantalla, iconos, fuentes, plantillas, recursos gráficos y más.</li>
+        </ul>
+        <p>Descarga gratuita y segura desde Foxinix, tu portal de confianza.</p>
+    </div>
+
+    <div style="display:none" aria-hidden="true">
+        <h2>Juegos más relevantes en Foxinix</h2>
+        <p>Los juegos más populares y relevantes disponibles para descargar en Foxinix incluyen títulos como Age of Empires II, Halo Combat Evolved, GTA San Andreas, GTA Vice City, Counter Strike 1.6, Half-Life 2, Half-Life 1, Portal, Portal 2, DOOM 1 y 2, Plants vs Zombies, Among Us, Terraria, Stardew Valley, Assetto Corsa, Assault Cube, SuperTuxKart, Dead Cells, Brotato, Balatro, Friday Night Funkin, Hollow Knight, Celeste, Undertale, Hotline Miami, Limbo, Sonic Mania, Cuphead, Geometry Dash, Fruit Ninja, Slime Rancher, The Binding of Isaac, Project Zomboid, Subnautica, Phasmophobia, Cult of the Lamb y muchos más.</p>
+        <p>También contamos con emuladores como Dolphin, PCSX2, PPSSPP, Yuzu, Citra, Project64, DeSmuME, MAME y RetroArch para jugar tus títulos clásicos favoritos.</p>
+        <p>Todos los juegos están disponibles para descarga directa en PC y dispositivos Android, completamente gratis y seguros.</p>
     </div>
 
     <div class="content-grid" id="content-grid">
         <!-- Content cards injected here -->
     </div>
 
-    <button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Volver arriba">↑</button>
-
-    <div id="notification-container" role="alert" aria-live="polite"></div>
-
-    <div id="notifications-modal" role="dialog" aria-modal="true" aria-label="Notificaciones">
-        <div class="notif-modal-content">
-            <div class="notif-modal-header">
-                <h2>Notificaciones</h2>
-                <button class="close-desc" style="position:static;padding:5px 10px;" onclick="closeNotificationsModal()" aria-label="Cerrar">&times;</button>
-            </div>
-            <div class="notif-list" id="notif-list">
-                <!-- Notifications injected here -->
-            </div>
-            <div class="notif-modal-footer">
-                <button class="btn-clear-all" onclick="clearAllNotifications()">Borrar Todas</button>
-            </div>
-        </div>
+    <div class="pagination" id="pagination">
+        <!-- Pagination controls injected here -->
     </div>
 
+    <button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Volver arriba">↑</button>
+
     <div id="description-overlay" role="dialog" aria-modal="true" aria-label="Descripción">
-        <button class="close-desc" onclick="closeDescription()" aria-label="Cerrar">Cerrar</button>
+        <button class="close-desc" onclick="closeDescription()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
         <div class="desc-container" id="desc-container">
             <!-- Content injected here -->
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>
         const DB_URL = 'https://db.foxinix.qzz.io';
         let allData = {};
         let allNotifications = [];
         let currentCategory = '';
         let _searchQuery = '';
+        let _page = 1;
+        const _perPage = 48;
 
         const _p = ['X9f2', 'K7wQ', 'M5pZ', 'V2tRt', 'XyZ99'];
 
@@ -505,13 +682,51 @@
         async function decryptEnlace(encryptedB64) {
             try {
                 const raw = _b64decode(encryptedB64);
+                if (raw.length < 1) return null;
+
+                const version = raw[0];
+                const password = _p.join('-');
+                const enc = new TextEncoder();
+
+                if (version === 2 && raw.length >= 81) {
+                    const salt = raw.slice(1, 17);
+                    const iv = raw.slice(17, 33);
+                    const ct = raw.slice(33, -32);
+                    const mac = raw.slice(-32);
+
+                    const keyMaterial = await crypto.subtle.importKey(
+                        'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
+                    );
+                    const derived = await crypto.subtle.deriveBits(
+                        { name: 'PBKDF2', salt, iterations: 2000, hash: 'SHA-256' },
+                        keyMaterial, 384
+                    );
+                    const derivedBytes = new Uint8Array(derived);
+                    const aesKeyBytes = derivedBytes.slice(0, 32);
+                    const macKeyBytes = derivedBytes.slice(32, 48);
+
+                    const macKey = await crypto.subtle.importKey(
+                        'raw', macKeyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
+                    );
+                    const macData = new Uint8Array([2, ...salt, ...iv, ...ct]);
+                    const valid = await crypto.subtle.verify('HMAC', macKey, mac, macData);
+                    if (!valid) return null;
+
+                    const aesKey = await crypto.subtle.importKey(
+                        'raw', aesKeyBytes, { name: 'AES-CBC', length: 256 }, false, ['decrypt']
+                    );
+                    const decrypted = await crypto.subtle.decrypt(
+                        { name: 'AES-CBC', iv }, aesKey, ct
+                    );
+                    return new TextDecoder().decode(decrypted);
+                }
+
                 const salt = raw.slice(0, 16);
                 const iv = raw.slice(16, 32);
-                const ciphertext = raw.slice(32);
-                const password = _p.join('-');
+                const ct = raw.slice(32);
                 const key = await _deriveKey(password, salt);
                 const decrypted = await crypto.subtle.decrypt(
-                    { name: 'AES-CBC', iv }, key, ciphertext
+                    { name: 'AES-CBC', iv }, key, ct
                 );
                 return new TextDecoder().decode(decrypted);
             } catch (e) {
@@ -526,7 +741,43 @@
             return d.innerHTML;
         }
 
+        function hashColor(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) {
+                h = ((h << 5) - h) + str.charCodeAt(i);
+                h |= 0;
+            }
+            const hue = Math.abs(h) % 360;
+            return `hsl(${hue}, 15%, 20%)`;
+        }
+
+        function renderPagination(total) {
+            const el = document.getElementById('pagination');
+            const pages = Math.ceil(total / _perPage);
+            if (pages <= 1) { el.innerHTML = ''; return; }
+            let html = '';
+            html += `<button onclick="goPage(${_page - 1})" ${_page <= 1 ? 'disabled' : ''}>\u00AB Anterior</button>`;
+            for (let p = 1; p <= pages; p++) {
+                if (pages > 10 && p > 2 && p < pages - 1 && Math.abs(p - _page) > 2) {
+                    if (p === 3 || p === pages - 2) html += '<span style="color:var(--muted);padding:0 4px;">...</span>';
+                    continue;
+                }
+                html += `<button onclick="goPage(${p})" class="${p === _page ? 'active-page' : ''}">${p}</button>`;
+            }
+            html += `<button onclick="goPage(${_page + 1})" ${_page >= pages ? 'disabled' : ''}>Siguiente \u00BB</button>`;
+            html += `<span class="page-info">${(_page - 1) * _perPage + 1}-${Math.min(_page * _perPage, total)} de ${total}</span>`;
+            el.innerHTML = html;
+        }
+
+        function goPage(p) {
+            _page = p;
+            renderCategory(currentCategory);
+        }
+
         async function init() {
+            if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({ startOnLoad: false });
+            }
             const grid = document.getElementById('content-grid');
             grid.innerHTML = Array(12).fill('<div class="skeleton card"><div style="width:84px;height:84px;background:#333;border-radius:8px;margin-bottom:10px;"></div><div style="height:18px;width:80px;background:#333;border-radius:4px;margin:10px auto;"></div></div>').join('');
 
@@ -545,10 +796,44 @@
 
                 setupNotifications();
 
-                document.getElementById('search-input').addEventListener('input', function() {
+                const searchInput = document.getElementById('search-input');
+                const clearBtn = document.getElementById('clear-btn');
+                searchInput.addEventListener('input', function() {
                     _searchQuery = this.value;
-                    renderCategory(currentCategory);
+                    clearBtn.style.display = this.value ? 'block' : 'none';
+                    const url = new URL(window.location.href);
+                    if (this.value) {
+                        url.searchParams.set('search', this.value);
+                        document.getElementById('category-nav').classList.add('hidden');
+                        document.querySelector('.search-bar').classList.add('compact');
+                        renderGlobalSearch(this.value);
+                    } else {
+                        url.searchParams.delete('search');
+                        document.getElementById('category-nav').classList.remove('hidden');
+                        document.querySelector('.search-bar').classList.remove('compact');
+                        if (currentCategory) renderCategory(currentCategory);
+                    }
+                    window.history.replaceState({}, '', url);
                 });
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const searchParam = urlParams.get('search');
+                const itemParam = urlParams.get('item');
+
+                if (searchParam) {
+                    searchInput.value = searchParam;
+                    _searchQuery = searchParam;
+                    clearBtn.style.display = 'block';
+                    document.getElementById('category-nav').classList.add('hidden');
+                    document.querySelector('.search-bar').classList.add('compact');
+                    renderGlobalSearch(searchParam);
+                }
+
+                if (itemParam) {
+                    setTimeout(() => {
+                        openItemById(itemParam);
+                    }, 100);
+                }
             } catch (e) {
                 console.error('Error loading data:', e);
                 grid.innerHTML = `
@@ -584,6 +869,7 @@
 
         function switchCategory(cat) {
             currentCategory = cat;
+            _page = 1;
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById(`btn-${cat}`);
             if (activeBtn) activeBtn.classList.add('active');
@@ -613,22 +899,28 @@
                 : items;
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="no-results">${_searchQuery ? 'Sin resultados para "' + escapeHtml(_searchQuery) + '"' : 'No hay elementos en esta categoría.'}</div>`;
+                grid.innerHTML = `<div class="no-results"><i class="fa-solid fa-magnifying-glass" style="margin-right:8px;"></i>${_searchQuery ? 'Sin resultados para "' + escapeHtml(_searchQuery) + '"' : 'No hay elementos en esta categoría.'}</div>`;
+                document.getElementById('pagination').innerHTML = '';
                 return;
             }
 
-            filtered.forEach(item => {
+            _page = Math.min(_page, Math.ceil(filtered.length / _perPage) || 1);
+            const start = (_page - 1) * _perPage;
+            const pageItems = filtered.slice(start, start + _perPage);
+
+            pageItems.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.tabIndex = 0;
                 card.role = 'button';
                 card.setAttribute('aria-label', `Abrir ${item.name || ''}`);
+                card.title = item.name || '';
 
                 const badgesHtml = (item.badges || []).map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
                 const iconUrl = `${DB_URL}/icons/${item.id}.webp`;
 
                 card.innerHTML = `
-                    <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'">
+                    <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'"">
                     <h3>${escapeHtml(item.name || '')}</h3>
                     <div class="badges">${badgesHtml}</div>
                 `;
@@ -642,10 +934,87 @@
                 };
                 grid.appendChild(card);
             });
+
+            renderPagination(filtered.length);
         }
 
         function filterCards() {
             if (currentCategory) renderCategory(currentCategory);
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            input.value = '';
+            _searchQuery = '';
+            document.getElementById('clear-btn').style.display = 'none';
+            document.getElementById('category-nav').classList.remove('hidden');
+            document.querySelector('.search-bar').classList.remove('compact');
+            const url = new URL(window.location.href);
+            url.searchParams.delete('search');
+            window.history.replaceState({}, '', url);
+            if (currentCategory) renderCategory(currentCategory);
+            input.focus();
+        }
+
+        function openItemById(id) {
+            for (const items of Object.values(allData)) {
+                const item = items.find(it => it.id === id);
+                if (item) { openDescription(item); return; }
+            }
+        }
+
+        function renderGlobalSearch(query) {
+            const grid = document.getElementById('content-grid');
+            const q = query.toLowerCase();
+            const results = [];
+
+            for (const [cat, items] of Object.entries(allData)) {
+                const matches = items.filter(item =>
+                    (item.name || '').toLowerCase().includes(q) ||
+                    (item.info || '').toLowerCase().includes(q) ||
+                    (item.badges || []).some(b => b.toLowerCase().includes(q))
+                );
+                if (matches.length) results.push({ cat, matches });
+            }
+
+            if (!results.length) {
+                grid.innerHTML = `<div class="no-results"><i class="fa-solid fa-magnifying-glass" style="margin-right:8px;"></i>Sin resultados para "${escapeHtml(query)}"</div>`;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            results.sort((a, b) => b.matches.length - a.matches.length);
+
+            const icons = {
+                programas: 'fa-solid fa-box',
+                sistemas: 'fa-solid fa-desktop',
+                juegos: 'fa-solid fa-gamepad',
+                apks: 'fa-brands fa-android',
+                extras: 'fa-solid fa-ellipsis-h'
+            };
+
+            let html = '';
+            results.forEach(r => {
+                const catName = r.cat.charAt(0).toUpperCase() + r.cat.slice(1);
+                const catIcon = icons[r.cat] || 'fa-solid fa-folder';
+                html += `<div class="search-cat-section">
+                    <div class="search-cat-header"><i class="${catIcon}"></i> ${catName} (${r.matches.length})</div>
+                    <div class="search-cat-line"></div>
+                    <div class="search-cat-grid">`;
+                r.matches.forEach(item => {
+                    const iconUrl = `${DB_URL}/icons/${item.id}.webp`;
+                    const badgesHtml = (item.badges || []).map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
+                    html += `<div class="card" tabindex="0" role="button" aria-label="Abrir ${escapeHtml(item.name || '')}" title="${escapeHtml(item.name || '')}" onclick="openItemById('${escapeHtml(item.id)}')">
+                        <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'"">
+                        <h3>${escapeHtml(item.name || '')}</h3>
+                        <div class="badges">${badgesHtml}</div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            });
+
+            grid.innerHTML = html;
+            document.getElementById('pagination').innerHTML = '';
         }
 
         let _mdCache = {};
@@ -655,12 +1024,16 @@
             const container = document.getElementById('desc-container');
             const iconUrl = `${DB_URL}/icons/${item.id}.webp`;
 
+            const url = new URL(window.location.href);
+            url.searchParams.set('item', item.id);
+            window.history.replaceState({}, '', url);
+
             document.body.classList.add('no-scroll');
             overlay.style.display = 'block';
-            container.innerHTML = '<div class="skeleton" style="height:200px;background:#222;border-radius:8px;"></div>';
+            container.innerHTML = '<div class="spinner"></div><p style="text-align:center;color:var(--muted-text);margin-top:10px;">Cargando contenido...</p>';
 
             try {
-                let mdText = 'No hay contenido adicional disponible.';
+                let mdText = '';
                 if (_mdCache[item.id] !== undefined) {
                     mdText = _mdCache[item.id];
                 } else {
@@ -676,76 +1049,34 @@
                 const link = item.enlace || '';
                 const safeLink = escapeHtml(link);
 
-                let renderedMd = mdText.replace(/\[boton de descarga,\s*color=([^,]+),\s*icono=([^,]+),\s*enlace=([^,]+),\s*title="([^"]+)"\]/g, (match, color, icon, linkUrl, title) => {
+                // Pre-process mermaid blocks
+                const mermaidBlocks = [];
+                let processedMd = mdText.replace(/```mermaid\n?([\s\S]*?)```/g, (match, code) => {
+                    const idx = mermaidBlocks.length;
+                    mermaidBlocks.push(code);
+                    return `<!--MERMAID_${idx}-->`;
+                });
+
+                // Pre-process download buttons
+                const buttonHtmls = [];
+                processedMd = processedMd.replace(/\[boton de descarga,\s*color=([^,]+),\s*icono=([^,]+),\s*enlace=([^,]+),\s*title="([^"]+)"\]/g, (match, color, icon, linkUrl, title) => {
+                    const idx = buttonHtmls.length;
                     const safeUrl = escapeHtml(linkUrl);
                     const safeTitle = escapeHtml(title);
                     const safeColor = escapeHtml(color);
                     const safeIcon = escapeHtml(icon);
-                    return `<a href="${safeUrl}" style="background-color:${safeColor};color:white;padding:10px 20px;border-radius:5px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;margin:10px 0;font-weight:bold;" target="_blank" rel="noopener"><i class="${safeIcon}"></i> ${safeTitle}</a>`;
+                    buttonHtmls.push(`<a href="${safeUrl}" style="background-color:${safeColor};color:white;padding:10px 20px;border-radius:5px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;margin:10px 0;font-weight:bold;" target="_blank" rel="noopener"><i class="${safeIcon}"></i> ${safeTitle}</a>`);
+                    return `<!--BTN_${idx}-->`;
                 });
 
-                function renderInline(text) {
-                    return text
-                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                        .replace(/`(.+?)`/g, '<code>$1</code>');
+                let renderedMd;
+                if (typeof marked !== 'undefined') {
+                    renderedMd = marked.parse(processedMd, { breaks: true, gfm: true });
+                    renderedMd = renderedMd.replace(/<!--BTN_(\d+)-->/g, (_, idx) => buttonHtmls[idx] || '');
+                    renderedMd = renderedMd.replace(/<!--MERMAID_(\d+)-->/g, (_, idx) => `<div class="mermaid">${mermaidBlocks[idx] || ''}</div>`);
+                } else {
+                    renderedMd = '<p>Markdown renderer not available.</p>';
                 }
-
-                let lines = renderedMd.split('\n');
-                let html = '';
-                let inList = false;
-                let listTag = '';
-
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i];
-
-                    if (/^#### (.+)/.test(line)) {
-                        if (inList) { html += `</${listTag}>`; inList = false; }
-                        html += `<h4>${renderInline(line.match(/^#### (.+)/)[1])}</h4>`;
-                        continue;
-                    }
-                    if (/^### (.+)/.test(line)) {
-                        if (inList) { html += `</${listTag}>`; inList = false; }
-                        html += `<h3>${renderInline(line.match(/^### (.+)/)[1])}</h3>`;
-                        continue;
-                    }
-                    if (/^## (.+)/.test(line)) {
-                        if (inList) { html += `</${listTag}>`; inList = false; }
-                        html += `<h2>${renderInline(line.match(/^## (.+)/)[1])}</h2>`;
-                        continue;
-                    }
-                    if (/^# (.+)/.test(line)) {
-                        if (inList) { html += `</${listTag}>`; inList = false; }
-                        html += `<h1>${renderInline(line.match(/^# (.+)/)[1])}</h1>`;
-                        continue;
-                    }
-                    if (/^---+\s*$/.test(line)) {
-                        if (inList) { html += `</${listTag}>`; inList = false; }
-                        html += '<hr>';
-                        continue;
-                    }
-                    if (/^\d+\. (.+)/.test(line)) {
-                        if (inList && listTag !== 'ol') { html += `</${listTag}>`; inList = false; }
-                        if (!inList) { html += '<ol>'; inList = true; listTag = 'ol'; }
-                        html += `<li>${renderInline(line.match(/^\d+\. (.+)/)[1])}</li>`;
-                        continue;
-                    }
-                    if (/^[-*] (.+)/.test(line)) {
-                        if (inList && listTag !== 'ul') { html += `</${listTag}>`; inList = false; }
-                        if (!inList) { html += '<ul>'; inList = true; listTag = 'ul'; }
-                        html += `<li>${renderInline(line.match(/^[-*] (.+)/)[1])}</li>`;
-                        continue;
-                    }
-                    if (line.trim() === '') {
-                        if (inList) { html += `</${listTag}>`; inList = false; }
-                        continue;
-                    }
-                    if (inList) { html += `</${listTag}>`; inList = false; }
-                    html += `<p>${renderInline(line)}</p>`;
-                }
-
-                if (inList) html += `</${listTag}>`;
-                renderedMd = html;
 
                 const hasDownload = safeLink && safeLink !== '#';
                 const downloadButton = hasDownload
@@ -764,6 +1095,10 @@
                     ${downloadButton}
                     <div class="desc-md-content">${renderedMd}</div>
                 `;
+
+                if (typeof mermaid !== 'undefined' && mermaidBlocks.length > 0) {
+                    mermaid.run({ nodes: [container.querySelector('.desc-md-content')] });
+                }
             } catch (e) {
                 console.error('Error loading description:', e);
                 container.innerHTML = '<div class="error-banner"><h2>Error</h2><p>No se pudo cargar la descripción.</p></div>';
@@ -771,13 +1106,14 @@
         }
 
         function closeDescription() {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('item');
+            window.history.replaceState({}, '', url);
+
             const overlay = document.getElementById('description-overlay');
-            overlay.style.animation = 'fadeOut 0.15s ease-out';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                overlay.style.animation = '';
-                document.body.classList.remove('no-scroll');
-            }, 150);
+            overlay.style.display = 'none';
+            document.getElementById('desc-container').innerHTML = '';
+            document.body.classList.remove('no-scroll');
         }
 
         async function handleDownload(e, enlace) {
