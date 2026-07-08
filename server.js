@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 80;
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -81,11 +81,53 @@ function getEncoding(acceptEncoding) {
  * Obtiene headers de cache basados en el tipo de archivo
  */
 function getCacheHeaders(ext, mtime) {
-  return {
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+  const isImage = ['.webp', '.png', '.jpg', '.jpeg', '.svg', '.ico'].includes(ext);
+  const isFont = ['.woff', '.woff2', '.ttf', '.eot'].includes(ext);
+  const isStatic = ['.css', '.js'].includes(ext);
+
+  const headers = {
+    'Last-Modified': mtime ? new Date(mtime).toUTCString() : undefined
   };
+
+  if (isImage || isFont) {
+    headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+    headers['Expires'] = new Date(Date.now() + 31536000000).toUTCString();
+  } else if (isStatic) {
+    headers['Cache-Control'] = 'public, max-age=604800';
+    headers['Expires'] = new Date(Date.now() + 604800000).toUTCString();
+  } else {
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    headers['Pragma'] = 'no-cache';
+    headers['Expires'] = '0';
+  }
+
+  return headers;
+}
+
+/**
+ * Sirve una página de error personalizada
+ */
+async function serveError(res, code, acceptEncoding) {
+  try {
+    const content = await fs.promises.readFile(path.join(__dirname, `${code}.html`));
+    const encoding = getEncoding(acceptEncoding);
+    if (encoding) {
+      res.writeHead(code, { 
+        'Content-Type': 'text/html',
+        'Content-Encoding': encoding.type,
+        ...getCacheHeaders('.html', Date.now())
+      });
+      const compressor = encoding.type === 'br' ? zlib.createBrotliCompress() : zlib.createGzip();
+      compressor.pipe(res);
+      compressor.end(content);
+    } else {
+      res.writeHead(code, { 'Content-Type': 'text/html', ...getCacheHeaders('.html', Date.now()) });
+      res.end(content);
+    }
+  } catch {
+    res.writeHead(code, { 'Content-Type': 'text/plain' });
+    res.end(`${code} ${require('http').STATUS_CODES[code] || 'Error'}`);
+  }
 }
 
 /**
@@ -132,35 +174,9 @@ async function serveFile(filePath, res, acceptEncoding) {
     }
   } catch (err) {
     if (err.code === 'ENOENT') {
-      try {
-        const content404 = await fs.promises.readFile(path.join(__dirname, '404.html'));
-        const encoding = getEncoding(acceptEncoding);
-        
-        if (encoding) {
-          res.writeHead(404, { 
-            'Content-Type': 'text/html',
-            'Content-Encoding': encoding.type,
-            ...getCacheHeaders('.html', Date.now())
-          });
-          const compressor = encoding.type === 'br' 
-            ? zlib.createBrotliCompress() 
-            : zlib.createGzip();
-          compressor.pipe(res);
-          compressor.end(content404);
-        } else {
-          res.writeHead(404, { 
-            'Content-Type': 'text/html',
-            ...getCacheHeaders('.html', Date.now())
-          });
-          res.end(content404);
-        }
-      } catch (err404) {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('404 Not Found');
-      }
+      await serveError(res, 404, acceptEncoding);
     } else {
-      res.writeHead(500);
-      res.end('500 Internal Server Error');
+      await serveError(res, 500, acceptEncoding);
     }
   }
 }
@@ -185,17 +201,29 @@ function setCookie(res, name, value, days = 365) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const acceptEncoding = req.headers['accept-encoding'] || '';
-  
-  // Log de requests para debug
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  
-  // Headers de seguridad básicos para local
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  
-  // Determinar la ruta del archivo
-  let urlPath = req.url.split('?')[0];
+  try {
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    
+    // Log de requests para debug
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    
+    // CORS Headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+    
+    // Headers de seguridad básicos para local
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    
+    // Determinar la ruta del archivo
+    let urlPath = req.url.split('?')[0];
   
   if (urlPath === '/') {
     urlPath = '/index.html';
@@ -218,27 +246,22 @@ const server = http.createServer(async (req, res) => {
   
   // Prevenir directory traversal
   if (!fullPath.startsWith(rootPath)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain' });
-    res.end('403 Forbidden');
+    await serveError(res, 403, acceptEncoding);
     return;
   }
   
    // Verificar que el archivo existe
    if (!fs.existsSync(fullPath)) {
-     try {
-       const content404 = fs.readFileSync(path.join(__dirname, '404.html'));
-       res.writeHead(404, { 'Content-Type': 'text/html' });
-       res.end(content404);
-     } catch (err404) {
-       res.writeHead(404, { 'Content-Type': 'text/plain' });
-       res.end('404 Not Found');
-     }
+     await serveError(res, 404, acceptEncoding);
      return;
    }
   
-  await serveFile(fullPath, res, acceptEncoding);
+   await serveFile(fullPath, res, acceptEncoding);
+  } catch (e) {
+    await serveError(res, 500, req.headers['accept-encoding'] || '');
+  }
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log('Foxinix - Puerto: 8080')
+  console.log('Foxinix - Puerto: 80')
 });

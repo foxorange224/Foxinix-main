@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex, follow">
+    <title>Foxinix | 400 - Solicitud incorrecta</title>
+    <meta name="description" content="La solicitud no pudo ser procesada debido a una sintaxis incorrecta.">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: sans-serif;
+    background: black;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+.error-code {
+    font-size: 5em;
+    font-weight: 800;
+    color: #d24500;
+    line-height: 1;
+    margin-bottom: 10px;
+}
+.error-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #d24500;
+    margin-bottom: 8px;
+}
+.error-message {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+}
+.current-url {
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.error-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.error-btn {
+    padding: 10px 18px;
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, border-color 0.2s;
+}
+.error-btn:hover {
+    background: #333;
+    border-color: #666;
+}
+.error-btn.primary {
+    background: #d24500;
+    border-color: #d24500;
+    color: white;
+}
+.error-btn.primary:hover {
+    background: #e65500;
+}
+</style>
+</head>
+<body>
+    <div class="error-code">400</div>
+    <h1 class="error-title">Solicitud incorrecta</h1>
+    <div class="current-url" id="currentUrl"><img src="/favicon.ico" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;"></div>
+    <p class="error-message">La solicitud no pudo ser procesada debido a una sintaxis incorrecta.</p>
+    <div class="error-actions">
+        <a href="/" class="error-btn primary"> Ir al Inicio</a>
+        <a href="javascript:history.back()" class="error-btn"> Volver Atrás</a>
+        <a href="https://github.com/foxorange224/Foxinix/issues" class="error-btn" target="_blank"> Reportar Problema</a>
+    </div>
+    <script>
+        const urlEl = document.getElementById('currentUrl');
+        if (urlEl) urlEl.innerHTML += ' ' + window.location.href;
+    </script>
+</body>
+</html>

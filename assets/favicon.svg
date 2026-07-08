@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+     width="200.000000pt" height="200.000000pt" viewBox="0 0 200.000000 200.000000"
+     preserveAspectRatio="xMidYMid meet">
+    <metadata>
+        Created by potrace 1.16, written by Peter Selinger 2001-2019
+    </metadata>
+    <defs>
+        <!-- Usamos tu grupo original completo como una máscara -->
+        <mask id="logo-mask">
+            <!-- El fondo blanco revela, el negro oculta. Al poner el fondo blanco, invertimos el negativo del potrace -->
+            <rect width="200" height="200" fill="white" />
+            <g transform="translate(0.000000,200.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none">
+                <path d="M0 1000 l0 -1000 1000 0 1000 0 0 1000 0 1000 -1000 0 -1000 0 0 -1000z m1005 330 c6 0 152 144 324 321 l314 320 26 -25 c19 -18 38 -26 64 -26 l37 0 0 -585 c0 -513 -2 -585 -15 -585 -8 0 -15 -6 -15 -14 0 -7 -154 -170 -341 -360 l-342 -347 -27 26 -27 26 -27 -22 -28 -22 -344 344 c-189 189 -344 350 -344 356 0 7 -7 13 -15 13 -13 0 -15 72 -15 585 l0 585 38 0 c28 0 45 7 62 25 l24 26 321 -321 c176 -176 325 -320 330 -320z"/>
+                <path d="M370 1314 c0 -374 2 -425 15 -420 8 3 126 80 261 172 l246 167 -254 254 c-139 139 -256 253 -260 253 -5 0 -8 -192 -8 -426z"/>
+                <path d="M1366 1491 c-137 -137 -246 -253 -242 -259 7 -12 470 -330 492 -339 12 -4 14 63 14 421 0 234 -3 426 -8 426 -4 0 -119 -112 -256 -249z"/>
+                <path d="M874 1053 c-317 -212 -434 -295 -434 -306 0 -7 126 -138 280 -292 l280 -280 280 280 c154 154 279 286 278 294 -2 10 -538 388 -554 391 0 0 -59 -39 -130 -87z"/>
+            </g>
+        </mask>
+    </defs>
+
+    <!-- Este rectángulo dibuja solo la silueta resultante usando tu color naranja deseado -->
+    <rect width="200" height="200" fill="#fe761e" mask="url(#logo-mask)" />
+</svg>
