@@ -1,4 +1,16 @@
         const DB_URL = 'https://db.foxinix.qzz.io';
+        const sourceIcons = {
+            'open': {
+                class: 'source-open',
+                title: 'Código Abierto',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M392.8 65.2C375.8 60.3 358.1 70.2 353.2 87.2L225.2 535.2C220.3 552.2 230.2 569.9 247.2 574.8C264.2 579.7 281.9 569.8 286.8 552.8L414.8 104.8C419.7 87.8 409.8 70.1 392.8 65.2zM457.4 201.3C444.9 213.8 444.9 234.1 457.4 246.6L530.8 320L457.4 393.4C444.9 405.9 444.9 426.2 457.4 438.7C469.9 451.2 490.2 451.2 502.7 438.7L598.7 342.7C611.2 330.2 611.2 309.9 598.7 297.4L502.7 201.4C490.2 188.9 469.9 188.9 457.4 201.4zM182.7 201.3C170.2 188.8 149.9 188.8 137.4 201.3L41.4 297.3C28.9 309.8 28.9 330.1 41.4 342.6L137.4 438.6C149.9 451.1 170.2 451.1 182.7 438.6C195.2 426.1 195.2 405.8 182.7 393.3L109.3 320L182.6 246.6C195.1 234.1 195.1 213.8 182.6 201.3z"/></svg>`
+            },
+            'close': {
+                class: 'source-close',
+                title: 'Código Cerrado/Propietario',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M256 160L256 224L384 224L384 160C384 124.7 355.3 96 320 96C284.7 96 256 124.7 256 160zM192 224L192 160C192 89.3 249.3 32 320 32C390.7 32 448 89.3 448 160L448 224C483.3 224 512 252.7 512 288L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 288C128 252.7 156.7 224 192 224z"/></svg>`
+            }
+        };
         let allData = {};
         let allNotifications = [];
         let currentCategory = '';
@@ -129,8 +141,32 @@
             }
         }
 
+        function updateFloatingButtons() {
+            const topBtn = document.getElementById('back-to-top');
+            const bottomBtn = document.getElementById('scroll-to-bottom');
+            const searchBtn = document.getElementById('scroll-to-search');
+
+            const hasScrollbar = document.documentElement.scrollHeight > window.innerHeight;
+            if (!hasScrollbar) {
+                if (topBtn) topBtn.classList.remove('visible');
+                if (bottomBtn) bottomBtn.classList.remove('visible');
+                if (searchBtn) searchBtn.classList.remove('visible');
+                return;
+            }
+            
+            if (topBtn && bottomBtn) {
+                const isScrolled = window.scrollY > 400;
+                topBtn.classList.toggle('visible', isScrolled);
+                bottomBtn.classList.toggle('visible', !isScrolled);
+            }
+            if (searchBtn) {
+                searchBtn.classList.toggle('visible', window.scrollY > 400);
+            }
+        }
+
         async function init() {
             const grid = document.getElementById('content-grid');
+
             grid.innerHTML = `
             <div id="catalog-loader" style="grid-column: 1/-1; text-align: center; padding: 10px 0;">
             <div class="spinner" style="margin-top: 5px;"></div>
@@ -142,9 +178,9 @@
             const loaderText = document.getElementById('loader-text');
             const timer = setInterval(() => {
                 const elapsed = (Date.now() - startTime) / 1000;
-                if (elapsed >= 8) {
+                if (elapsed >= 16) {
                     loaderText.innerText = 'Al parecer esto esta durando más de lo normal...';
-                } else if (elapsed >= 3) {
+                } else if (elapsed >= 6) {
                     loaderText.innerText = 'Sigue cargando, no te desesperes...';
                 }
             }, 1000);
@@ -167,6 +203,12 @@
 
                 const searchInput = document.getElementById('search-input');
                 const clearBtn = document.getElementById('clear-btn');
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        clearSearch();
+                    }
+                });
                 searchInput.addEventListener('input', function() {
                     _searchQuery = this.value;
                     clearBtn.style.display = this.value ? 'block' : 'none';
@@ -182,6 +224,7 @@
                         document.querySelector('.search-bar').classList.remove('compact');
                         if (currentCategory) renderCategory(currentCategory);
                     }
+                    updateFloatingButtons();
                     window.history.replaceState({}, '', url);
                 });
 
@@ -198,12 +241,13 @@
                     renderGlobalSearch(searchParam);
                 }
 
-                if (itemParam) {
-                    setTimeout(() => {
-                        openItemById(itemParam);
-                    }, 100);
-                }
-            } catch (e) {
+                    if (itemParam) {
+                        setTimeout(() => {
+                            openItemById(itemParam);
+                        }, 100);
+                    }
+                    updateFloatingButtons();
+                } catch (e) {
                 clearInterval(timer);
                 console.error('Error loading data:', e);
                 grid.innerHTML = '';
@@ -264,63 +308,111 @@
             if (targetCat) switchCategory(targetCat);
         };
 
-            function renderCategory(cat) {
-                const grid = document.getElementById('content-grid');
-                grid.innerHTML = '';
-
-                const items = allData[cat] || [];
-                const filtered = _searchQuery
-                ? items.filter(item =>
-                (item.name || '').toLowerCase().includes(_searchQuery.toLowerCase()) ||
-                (item.info || '').toLowerCase().includes(_searchQuery.toLowerCase()) ||
-                (item.badges || []).some(b => b.toLowerCase().includes(_searchQuery.toLowerCase()))
-                )
-                : items;
-
-                if (filtered.length === 0) {
-                    grid.innerHTML = `<div class="no-results">
-                    <div class="no-results-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M64 128C51.1 128 39.4 135.8 34.4 147.8C29.4 159.8 32.2 173.5 41.4 182.6L224 365.3L224 480C224 488.5 227.4 496.6 233.4 502.6L297.4 566.6C299.9 569.1 302.7 571.1 305.7 572.6C284.5 541.7 272.1 504.3 272.1 464C272.1 364.6 347.6 282.9 444.4 273L534.8 182.6C544 173.4 546.7 159.7 541.7 147.7C536.7 135.7 524.9 128 512 128L64 128zM464 608C543.5 608 608 543.5 608 464C608 384.5 543.5 320 464 320C384.5 320 320 384.5 320 464C320 543.5 384.5 608 464 608zM523.3 427.3L486.6 464L523.3 500.7C529.5 506.9 529.5 517.1 523.3 523.3C517.1 529.5 506.9 529.5 500.7 523.3L464 486.6L427.3 523.3C421.1 529.5 410.9 529.5 404.7 523.3C398.5 517.1 398.5 506.9 404.7 500.7L441.4 464L404.7 427.3C398.5 421.1 398.5 410.9 404.7 404.7C410.9 398.5 421.1 398.5 427.3 404.7L464 441.4L500.7 404.7C506.9 398.5 517.1 398.5 523.3 404.7C529.5 410.9 529.5 421.1 523.3 427.3z"/></svg>
-                    </div>
-                    <div>${_searchQuery ? 'Sin resultados para "' + escapeHtml(_searchQuery) + '"' : 'No hay elementos en esta categoría.'}</div>
-                    </div>`;
-                    document.getElementById('pagination').innerHTML = '';
-                    return;
-                }
-
-                _page = Math.min(_page, Math.ceil(filtered.length / _perPage) || 1);
-                const start = (_page - 1) * _perPage;
-                const pageItems = filtered.slice(start, start + _perPage);
-
-                pageItems.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.tabIndex = 0;
-                    card.role = 'button';
-                    card.setAttribute('aria-label', `Abrir ${item.name || ''}`);
-                    card.title = item.name || '';
-
-                    const badgesHtml = (item.badges || []).map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
-                    const iconUrl = `${DB_URL}/icons/${item.id}.webp`;
-
-                    card.innerHTML = `
-                    <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'"">
-                    <h3>${escapeHtml(item.name || '')}</h3>
-                    <div class="badges">${badgesHtml}</div>
-                    `;
-
-                    card.onclick = () => openDescription(item);
-                    card.onkeydown = (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            openDescription(item);
-                        }
-                    };
-                    grid.appendChild(card);
-                });
-
-                renderPagination(filtered.length);
+        function renderCategory(cat) {
+            const mainGrid = document.getElementById('content-grid');
+            
+            // Ensure we have a search container and category containers separate
+            let searchGrid = document.getElementById('search-results-grid');
+            if (!searchGrid) {
+                searchGrid = document.createElement('div');
+                searchGrid.id = 'search-results-grid';
+                searchGrid.className = 'category-grid grid-hidden';
+                mainGrid.appendChild(searchGrid);
             }
+
+            let catGrid = document.getElementById(`grid-${cat}`);
+            if (!catGrid) {
+                catGrid = document.createElement('div');
+                catGrid.id = `grid-${cat}`;
+                catGrid.className = 'category-grid grid-hidden';
+                mainGrid.appendChild(catGrid);
+                catGrid.dataset.page = '0'; // Track rendered page
+            }
+
+            // Hide all grids
+            document.querySelectorAll('.category-grid').forEach(g => g.classList.add('grid-hidden'));
+            
+            if (_searchQuery) {
+                searchGrid.classList.remove('grid-hidden');
+                renderGlobalSearch(_searchQuery);
+                return;
+            }
+
+            // If we are on the page already rendered, just show it and skip re-rendering
+            if (catGrid.dataset.page == _page) {
+                catGrid.classList.remove('grid-hidden');
+                renderPagination( (allData[cat] || []).length ); // Need total for pagination
+                updateFloatingButtons();
+                return;
+            }
+
+            catGrid.classList.remove('grid-hidden');
+            catGrid.dataset.page = _page;
+            catGrid.innerHTML = '';
+
+            const items = allData[cat] || [];
+            const filtered = _searchQuery
+            ? items.filter(item =>
+            (item.name || '').toLowerCase().includes(_searchQuery.toLowerCase()) ||
+            (item.info || '').toLowerCase().includes(_searchQuery.toLowerCase()) ||
+            (item.badges || []).some(b => b.toLowerCase().includes(_searchQuery.toLowerCase()))
+            )
+            : items;
+
+            if (filtered.length === 0) {
+                catGrid.innerHTML = `<div class="no-results">
+                <div class="no-results-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M64 128C51.1 128 39.4 135.8 34.4 147.8C29.4 159.8 32.2 173.5 41.4 182.6L224 365.3L224 480C224 488.5 227.4 496.6 233.4 502.6L297.4 566.6C299.9 569.1 302.7 571.1 305.7 572.6C284.5 541.7 272.1 504.3 272.1 464C272.1 364.6 347.6 282.9 444.4 273L534.8 182.6C544 173.4 546.7 159.7 541.7 147.7C536.7 135.7 524.9 128 512 128L64 128zM464 608C543.5 608 608 543.5 608 464C608 384.5 543.5 320 464 320C384.5 320 320 384.5 320 464C320 543.5 384.5 608 464 608zM523.3 427.3L486.6 464L523.3 500.7C529.5 506.9 529.5 517.1 523.3 523.3C517.1 529.5 506.9 529.5 500.7 523.3L464 486.6L427.3 523.3C421.1 529.5 410.9 529.5 404.7 523.3C398.5 517.1 398.5 506.9 404.7 500.7L441.4 464L404.7 427.3C398.5 421.1 398.5 410.9 404.7 404.7C410.9 398.5 421.1 398.5 427.3 404.7L464 441.4L500.7 404.7C506.9 398.5 517.1 398.5 523.3 404.7C529.5 410.9 529.5 421.1 523.3 427.3z"/></svg>
+                </div>
+                <div>${_searchQuery ? 'Sin resultados para "' + escapeHtml(_searchQuery) + '"' : 'No hay elementos en esta categoría.'}</div>
+                </div>`;
+                document.getElementById('pagination').innerHTML = '';
+                updateFloatingButtons();
+                return;
+            }
+
+            _page = Math.min(_page, Math.ceil(filtered.length / _perPage) || 1);
+            const start = (_page - 1) * _perPage;
+            const pageItems = filtered.slice(start, start + _perPage);
+
+            pageItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.tabIndex = 0;
+                card.role = 'button';
+                card.setAttribute('aria-label', `Abrir ${item.name || ''}`);
+                card.title = item.name || '';
+
+                const badgesHtml = (item.badges || []).map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
+                const iconUrl = `${DB_URL}/icons/${item.id}.webp`;
+
+                const sourceInfo = sourceIcons[item.source] || { class: '', svg: '', title: '' };
+                const sourceIndicator = sourceInfo.svg 
+                    ? `<div class="source-indicator ${sourceInfo.class}" title="${sourceInfo.title}">${sourceInfo.svg}</div>` 
+                    : '';
+
+                card.innerHTML = `
+                <div class="icon-wrapper">
+                    <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'"">
+                    ${sourceIndicator}
+                </div>
+                <h3>${escapeHtml(item.name || '')}</h3>
+                <div class="badges">${badgesHtml}</div>
+                `;
+
+                card.onclick = () => openDescription(item);
+                card.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openDescription(item);
+                    }
+                };
+                catGrid.appendChild(card);
+            });
+
+            renderPagination(filtered.length);
+            updateFloatingButtons();
+        }
 
             function filterCards() {
                 if (currentCategory) renderCategory(currentCategory);
@@ -348,7 +440,12 @@
             }
 
             function renderGlobalSearch(query) {
-                const grid = document.getElementById('content-grid');
+                // Hide all category grids first
+                document.querySelectorAll('.category-grid').forEach(g => g.classList.add('grid-hidden'));
+
+                const grid = document.getElementById('search-results-grid');
+                if (!grid) return;
+                grid.classList.remove('grid-hidden');
                 const q = query.toLowerCase();
                 const results = [];
 
@@ -369,6 +466,7 @@
                     <div>Sin resultados para "${escapeHtml(query)}"</div>
                     </div>`;
                     document.getElementById('pagination').innerHTML = '';
+                    updateFloatingButtons();
                     return;
                 }
 
@@ -393,8 +491,17 @@
                     r.matches.forEach(item => {
                         const iconUrl = `${DB_URL}/icons/${item.id}.webp`;
                         const badgesHtml = (item.badges || []).map(b => `<span class="badge">${escapeHtml(b)}</span>`).join('');
+                        
+                        const sourceInfo = sourceIcons[item.source] || { class: '', svg: '', title: '' };
+                        const sourceIndicator = sourceInfo.svg 
+                            ? `<div class="source-indicator ${sourceInfo.class}" title="${sourceInfo.title}">${sourceInfo.svg}</div>` 
+                            : '';
+
                         html += `<div class="card" tabindex="0" role="button" aria-label="Abrir ${escapeHtml(item.name || '')}" title="${escapeHtml(item.name || '')}" onclick="openItemById('${escapeHtml(item.id)}')">
-                        <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'"">
+                        <div class="icon-wrapper">
+                            <img src="${iconUrl}" alt="${escapeHtml(item.name || '')}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" fill="%23333"><rect width="84" height="84" rx="8"/><text x="42" y="48" text-anchor="middle" fill="%23666" font-size="28">?</text></svg>')}'"">
+                            ${sourceIndicator}
+                        </div>
                         <h3>${escapeHtml(item.name || '')}</h3>
                         <div class="badges">${badgesHtml}</div>
                         </div>`;
@@ -404,6 +511,7 @@
 
                 grid.innerHTML = html;
                 document.getElementById('pagination').innerHTML = '';
+                updateFloatingButtons();
             }
 
             let _mdCache = {};
@@ -429,6 +537,7 @@
 
                 document.body.classList.add('no-scroll');
                 overlay.style.display = 'block';
+                container.classList.add('pop-in');
                 container.innerHTML = '<div class="spinner"></div><p style="text-align:center;color:var(--muted-text);margin-top:10px;">Cargando contenido...</p>';
 
                 try {
@@ -447,6 +556,9 @@
 
                     if (!mdText && !item.info) {
                         container.innerHTML = '<div class="error-banner"><h2>No hay contenido</h2><p>Este elemento no tiene una descripción disponible.</p></div>';
+                        container.classList.remove('pop-in');
+                        void container.offsetWidth;
+                        container.classList.add('pop-in');
                         return;
                     }
 
@@ -497,6 +609,11 @@
                     renderedMd = marked.parse(processedMd, { breaks: true, gfm: true });
                     renderedMd = renderedMd.replace(/<!--BTN_(\d+)-->/g, (_, idx) => buttonHtmls[idx] || '');
                     renderedMd = renderedMd.replace(/<!--MERMAID_(\d+)-->/g, (_, idx) => `<div class="mermaid">${mermaidBlocks[idx] || ''}</div>`);
+                    renderedMd = renderedMd.replace(/src="(mds\/media\/[^"]+)"/g, (_, p) => `src="${DB_URL}/${p}"`);
+                    renderedMd = renderedMd.replace(/<p>((?:\s*<img[^>]*>(?:\s*<a[^>]*>)?(?:\s*<\/a>)?\s*)+)<\/p>/g, (_, content) => {
+                        const count = (content.match(/<img\s/g) || []).length;
+                        return count >= 2 ? `<div class="image-row">${content}</div>` : `<p>${content}</p>`;
+                    });
 
                     const hasDownload = safeLink && safeLink !== '#';
                     let btnLabel = 'Sitio oficial';
@@ -546,6 +663,28 @@
                          ? `<div class="desc-body">${safeInfo}</div>`
                          : '';
 
+                      const _reqSvgs = {
+                        os: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M128 96C92.7 96 64 124.7 64 160L64 416C64 451.3 92.7 480 128 480L272 480L256 528L184 528C170.7 528 160 538.7 160 552C160 565.3 170.7 576 184 576L456 576C469.3 576 480 565.3 480 552C480 538.7 469.3 528 456 528L384 528L368 480L512 480C547.3 480 576 451.3 576 416L576 160C576 124.7 547.3 96 512 96L128 96zM160 160L480 160C497.7 160 512 174.3 512 192L512 352C512 369.7 497.7 384 480 384L160 384C142.3 384 128 369.7 128 352L128 192C128 174.3 142.3 160 160 160z"/></svg>',
+                        cpu: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M240 88C240 74.7 229.3 64 216 64C202.7 64 192 74.7 192 88L192 128C156.7 128 128 156.7 128 192L88 192C74.7 192 64 202.7 64 216C64 229.3 74.7 240 88 240L128 240L128 296L88 296C74.7 296 64 306.7 64 320C64 333.3 74.7 344 88 344L128 344L128 400L88 400C74.7 400 64 410.7 64 424C64 437.3 74.7 448 88 448L128 448C128 483.3 156.7 512 192 512L192 552C192 565.3 202.7 576 216 576C229.3 576 240 565.3 240 552L240 512L296 512L296 552C296 565.3 306.7 576 320 576C333.3 576 344 565.3 344 552L344 512L400 512L400 552C400 565.3 410.7 576 424 576C437.3 576 448 565.3 448 552L448 512C483.3 512 512 483.3 512 448L552 448C565.3 448 576 437.3 576 424C576 410.7 565.3 400 552 400L512 400L512 344L552 344C565.3 344 576 333.3 576 320C576 306.7 565.3 296 552 296L512 296L512 240L552 240C565.3 240 576 229.3 576 216C576 202.7 565.3 192 552 192L512 192C512 156.7 483.3 128 448 128L448 88C448 74.7 437.3 64 424 64C410.7 64 400 74.7 400 88L400 128L344 128L344 88C344 74.7 333.3 64 320 64C306.7 64 296 74.7 296 88L296 128L240 128L240 88zM224 192L416 192C433.7 192 448 206.3 448 224L448 416C448 433.7 433.7 448 416 448L224 448C206.3 448 192 433.7 192 416L192 224C192 206.3 206.3 192 224 192zM240 240L240 400L400 400L400 240L240 240z"/></svg>',
+                        ram: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M128 128C92.7 128 64 156.7 64 192L64 199.4C64 206.2 68.4 212 74.1 215.7C87.3 224.3 96 239.1 96 256C96 272.9 87.3 287.7 74.1 296.3C68.4 300 64 305.8 64 312.6L64 368L576 368L576 312.6C576 305.8 571.6 300 565.9 296.3C552.7 287.7 544 272.9 544 256C544 239.1 552.7 224.3 565.9 215.7C571.6 212 576 206.2 576 199.4L576 192C576 156.7 547.3 128 512 128L128 128zM576 480L576 416L64 416L64 480C64 497.7 78.3 512 96 512L160 512L160 488C160 474.7 170.7 464 184 464C197.3 464 208 474.7 208 488L208 512L296 512L296 488C296 474.7 306.7 464 320 464C333.3 464 344 474.7 344 488L344 512L432 512L432 488C432 474.7 442.7 464 456 464C469.3 464 480 474.7 480 488L480 512L544 512C561.7 512 576 497.7 576 480zM224 224L224 288C224 305.7 209.7 320 192 320C174.3 320 160 305.7 160 288L160 224C160 206.3 174.3 192 192 192C209.7 192 224 206.3 224 224zM352 224L352 288C352 305.7 337.7 320 320 320C302.3 320 288 305.7 288 288L288 224C288 206.3 302.3 192 320 192C337.7 192 352 206.3 352 224zM480 224L480 288C480 305.7 465.7 320 448 320C430.3 320 416 305.7 416 288L416 224C416 206.3 430.3 192 448 192C465.7 192 480 206.3 480 224z"/></svg>',
+                        gpu: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M512 160L512 416L128 416L128 160L512 160zM128 96C92.7 96 64 124.7 64 160L64 416C64 451.3 92.7 480 128 480L272 480L256 528L184 528C170.7 528 160 538.7 160 552C160 565.3 170.7 576 184 576L456 576C469.3 576 480 565.3 480 552C480 538.7 469.3 528 456 528L384 528L368 480L512 480C547.3 480 576 451.3 576 416L576 160C576 124.7 547.3 96 512 96L128 96z"/></svg>',
+                        spc: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="currentColor" d="M160 96C124.7 96 96 124.7 96 160L96 324.1C114.1 311.4 136.2 304 160 304L480 304C503.8 304 525.9 311.4 544 324.1L544 160C544 124.7 515.3 96 480 96L160 96zM544 416C544 380.7 515.3 352 480 352L160 352C124.7 352 96 380.7 96 416L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 416zM320 448C320 430.3 334.3 416 352 416C369.7 416 384 430.3 384 448C384 465.7 369.7 480 352 480C334.3 480 320 465.7 320 448zM448 416C465.7 416 480 430.3 480 448C480 465.7 465.7 480 448 480C430.3 480 416 465.7 416 448C416 430.3 430.3 416 448 416z"/></svg>'
+                      };
+                      const _reqLabels = { os: 'Sistema', cpu: 'Procesador', ram: 'RAM', gpu: 'Gráficos', spc: 'Disco' };
+                      const reqSection = item.minRequirements ? `
+                        <div class="req-section">
+                          <div class="req-title">Requisitos Mínimos</div>
+                          <div class="req-grid">
+                            ${Object.entries(item.minRequirements).map(([k, v]) => `
+                              <div class="req-item">
+                                <span class="req-icon">${_reqSvgs[k] || ''}</span>
+                                <span class="req-label">${_reqLabels[k] || k}</span>
+                                <span class="req-value">${escapeHtml(v)}</span>
+                              </div>
+                            `).join('')}
+                          </div>
+                        </div>
+                      ` : '';
 
                      container.innerHTML = `
                      <div class="desc-header">
@@ -556,10 +695,13 @@
                          </div>
                      </div>
                      ${infoSection}
+                     ${reqSection}
                      ${downloadButton}
                      <div class="desc-md-content">${renderedMd}</div>
                      `;
-
+                    container.classList.remove('pop-in');
+                    void container.offsetWidth;
+                    container.classList.add('pop-in');
 
                     if (mermaidBlocks.length > 0) {
                         if (typeof mermaid === 'undefined') {
@@ -571,6 +713,9 @@
                 } catch (e) {
                     console.error('Error loading description:', e);
                     container.innerHTML = '<div class="error-banner"><h2>Error</h2><p>No se pudo cargar la descripción.</p></div>';
+                    container.classList.remove('pop-in');
+                    void container.offsetWidth;
+                    container.classList.add('pop-in');
                 }
             }
 
@@ -580,9 +725,15 @@
                 window.history.replaceState({}, '', url);
 
                 const overlay = document.getElementById('description-overlay');
-                overlay.style.display = 'none';
-                document.getElementById('desc-container').innerHTML = '';
-                document.body.classList.remove('no-scroll');
+                const container = document.getElementById('desc-container');
+                container.classList.remove('pop-in');
+                container.classList.add('pop-out');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    container.innerHTML = '';
+                    container.classList.remove('pop-out');
+                    document.body.classList.remove('no-scroll');
+                }, 150);
             }
 
             async function handleDownload(e, enlace) {
@@ -633,6 +784,7 @@
                             markAsSeen(notif.id);
                         }, index * 3000);
                     });
+                    updateNotificationBadge();
                 } catch (e) {
                     console.error('Error loading notifications:', e);
                 }
@@ -641,6 +793,18 @@
             function getActiveNotifications() {
                 const deletedNotifs = JSON.parse(localStorage.getItem('deleted_notifications') || '[]');
                 return allNotifications.filter(n => !deletedNotifs.includes(n.id));
+            }
+
+            function updateNotificationBadge() {
+                const badge = document.getElementById('notif-badge');
+                if (!badge) return;
+                const count = getActiveNotifications().length;
+                if (count === 0) {
+                    badge.style.display = 'none';
+                } else {
+                    badge.style.display = 'flex';
+                    badge.textContent = count > 9 ? '+9' : count;
+                }
             }
 
             function markAsSeen(id) {
@@ -667,18 +831,32 @@
 
             function openNotificationsModal() {
                 const modal = document.getElementById('notifications-modal');
+                const content = modal.querySelector('.notifications-modal-content');
                 const list = document.getElementById('notif-list');
                 modal.style.display = 'flex';
+                content.classList.remove('pop-in');
+                void content.offsetWidth;
+                content.classList.add('pop-in');
                 list.innerHTML = '';
 
                 const activeNotifs = getActiveNotifications();
 
-                if (activeNotifs.length === 0) {
-                    list.innerHTML = '<p style="text-align:center;color:#666;">No hay notificaciones.</p>';
-                    return;
-                }
+            const clearBtn = document.getElementById('clear-all-btn');
 
-                activeNotifs.forEach(notif => {
+            if (activeNotifs.length === 0) {
+                clearBtn.disabled = true;
+                list.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 20px;color:#666;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="64" height="64" style="color:#4CAF50;"><path fill="currentColor" d="M320 576C178.6 576 64 461.4 64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576zM438 209.7C427.3 201.9 412.3 204.3 404.5 215L285.1 379.2L233 327.1C223.6 317.7 208.4 317.7 199.1 327.1C189.8 336.5 189.7 351.7 199.1 361L271.1 433C276.1 438 282.9 440.5 289.9 440C296.9 439.5 303.3 435.9 307.4 430.2L443.3 243.2C451.1 232.5 448.7 217.5 438 209.7z"/></svg>
+                        <span style="font-size:16px;font-weight:500;text-align:center;">¡Estas al dia! No hay nada aqui.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            clearBtn.disabled = false;
+
+            activeNotifs.forEach(notif => {
                     const item = document.createElement('div');
                     item.className = 'notif-item';
                     item.innerHTML = `
@@ -692,7 +870,14 @@
             }
 
             function closeNotificationsModal() {
-                document.getElementById('notifications-modal').style.display = 'none';
+                const modal = document.getElementById('notifications-modal');
+                const content = modal.querySelector('.notifications-modal-content');
+                content.classList.remove('pop-in');
+                content.classList.add('pop-out');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    content.classList.remove('pop-out');
+                }, 150);
             }
 
             function deleteNotification(id) {
@@ -702,18 +887,19 @@
                     localStorage.setItem('deleted_notifications', JSON.stringify(deletedNotifs));
                 }
                 openNotificationsModal();
+                updateNotificationBadge();
             }
 
             function clearAllNotifications() {
                 const allIds = allNotifications.map(n => n.id);
                 localStorage.setItem('deleted_notifications', JSON.stringify(allIds));
                 openNotificationsModal();
+                updateNotificationBadge();
             }
 
-            window.addEventListener('scroll', () => {
-                document.getElementById('back-to-top').classList.toggle('visible', window.scrollY > 400);
-                document.getElementById('scroll-to-search').classList.toggle('visible', window.scrollY > 400);
-            }, { passive: true });
+            window.addEventListener('scroll', updateFloatingButtons, { passive: true });
+
+
 
             document.addEventListener('DOMContentLoaded', init);
 
