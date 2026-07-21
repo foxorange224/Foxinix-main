@@ -17,6 +17,8 @@
         let _searchQuery = '';
         let _page = 1;
         const _perPage = 48;
+        let _currentOpenItem = null;
+        let _currentOpenCat = '';
 
         const _p = ['X9f2', 'K7wQ', 'M5pZ', 'V2tRt', 'XyZ99'];
 
@@ -299,6 +301,10 @@
             document.getElementById('search-input').value = '';
             _searchQuery = '';
             renderCategory(cat);
+            setTimeout(() => {
+                const firstCard = document.querySelector('.category-grid:not(.grid-hidden) .card');
+                if (firstCard) firstCard.focus();
+            }, 50);
         }
 
         window.onhashchange = () => {
@@ -535,6 +541,14 @@
                 url.searchParams.set('item', item.id);
                 window.history.replaceState({}, '', url);
 
+                _currentOpenItem = item;
+                for (const _cat of Object.keys(allData)) {
+                    if (allData[_cat].includes(item)) {
+                        _currentOpenCat = _cat;
+                        break;
+                    }
+                }
+
                 document.body.classList.add('no-scroll');
                 overlay.style.display = 'block';
                 container.classList.add('pop-in');
@@ -720,6 +734,8 @@
             }
 
             function closeDescription() {
+                _currentOpenItem = null;
+                _currentOpenCat = '';
                 const url = new URL(window.location.href);
                 url.searchParams.delete('item');
                 window.history.replaceState({}, '', url);
@@ -899,7 +915,98 @@
 
             window.addEventListener('scroll', updateFloatingButtons, { passive: true });
 
+            function _getVisibleGrid() {
+                return document.querySelector('.category-grid:not(.grid-hidden)') ||
+                       document.getElementById('search-results-grid');
+            }
 
+            function _navigateCard(direction) {
+                const grid = _getVisibleGrid();
+                if (!grid) return;
+                const cards = grid.querySelectorAll('.card');
+                if (cards.length === 0) return;
+                const active = document.activeElement;
+                let idx = Array.from(cards).indexOf(active);
+                if (idx === -1) { cards[0].focus(); return; }
+                if (direction === 'up' || direction === 'down') {
+                    const gridStyle = getComputedStyle(grid);
+                    const cols = gridStyle.gridTemplateColumns.split(' ').length;
+                    if (direction === 'up') {
+                        idx = Math.max(0, idx - cols);
+                    } else {
+                        idx = Math.min(cards.length - 1, idx + cols);
+                    }
+                } else if (direction === 'left') {
+                    idx = Math.max(0, idx - 1);
+                } else if (direction === 'right') {
+                    idx = Math.min(cards.length - 1, idx + 1);
+                }
+                cards[idx].focus();
+            }
+
+            document.addEventListener('keydown', function(e) {
+                const overlay = document.getElementById('description-overlay');
+                const notifModal = document.getElementById('notifications-modal');
+                const searchInput = document.getElementById('search-input');
+                const isDescOpen = overlay && overlay.style.display === 'block';
+                const isNotifOpen = notifModal && notifModal.style.display === 'flex';
+                const isSearchFocused = document.activeElement === searchInput;
+
+                if (e.key === 'Escape') {
+                    if (isDescOpen) { e.preventDefault(); closeDescription(); return; }
+                    if (isNotifOpen) { e.preventDefault(); closeNotificationsModal(); return; }
+                    if (isSearchFocused) { e.preventDefault(); clearSearch(); return; }
+                }
+
+                if (isSearchFocused) return;
+
+                if (isDescOpen) {
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        const cat = _currentOpenCat || currentCategory;
+                        const items = allData[cat];
+                        if (!items || items.length === 0) return;
+                        const idx = items.indexOf(_currentOpenItem);
+                        if (idx === -1) return;
+                        const newIdx = e.key === 'ArrowLeft'
+                            ? (idx - 1 + items.length) % items.length
+                            : (idx + 1) % items.length;
+                        openDescription(items[newIdx]);
+                    }
+                    return;
+                }
+
+                if (isNotifOpen) return;
+
+                if (e.key === '/') { e.preventDefault(); searchInput.focus(); return; }
+
+                const categories = Object.keys(allData);
+                const cardFocused = document.activeElement && document.activeElement.closest('.card');
+                const num = parseInt(e.key);
+
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    if (cardFocused) {
+                        _navigateCard(e.key === 'ArrowLeft' ? 'left' : 'right');
+                    } else {
+                        const idx = categories.indexOf(currentCategory);
+                        if (idx === -1) return;
+                        const newIdx = e.key === 'ArrowLeft'
+                            ? (idx - 1 + categories.length) % categories.length
+                            : (idx + 1) % categories.length;
+                        switchCategory(categories[newIdx]);
+                    }
+                    return;
+                }
+
+                if (e.key === 'ArrowUp') { e.preventDefault(); _navigateCard('up'); return; }
+                if (e.key === 'ArrowDown') { e.preventDefault(); _navigateCard('down'); return; }
+
+                if (num >= 1 && num <= categories.length) {
+                    e.preventDefault();
+                    switchCategory(categories[num - 1]);
+                }
+            });
 
             document.addEventListener('DOMContentLoaded', init);
 
