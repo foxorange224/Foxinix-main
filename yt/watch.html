@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reproductor YouTube - Foxinix</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      transition: background-image 0.5s ease-in-out;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+    }
+
+    .watch-nav {
+      width: 100%;
+      max-width: 900px;
+      padding: 15px 20px 0;
+      box-sizing: border-box;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #aaa;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #fe751f;
+    }
+
+    .youtube-player {
+      width: 90%;
+      max-width: 900px;
+      margin: 1rem auto 2rem;
+      padding: 3px;
+      background: #000000;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #1a1a1a;
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .loader {
+      margin: 40px auto;
+      width: 36px;
+      height: 36px;
+      border: 3px solid #333;
+      border-top: 3px solid #fe751f;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      color: #ff4d4d;
+      padding: 2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="watch-nav">
+    <a href="/yt" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" width="16" height="16"><path d="M182.6 137.3C170.1 124.8 149.8 124.8 137.3 137.3L9.4 265.4C3.4 271.4 0 279.5 0 288s3.4 16.6 9.4 22.6l128 128c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 320H544c17.7 0 32-14.3 32-32s-14.3-32-32-32H109.3l73.4-73.4c12.5-12.5 12.5-32.7 0-45.3z"/></svg>
+      Volver
+    </a>
+  </div>
+
+  <div class="youtube-player" id="player-card">
+    <div id="video-content" style="width: 100%;">
+      <div class="loader" id="loader"></div>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get('v');
+    const startTime = urlParams.get('t');
+
+    const container = document.getElementById('video-content');
+    const loader = document.getElementById('loader');
+
+    function parseSeconds(timeStr) {
+      if (!timeStr) return null;
+      if (!timeStr.includes(':')) return parseInt(timeStr, 10);
+      
+      const parts = timeStr.split(':').map(p => parseInt(p, 10) || 0);
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return null;
+    }
+
+    function setBackgroundFallback(id) {
+      const bg = new Image();
+      bg.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+      bg.onload = () => {
+        document.body.style.backgroundImage = `url('${bg.src}')`;
+      };
+      bg.onerror = () => {
+        document.body.style.backgroundImage = `url('https://img.youtube.com/vi/${id}/hqdefault.jpg')`;
+      };
+    }
+
+    if (videoId) {
+      setBackgroundFallback(videoId);
+
+      const seconds = parseSeconds(startTime);
+      const embedUrl = `https://www.youtube.com/embed/${videoId}${seconds ? `?start=${seconds}` : ''}`;
+
+      fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.title) {
+            document.title = `${data.title} - Foxinix YT`;
+          }
+        })
+        .catch(err => console.error('Error fetching video title:', err));
+
+      loader.style.display = 'block';
+
+      container.innerHTML = `
+        <div class="video-container">
+          <iframe
+            src="${embedUrl}"
+            title="Reproductor de YouTube"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            onload="document.getElementById('loader').style.display='none'">
+          </iframe>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="error-banner">
+          <i style="display: flex; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="84" height="84"><path fill="currentColor" d="M320 64C334.7 64 348.2 72.1 355.2 85L571.2 485C577.9 497.4 577.6 512.4 570.4 524.5C563.2 536.6 550.1 544 536 544L104 544C89.9 544 76.8 536.6 69.6 524.5C62.4 512.4 62.1 497.4 68.8 485L284.8 85C291.8 72.1 305.3 64 320 64zM320 416C302.3 416 288 430.3 288 448C288 465.7 302.3 480 320 480C337.7 480 352 465.7 352 448C352 430.3 337.7 416 320 416zM320 224C301.8 224 287.3 239.5 288.6 257.7L296 361.7C296.9 374.2 307.4 384 319.9 384C332.5 384 342.9 374.3 343.8 361.7L351.2 257.7C352.5 239.5 338.1 224 319.8 224z"/></svg>
+          </i>
+          <h2>No se proporcionó el ID del video</h2>
+          <p>Para ver un video, usa: <code>?v=[id del video]</code></p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

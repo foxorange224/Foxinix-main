@@ -10,152 +10,138 @@
     <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-    
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #121214;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            justify-content: center;
+            align-items: center;
+        }
 
-body {
-    font-family: sans-serif;
-    background: black;
-    color: white;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-}
-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 40px;
-    width: 100%;
-    max-width: 800px;
-}
-header a {
-    text-decoration: none;
-    color: white;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-header h1 { margin: 0; font-size: inherit; display: inline; }
-.container {
-    max-width: 800px;
-    width: 100%;
-}
-h2 {
-    color: #d24500;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    text-align: center;
-}
-p {
-    color: #ccc;
-    font-size: 1rem;
-    line-height: 1.7;
-    margin-bottom: 16px;
-    text-align: center;
-}
-.section {
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 20px;
-}
-.section h3 {
-    color: #d24500;
-    font-size: 1.1rem;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.section ul {
-    list-style: none;
-    padding: 0;
-}
-.section li {
-    color: #ccc;
-    padding: 8px 0;
-    border-bottom: 1px solid #222;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.section li:last-child { border-bottom: none; }
-.section li i { color: #d24500; width: 20px; text-align: center; }
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: #d24500;
-    text-decoration: none;
-    font-weight: 600;
-    margin-top: 20px;
-    transition: opacity 0.2s;
-}
-.back-link:hover { opacity: 0.8; }
-</style>
+        .desc-about {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: #000000;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .desc-about-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 12px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .desc-about h2 {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .desc-about h2::after {
+            content: '';
+            display: block;
+            width: 50%;
+            height: 4px;
+            background: #fe751f;
+            border-radius: 2px;
+            margin: 0.5rem auto 0 auto;
+        }
+
+        .desc-about p {
+            color: #b3b3b3;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0 0 1.5rem 0;
+            width: 100%;
+        }
+
+        .about-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .about-links a {
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .about-links a:hover {
+            color: #fe751f;
+        }
+
+        .about-links span {
+            color: #444;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 0.8rem 1.5rem;
+            background-color: #fe751f;
+            color: #000000;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box; /* Evita que el padding deforme el ancho fijo */
+        }
+
+        .btn-back svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+    </style>
 </head>
 <body>
-<a href="/" class="back-link"> Volver al inicio</a>
-    <div class="container">
+
+    <div class="desc-about">
+        <img src="/assets/icon.webp" alt="Foxinix Logo" class="desc-about-logo">
+
         <h2>Acerca de Foxinix</h2>
-        <p>Foxinix es un portal de descargas que ofrece una amplia colección de software, sistemas operativos, juegos, aplicaciones Android y contenido adicional. Todo organizado por categorías y disponible para descarga directa.</p>
 
-        <div class="section">
-            <h3> Programas</h3>
-            <ul>
-                <li> Software de escritorio y utilidades</li>
-                <li> Herramientas de productividad y desarrollo</li>
-                <li> Editores multimedia y diseño</li>
-                <li> Navegadores, seguridad y más</li>
-            </ul>
+        <p>Foxinix es un portal de descargas que ofrece una amplia colección de software, sistemas operativos, juegos, aplicaciones Android y contenido adicional. Todo organizado por categorías y disponible para descarga directa y sin anuncios.</p>
+
+        <div class="about-links">
+            <a href="/about/policy">Política de Privacidad</a>
+            <span>|</span>
+            <a href="/about/terms">Términos de Uso</a>
         </div>
 
-        <div class="section">
-            <h3> Sistemas</h3>
-            <ul>
-                <li> Sistemas operativos Windows y Linux</li>
-                <li> Distribuciones optimizadas</li>
-                <li> Herramientas de sistema y rescate</li>
-                <li> Drivers y actualizaciones</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h3> Juegos</h3>
-            <ul>
-                <li> Títulos clásicos y modernos para PC</li>
-                <li> Juegos indie y AAA</li>
-                <li> Emuladores y ROMs</li>
-                <li> Juegos ligeros para hardware antiguo</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h3> APKs</h3>
-            <ul>
-                <li> Aplicaciones Android en formato APK</li>
-                <li> Juegos móviles y utilidades</li>
-                <li> Apps sin anuncios y modificadas</li>
-                <li> Emuladores y herramientas</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h3> Extras</h3>
-            <ul>
-                <li> Temas, fondos de pantalla e iconos</li>
-                <li> Recursos gráficos y plantillas</li>
-                <li> Optimizaciones y personalización</li>
-                <li> Contenido adicional variado</li>
-            </ul>
-        </div>
-
-        <p style="color:#666;font-size:0.85rem;">Foxinix — Tu portal de descargas confiable.</p>
+        <a href="/" class="btn-back">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                <path fill="currentColor" d="M73.4 297.4C60.9 309.9 60.9 330.2 73.4 342.7L233.4 502.7C245.9 515.2 266.2 515.2 278.7 502.7C291.2 490.2 291.2 469.9 278.7 457.4L173.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L173.3 288L278.7 182.6C291.2 170.1 291.2 149.8 278.7 137.3C266.2 124.8 245.9 124.8 233.4 137.3L73.4 297.3z"/>
+            </svg>
+            <span>Volver a Foxinix</span>
+        </a>
     </div>
+
 </body>
 </html>
