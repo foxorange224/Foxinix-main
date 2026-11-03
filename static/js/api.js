@@ -253,10 +253,10 @@ export function refreshTokens() {
       try {
         /* W30e: si hay refresh legado en memoria va en el body; si no,
            el server usa su cookie HttpOnly (credentials lo incluye). */
-        res = await fetch('/auth/refresh', {
+        res = await fetch(API_BASE + '/auth/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
+          credentials: 'include',
           body: JSON.stringify({ refresh: session.refresh || '' }),
         });
       } catch (e) {
@@ -568,8 +568,8 @@ export function logout() {
      el body porque sin cookie no hay otra forma de identificarlo.
      Fire-and-forget: si no hay red el cierre local igual procede. */
   try {
-    fetch('/auth/logout', {
-      method: 'POST', credentials: 'same-origin',
+    fetch(API_BASE + '/auth/logout', {
+      method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: session.refresh || '' }),
     }).catch(function () {});
