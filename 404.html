@@ -3,67 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página no encontrada | Foxinix Chat</title>
-    <meta name="description" content="La página que buscas no existe. Vuelve a la portada de Foxinix Chat.">
+    <title>Foxinix Chat</title>
     <meta name="theme-color" content="#0d0d10">
     <meta name="robots" content="noindex, follow">
-    <link rel="icon" type="image/svg+xml" href="assets/chat/icon.svg">
-    <link rel="icon" href="assets/chat/favicon.ico" sizes="any">
-    <link rel="apple-touch-icon" href="assets/chat/apple-touch-icon.png">
-    <link rel="stylesheet" href="styles.css?v=20261020b">
+    <link rel="icon" type="image/svg+xml" href="/assets/chat/icon.svg">
+    <link rel="apple-touch-icon" href="/assets/chat/apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css?v=20261020b">
 </head>
-<body id="top">
-    <a class="skip-link" href="#contenido">Saltar al contenido</a>
-
-    <header class="site-header">
-        <div class="wrap header-inner">
-            <a class="brand" href="/" aria-label="Foxinix, inicio">
-                <img src="assets/chat/logo.svg" alt="Foxinix" width="500" height="200">
-            </a>
-
-            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-principal">
-                <span class="nav-toggle-bar"></span>
-                <span class="nav-toggle-bar"></span>
-                <span class="nav-toggle-bar"></span>
-                <span class="sr-only">Abrir menú</span>
-            </button>
-
-            <nav class="site-nav" id="nav-principal" aria-label="Navegación principal">
-                <a href="/#funciones">Funciones</a>
-                <a href="/#privacidad">Privacidad</a>
-                <a href="/#como-funciona">Cómo funciona</a>
-                <a class="btn btn-small btn-primary" href="https://chat.foxinix.qzz.io/">
-                    Abrir chat
-                    <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="legal-page" id="contenido">
-        <div class="wrap">
-            <article class="legal-card">
-                <p class="eyebrow">Error 404</p>
-                <h1>Esta página no existe.</h1>
-                <p>Puede que el enlace haya cambiado o que la página se haya movido. La portada de Foxinix Chat sigue aquí.</p>
-                <p>
-                    <a class="btn btn-primary" href="/">
-                        Volver a la portada
-                        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </a>
-                </p>
-                <p>Si buscabas el chat, puedes <a href="https://chat.foxinix.qzz.io/">abrir Foxinix Chat</a> directamente.</p>
-            </article>
-        </div>
-    </main>
-
-    <footer class="site-footer">
-        <div class="wrap footer-bottom">
-            <span>© <span data-year>2026</span> Foxinix. Todos los derechos reservados.</span>
-            <span><a href="privacidad.html">Privacidad</a> · <a href="terminos.html">Términos</a></span>
-        </div>
-    </footer>
-
-    <script src="app.js?v=20261020b"></script>
+<body>
+    <script>
+      /* W80: GitHub Pages sirve este 404 para cualquier ruta que no exista.
+         Como la SPA vive en /, /login, /register, /app y usa History API,
+         redirigimos a la ruta base correspondiente para que Vue maneje el
+         routing interno. */
+      (function () {
+        var path = window.location.pathname;
+        var target = '/';
+        if (path.indexOf('/app/') === 0 || path === '/app') target = '/app/';
+        else if (path.indexOf('/login') === 0) target = '/login/';
+        else if (path.indexOf('/register') === 0) target = '/register/';
+        window.location.replace(target + window.location.search + '#' + path.slice(1));
+      })();
+    </script>
 </body>
 </html>
