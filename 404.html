@@ -8,20 +8,22 @@
     <meta name="robots" content="noindex, follow">
     <link rel="icon" type="image/svg+xml" href="/assets/chat/icon.svg">
     <link rel="apple-touch-icon" href="/assets/chat/apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css?v=20261020b">
 </head>
 <body>
     <script>
       /* W80: GitHub Pages sirve este 404 para cualquier ruta que no exista.
-         Como la SPA vive en /, /login, /register, /app y usa History API,
-         redirigimos a la ruta base correspondiente para que Vue maneje el
-         routing interno. */
+         Redirige a la ruta correspondiente de la SPA para que Vue maneje
+         el routing interno. */
       (function () {
         var path = window.location.pathname;
         var target = '/';
-        if (path.indexOf('/app/') === 0 || path === '/app') target = '/app/';
-        else if (path.indexOf('/login') === 0) target = '/login/';
-        else if (path.indexOf('/register') === 0) target = '/register/';
+
+        if (path === '/app' || path.indexOf('/app/') === 0) target = '/app/';
+        else if (path === '/login' || path.indexOf('/login/') === 0) target = '/login/';
+        else if (path === '/register' || path.indexOf('/register/') === 0) target = '/register/';
+        else if (path === '/registro' || path.indexOf('/registro/') === 0) target = '/register/';
+        else if (path === '/entrar' || path.indexOf('/entrar/') === 0) target = '/app/';
+
         window.location.replace(target + window.location.search + '#' + path.slice(1));
       })();
     </script>
