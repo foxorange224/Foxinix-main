@@ -57,7 +57,7 @@ export const store = reactive({
     } catch (e) { return []; }
   })(),
   /* W61: biblioteca personal de GIFs/stickers subidos (máx. 10 de cada
-     tipo). Los carga /api/assets al abrir el selector. */
+     tipo). Los carga /assets al abrir el selector. */
   userAssets: { gifs: [], stickers: [] },
   userAssetsLoaded: false,
   pinsRev: 0,             // W28c: gatillo para refrescar los fijados abiertos

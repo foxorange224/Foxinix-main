@@ -133,7 +133,7 @@ function connect() {
   }
   store.ws = 'connecting';
   /* W80: el WebSocket va a api.foxinix.qzz.io vía cloudflared tunnel. */
-  const url = API_BASE.replace(/^https:/i, 'wss:') + '/api/ws';
+  const url = API_BASE.replace(/^https:/i, 'wss:') + '/ws';
   let sock;
   try {
     /* W14: el token viaja como subprotocolo (2.º valor), no en la URL,

@@ -42,7 +42,7 @@ export const LoginView = {
       }
       busy.value = true;
       try {
-        const r = await api('POST', '/api/auth/login', {
+        const r = await api('POST', '/auth/login', {
           identifier: identifier.value,
           password: password.value,
         });
@@ -140,7 +140,7 @@ export const RegisterView = {
       if (err.value) return;
       busy.value = true;
       try {
-        const r = await api('POST', '/api/auth/register', {
+        const r = await api('POST', '/auth/register', {
           email: email.value.trim(),
           username: username.value,
           password: password.value,
@@ -294,7 +294,7 @@ export const ProfileView = {
           const up = await uploadMedia(file.value);
           body.avatar_media_id = up.id;
         }
-        const r = await api('PUT', '/api/auth/profile', body, { retry401: true });
+        const r = await api('PUT', '/auth/profile', body, { retry401: true });
         if (r.user) { session.user = r.user; store.user = r.user; saveSession(); }
         go('verify');
       } catch (e) {
@@ -390,7 +390,7 @@ export const VerifyView = {
       err.value = '';
       busy.value = true;
       try {
-        const r = await api('POST', '/api/auth/verify', { code: code.value });
+        const r = await api('POST', '/auth/verify', { code: code.value });
         if (r.tokens) applyAuth({ tokens: r.tokens, user: r.user });
         await bootstrap();
       } catch (e) {
@@ -414,7 +414,7 @@ export const VerifyView = {
       err.value = '';
       busy.value = true;
       try {
-        const r = await api('POST', '/api/auth/resend', { purpose: 'verify' });
+        const r = await api('POST', '/auth/resend', { purpose: 'verify' });
         cd.value = Number(r.resend_after || 60);
         attempts.value = r.attempts_left != null ? r.attempts_left : attempts.value;
         startTimer();
@@ -498,7 +498,7 @@ export const ForgotView = {
       busy.value = true;
       try {
         lastIdentifier = identifier.value;
-        await api('POST', '/api/auth/forgot', { identifier: identifier.value });
+        await api('POST', '/auth/forgot', { identifier: identifier.value });
         // El endpoint responde igual si la cuenta no existe. Si hay cooldown
         // (retry_after > 0) el código anterior sigue vigente: se puede usar.
         go('reset');
@@ -559,7 +559,7 @@ export const ResetView = {
       if (password.value !== confirm.value) { err.value = 'Las contraseñas no coinciden'; return; }
       busy.value = true;
       try {
-        const r = await api('POST', '/api/auth/reset', {
+        const r = await api('POST', '/auth/reset', {
           identifier: identifier.value,
           code: code.value.replace(/\D/g, ''),
           password: password.value,

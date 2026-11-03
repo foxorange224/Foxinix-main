@@ -253,7 +253,7 @@ export function refreshTokens() {
       try {
         /* W30e: si hay refresh legado en memoria va en el body; si no,
            el server usa su cookie HttpOnly (credentials lo incluye). */
-        res = await fetch('/api/auth/refresh', {
+        res = await fetch('/auth/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
@@ -333,7 +333,7 @@ async function isToken401(res) {
   }
 }
 
-/** api('GET', '/api/...', body?, {retry401}) → JSON | null. Lanza ApiError.
+/** api('GET', '/...', body?, {retry401}) → JSON | null. Lanza ApiError.
     Por defecto, un 401 de token refresca el access y reintenta una vez.
     Antes era opt-in y casi ninguna llamada lo activaba: al vencer el access
     de 3 h, enviar/abrir un chat mostraba el 401 crudo ("Sesión expirada…")
@@ -393,7 +393,7 @@ export async function uploadChatAvatar(chatId, file, _retried) {
   fd.append('file', file);
   let res;
   try {
-    res = await fetch(API_BASE + '/api/chats/' + chatId + '/avatar', {
+    res = await fetch(API_BASE + '/chats/' + chatId + '/avatar', {
       method: 'POST',
       headers: authHeaders(),
       body: fd,
@@ -433,7 +433,7 @@ export function uploadMedia(file, onProgress, ctl) {
     const attempt = (retried) => {
       const x = new XMLHttpRequest();
       xhr = x;
-      x.open('POST', API_BASE + '/api/media');
+      x.open('POST', API_BASE + '/media');
       x.setRequestHeader('Authorization', 'Bearer ' + session.access);
       x.timeout = 300000; // 5 min para enlaces lentos
       x.upload.onprogress = (e) => {
@@ -518,7 +518,7 @@ export async function bootstrap() {
     try { await renewSession(); } catch (e) {}
   }
   try {
-    const r = await api('GET', '/api/users/me', undefined, { retry401: true });
+    const r = await api('GET', '/users/me', undefined, { retry401: true });
     // W6: si la sesión se cerró durante el arranque, no revivir el usuario
     if (!store.hasSession) return;
     /* W59: /users/me también trae username_changed_at. No reescribimos
@@ -568,7 +568,7 @@ export function logout() {
      el body porque sin cookie no hay otra forma de identificarlo.
      Fire-and-forget: si no hay red el cierre local igual procede. */
   try {
-    fetch('/api/auth/logout', {
+    fetch('/auth/logout', {
       method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: session.refresh || '' }),
@@ -588,7 +588,7 @@ export function ensurePreview(url) {
   const cur = store.linkPrev[url];
   if (cur && cur.status !== 'err') return;
   store.linkPrev[url] = { status: 'loading' };
-  api('POST', '/api/link-preview', { url: url }).then(function (r) {
+  api('POST', '/link-preview', { url: url }).then(function (r) {
     store.linkPrev[url] = {
       status: 'ok', type: r.type || 'link', url: r.url || url,
       title: r.title || '', desc: r.desc || '', image: r.image || '',

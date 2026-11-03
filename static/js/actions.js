@@ -17,7 +17,7 @@ export function charCount(txt) {
 /* ------------------------------------------------------- utilidades */
 
 /* URL de media. Las nuevas vienen firmadas (?exp=&sig=) y NO llevan token
-   de cuenta (W11); a las viejas /api/media/{id} les seguimos pegando
+   de cuenta (W11); a las viejas /media/{id} les seguimos pegando
    ?token= por compatibilidad. */
 import { cachedUrl } from './mediadl.js';
 import {
@@ -145,7 +145,7 @@ export function chatTitle(chat) {
 
 /* ------------------------------------------------------- chats */
 
-/* P0: la primera conexión de la WS y bootAll pedían /api/chats a la vez
+/* P0: la primera conexión de la WS y bootAll pedían /chats a la vez
    (duplicando el trabajo más caro del arranque). Se comparte la misma
    promesa mientras hay una petición en vuelo. */
 let chatsInflight = null;
@@ -158,7 +158,7 @@ export function loadChats() {
 
 async function loadChatsOnce() {
   try {
-    const r = await api('GET', '/api/chats');
+    const r = await api('GET', '/chats');
     // W6: si la sesión se cerró mientras cargaba (respuesta tardía de un
     // fetch en vuelo), descartar: la pantalla principal queda sin datos.
     if (!store.hasSession) return;
@@ -238,7 +238,7 @@ export function resolvePendingChat() {
 async function resolveUserDeepLink(uid) {
   try {
     const isPub = /^\d{16}$/.test(String(uid));
-    const r = await api('GET', (isPub ? '/api/users/pub/' : '/api/users/id/') + uid,
+    const r = await api('GET', (isPub ? '/users/pub/' : '/users/id/') + uid,
                         undefined, { retry401: true });
     if (store.pendingUser !== uid) return;   // navegación nueva: descartar
     const u = r.user;
@@ -310,7 +310,7 @@ let pendingGroupPub = '';   // token anti-carrera: navegación nueva lo cambia
 async function resolveGroupDeepLink(pub) {
   pendingGroupPub = pub;
   try {
-    const r = await api('GET', '/api/chats/pub/' + pub, undefined, { retry401: true });
+    const r = await api('GET', '/chats/pub/' + pub, undefined, { retry401: true });
     if (pendingGroupPub !== pub) return;   // navegación nueva: descartar
     if (r.is_member) {
       /* Puede pasar si el chat quedó fuera de la lista (p. ej. recién
@@ -339,7 +339,7 @@ export async function joinGroupByPub() {
   p.joining = true;
   p.error = '';
   try {
-    const r = await api('POST', '/api/chats/pub/' + p.pubId + '/join');
+    const r = await api('POST', '/chats/pub/' + p.pubId + '/join');
     store.joinPrompt = null;
     await loadChats();
     const c = store.chats.filter(function (x) { return x.id === r.chat_id; })[0];
@@ -486,7 +486,7 @@ export async function openChat(id, keepJump) {
   store.chatLoading = true;
   inflightMsgs[id] = (async function () {
     try {
-      const r = await api('GET', '/api/chats/' + id + '/messages?limit=50');
+      const r = await api('GET', '/chats/' + id + '/messages?limit=50');
       const list = r.messages || [];
       mergeMessages(id, list);
       /* W59: del historial solo se completan los adjuntos MÁS RECIENTES
@@ -523,7 +523,7 @@ export async function catchUpChat(chatId) {
       /* Un chat que estaba VACÍO también puede recibir su primer mensaje
          mientras no había WS: after_seq=0 devuelve desde el principio y
          el bucle sigue hasta la última página. */
-      const url = '/api/chats/' + chatId + '/messages?after_seq=' +
+      const url = '/chats/' + chatId + '/messages?after_seq=' +
         (last || 0) + '&limit=100';
       const r = await api('GET', url, undefined, { retry401: true });
       if (!store.hasSession) break;
@@ -564,7 +564,7 @@ export async function loadOlder(chatId) {
   store.loadingOlder = true;
   try {
     const before = arr[0].seq;
-    const r = await api('GET', '/api/chats/' + chatId + '/messages?before_seq=' + before + '&limit=50');
+    const r = await api('GET', '/chats/' + chatId + '/messages?before_seq=' + before + '&limit=50');
     const list = r.messages || [];
     if (list.length) {
       store.msgs[chatId] = list.concat(arr);
@@ -579,7 +579,7 @@ export async function loadOlder(chatId) {
 }
 
 export async function createDm(username) {
-  const r = await api('POST', '/api/chats/dm', { username: username });
+  const r = await api('POST', '/chats/dm', { username: username });
   const chat = r.chat;
   const i = store.chats.findIndex(function (c) { return c.id === chat.id; });
   if (i >= 0) store.chats[i] = chat;
@@ -592,7 +592,7 @@ export async function createDm(username) {
 
 /* Archivar/desarchivar un chat o grupo. */
 export async function archiveChat(chatId, archived) {
-  const r = await api('POST', '/api/chats/' + chatId + '/archive',
+  const r = await api('POST', '/chats/' + chatId + '/archive',
     { archived: !!archived }, { retry401: true });
   const c = findChat(chatId);
   if (c) c.archived = !!archived;
@@ -602,7 +602,7 @@ export async function archiveChat(chatId, archived) {
 
 /* Eliminar un MD de MI lista (el otro conserva su copia). */
 export async function deleteDmChat(chatId) {
-  const r = await api('DELETE', '/api/chats/' + chatId, undefined,
+  const r = await api('DELETE', '/chats/' + chatId, undefined,
     { retry401: true });
   store.chats = store.chats.filter(function (c) { return c.id !== chatId; });
   if (store.activeChatId === chatId) closeChat();
@@ -619,7 +619,7 @@ export async function deleteDmChat(chatId) {
 
 /* Grupo nuevo (yo = owner). members: usernames. */
 export async function createGroup(title, members) {
-  const r = await api('POST', '/api/chats/group',
+  const r = await api('POST', '/chats/group',
     { title: title, members: members || [] });
   const chat = r.chat;
   const i = store.chats.findIndex(function (c) { return c.id === chat.id; });
@@ -633,7 +633,7 @@ export async function createGroup(title, members) {
 
 /* Agregar un miembro a un grupo activo (mensaje system + WS). */
 export async function addMember(chatId, username) {
-  const r = await api('POST', '/api/chats/' + chatId + '/members',
+  const r = await api('POST', '/chats/' + chatId + '/members',
     { username: username });
   loadChats();
   return r;
@@ -647,14 +647,14 @@ function refreshAfterMemberChange(chatId) {
 }
 
 export async function setMemberRole(chatId, userId, role) {
-  const r = await api('PATCH', '/api/chats/' + chatId + '/members/' + userId,
+  const r = await api('PATCH', '/chats/' + chatId + '/members/' + userId,
     { role: role }, { retry401: true });
   refreshAfterMemberChange(chatId);
   return r;
 }
 
 export async function removeMember(chatId, userId) {
-  const r = await api('DELETE', '/api/chats/' + chatId + '/members/' + userId,
+  const r = await api('DELETE', '/chats/' + chatId + '/members/' + userId,
     undefined, { retry401: true });
   refreshAfterMemberChange(chatId);
   return r;
@@ -662,7 +662,7 @@ export async function removeMember(chatId, userId) {
 
 /* El owner cede el grupo a otro miembro (evita grupos sin administrar). */
 export async function transferOwner(chatId, username) {
-  const r = await api('POST', '/api/chats/' + chatId + '/transfer-owner',
+  const r = await api('POST', '/chats/' + chatId + '/transfer-owner',
     { username: username }, { retry401: true });
   refreshAfterMemberChange(chatId);
   return r;
@@ -678,7 +678,7 @@ export async function loadMembers(chatId) {
     store.info = { chatId: chatId, loading: true, members: [], error: '' };
   }
   try {
-    const r = await api('GET', '/api/chats/' + chatId + '/members',
+    const r = await api('GET', '/chats/' + chatId + '/members',
       undefined, { retry401: true });
     if (!store.hasSession) return;
     if (!store.info || store.info.chatId !== chatId) return;
@@ -695,7 +695,7 @@ export async function loadMembers(chatId) {
 /* Salir de un grupo (W7): el server borra la membresía y avisa por WS.
    Si era el chat abierto, se cierra. */
 export async function leaveGroup(chatId) {
-  const r = await api('POST', '/api/chats/' + chatId + '/leave', {},
+  const r = await api('POST', '/chats/' + chatId + '/leave', {},
     { retry401: true });
   if (store.activeChatId === chatId) store.activeChatId = 0;
   if (store.info && store.info.chatId === chatId) store.info = null;
@@ -705,7 +705,7 @@ export async function leaveGroup(chatId) {
 
 export async function searchUsers(q) {
   if (!q || q.trim().length < 2) return [];
-  const r = await api('GET', '/api/users/search?q=' + encodeURIComponent(q.trim()));
+  const r = await api('GET', '/users/search?q=' + encodeURIComponent(q.trim()));
   return r.results || [];
 }
 
@@ -714,7 +714,7 @@ export async function searchUsers(q) {
 /* Amigos conectados + solicitudes enviadas/recibidas (panel Personas). */
 export async function loadPeople() {
   try {
-    const r = await api('GET', '/api/people', undefined, { retry401: true });
+    const r = await api('GET', '/people', undefined, { retry401: true });
     if (!store.hasSession) return;
     store.people = r;
   } catch (e) {
@@ -726,7 +726,7 @@ export async function loadPeople() {
    del perfil sepa si ofrecer "Bloquear" o "Desbloquear". */
 export async function loadBlocks() {
   try {
-    const r = await api('GET', '/api/people/blocks', undefined, { retry401: true });
+    const r = await api('GET', '/people/blocks', undefined, { retry401: true });
     if (!store.hasSession) return;
     store.blocks = r.user_ids || [];
   } catch (e) {
@@ -737,7 +737,7 @@ export async function loadBlocks() {
 /* W28e: bloquear (optimista) — el server además rompe amistad y
    solicitudes pendientes, por eso se recarga la gente. */
 export async function blockUser(username) {
-  const r = await api('POST', '/api/people/block', { username: username });
+  const r = await api('POST', '/people/block', { username: username });
   if (r && typeof r.blocked === 'number' && store.blocks.indexOf(r.blocked) < 0) {
     store.blocks = store.blocks.concat([r.blocked]);
   }
@@ -747,7 +747,7 @@ export async function blockUser(username) {
 
 /* W28e: desbloquear (optimista). */
 export async function unblockUser(username) {
-  const r = await api('POST', '/api/people/unblock', { username: username });
+  const r = await api('POST', '/people/unblock', { username: username });
   if (r && typeof r.blocked === 'number') {
     const id = r.blocked;
     store.blocks = store.blocks.filter(function (b) { return b !== id; });
@@ -757,7 +757,7 @@ export async function unblockUser(username) {
 }
 
 export async function sendFriendRequest(username) {
-  const r = await api('POST', '/api/people/requests', { username: username },
+  const r = await api('POST', '/people/requests', { username: username },
     { retry401: true });
   await loadPeople();
   return r;
@@ -765,7 +765,7 @@ export async function sendFriendRequest(username) {
 
 /* Aceptar crea (o reutiliza) el DM: devuelve {chat} y se abre. */
 export async function acceptFriendRequest(reqId) {
-  const r = await api('POST', '/api/people/requests/' + reqId + '/accept', {},
+  const r = await api('POST', '/people/requests/' + reqId + '/accept', {},
     { retry401: true });
   await loadPeople();
   if (r && r.chat) await openChat(r.chat.id);
@@ -773,21 +773,21 @@ export async function acceptFriendRequest(reqId) {
 }
 
 export async function rejectFriendRequest(reqId) {
-  const r = await api('POST', '/api/people/requests/' + reqId + '/reject', {},
+  const r = await api('POST', '/people/requests/' + reqId + '/reject', {},
     { retry401: true });
   await loadPeople();
   return r;
 }
 
 export async function cancelFriendRequest(reqId) {
-  const r = await api('DELETE', '/api/people/requests/' + reqId, undefined,
+  const r = await api('DELETE', '/people/requests/' + reqId, undefined,
     { retry401: true });
   await loadPeople();
   return r;
 }
 
 export async function unfriend(fid) {
-  const r = await api('DELETE', '/api/people/friends/' + fid, undefined,
+  const r = await api('DELETE', '/people/friends/' + fid, undefined,
     { retry401: true });
   await loadPeople();
   return r;
@@ -851,7 +851,7 @@ export function sendSeen(chatId, seq) {
      también por REST: si el socket está medio abierto, el recibo no se
      pierde. El server ignora el duplicado (last_read_seq no avanza). */
   if (!silent && hooks.sendSeen) hooks.sendSeen(chatId, seq);
-  api('POST', '/api/chats/' + chatId + '/read',
+  api('POST', '/chats/' + chatId + '/read',
     { seq: seq, silent: silent }).catch(function () {});
 }
 
@@ -987,7 +987,7 @@ export async function sendText(chatId, text, srcMsg, kind, opts) {
   if (!store.msgs[chatId]) store.msgs[chatId] = [];
   store.msgs[chatId].push(tmp);
   try {
-    const r = await api('POST', '/api/chats/' + chatId + '/messages',
+    const r = await api('POST', '/chats/' + chatId + '/messages',
       { kind: kind, body: text, reply_to: srcMsg ? srcMsg.id : null,
         client_msg_id: cid, spoiler: !!opts.spoiler });
     upsertMessage(r.message);
@@ -1083,7 +1083,7 @@ function runUpload(chatId, cid) {
   var send = function (up) {
     u.up = up;
     if (row) row.upload.p = 1;
-    return api('POST', '/api/chats/' + chatId + '/messages',
+    return api('POST', '/chats/' + chatId + '/messages',
       { kind: u.kind, body: u.body || '', media_id: up.id,
         reply_to: u.srcMsg ? u.srcMsg.id : null, client_msg_id: cid,
         peaks: u.peaks ? JSON.stringify(u.peaks) : null,      // W13: onda
@@ -1186,7 +1186,7 @@ export async function sendMedia(chatId, file, kind, srcMsg, caption, peaks, dur,
 /* W28c: fijar/desfijar un mensaje (la info del chat lo lista). */
 export async function togglePin(chatId, msgId, pin) {
   try {
-    const r = await api('POST', '/api/chats/' + chatId + '/messages/' +
+    const r = await api('POST', '/chats/' + chatId + '/messages/' +
       msgId + '/pin', { pin: pin });
     if (r.message) upsertMessage(r.message);
   } catch (e) {
@@ -1212,7 +1212,7 @@ export async function toggleReaction(chatId, msgId, emoji) {
   msg.reactions = next;
   try {
     await api(remove ? 'DELETE' : 'POST',
-      '/api/chats/' + chatId + '/reactions/' + msgId, { emoji: emoji });
+      '/chats/' + chatId + '/reactions/' + msgId, { emoji: emoji });
   } catch (e) {
     msg.reactions = prev;
     toast((e && e.detail) || 'No se pudo reaccionar', 'err');
@@ -1237,7 +1237,7 @@ export async function editMessage(chatId, msgId, text) {
     toast(t('El mensaje supera los 3000 caracteres'), 'err');
     return;
   }
-  const r = await api('PUT', '/api/chats/' + chatId + '/messages/' + msgId,
+  const r = await api('PUT', '/chats/' + chatId + '/messages/' + msgId,
     { body: text }, { retry401: true });
   if (r.message) upsertMessage(r.message);
   store.editFor = 0;
@@ -1253,7 +1253,7 @@ export function askDeleteMessage(chatId, msg) {
     danger: true,
     okLabel: 'Eliminar',
     onOk: async function () {
-      await api('DELETE', '/api/chats/' + chatId + '/messages/' + msg.id,
+      await api('DELETE', '/chats/' + chatId + '/messages/' + msg.id,
         undefined, { retry401: true });
       const arr = store.msgs[chatId];
       if (arr) {
@@ -1284,7 +1284,7 @@ export function notifyTyping(chatId) {
   const now = Date.now();
   if (now - lastTyping < 2500) return;
   lastTyping = now;
-  api('POST', '/api/chats/' + chatId + '/typing', {}).catch(function () {});
+  api('POST', '/chats/' + chatId + '/typing', {}).catch(function () {});
 }
 
 /* ------------------------------------------------------- W13 */
@@ -1292,7 +1292,7 @@ export function notifyTyping(chatId) {
 /* Fijar/desfijar el chat en MI lista (se guarda en el server). */
 export async function setPinned(chatId, v) {
   try {
-    await api('POST', '/api/chats/' + chatId + '/pin', { pinned: !!v },
+    await api('POST', '/chats/' + chatId + '/pin', { pinned: !!v },
       { retry401: true });
     /* Re-resolver DESPUÉS del await: si un loadChats aterrizó mientras
        (reconexión WS), el objeto capturado antes ya no está en el store
@@ -1307,7 +1307,7 @@ export async function setPinned(chatId, v) {
 /* Silenciar/activar las notificaciones del chat (solo mías). */
 export async function setMuted(chatId, v) {
   try {
-    await api('POST', '/api/chats/' + chatId + '/mute', { muted: !!v },
+    await api('POST', '/chats/' + chatId + '/mute', { muted: !!v },
       { retry401: true });
     const chat = findChat(chatId);   // ídem: objeto vigente, no huérfano
     if (chat) chat.muted = !!v;
@@ -1320,7 +1320,7 @@ export async function setMuted(chatId, v) {
    archivo (media_id compartido) y el nuevo mensaje es mío (forwarded=1). */
 export async function forwardMessage(srcChatId, msgId, targetChatId) {
   const r = await api('POST',
-    '/api/chats/' + srcChatId + '/messages/' + msgId + '/forward',
+    '/chats/' + srcChatId + '/messages/' + msgId + '/forward',
     { target_chat_id: targetChatId }, { retry401: true });
   if (r.message) {
     upsertMessage(r.message);       // aparece ya si el destino está cargado

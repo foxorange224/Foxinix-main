@@ -227,7 +227,7 @@ async function openProfile(username) {
   }
   store.profile = { loading: true, user: null, error: '', username: username };
   try {
-    const r = await api('GET', '/api/users/' + encodeURIComponent(username),
+    const r = await api('GET', '/users/' + encodeURIComponent(username),
       undefined, { retry401: true });
     /* W63: si un evento de perfil llegó mientras cargaba, la respuesta
        del GET puede ser más vieja: el evento manda. */
@@ -246,7 +246,7 @@ async function openProfile(username) {
 }
 
 /* W78: abre el modal de perfil de grupo con descripción, miembros y
-   archivos compartidos. Carga los datos del endpoint /api/chats/:id. */
+   archivos compartidos. Carga los datos del endpoint /chats/:id. */
 async function openGroupProfile(chatId) {
   if (!chatId) return;
   const cur = store.groupProfile;
@@ -256,7 +256,7 @@ async function openGroupProfile(chatId) {
   }
   store.groupProfile = { loading: true, chat: null, members: [], gallery: [], error: '' };
   try {
-    const r = await api('GET', '/api/chats/' + chatId,
+    const r = await api('GET', '/chats/' + chatId,
       undefined, { retry401: true });
     store.groupProfile = {
       loading: false,
@@ -849,7 +849,7 @@ const toggleStkFav = function (ch) {
 const ensureGifFavs = function () {
   if (store.gifFavsLoaded) return Promise.resolve();
   store.gifFavsLoaded = true;
-  return api('GET', '/api/gifs/favorites').then(function (r) {
+  return api('GET', '/gifs/favorites').then(function (r) {
     store.gifFavs = (r && r.favorites) || [];
   }).catch(function () { store.gifFavsLoaded = false; });
 };
@@ -861,7 +861,7 @@ const assetList = function (kind) {
 const ensureUserAssets = function () {
   if (store.userAssetsLoaded) return Promise.resolve();
   store.userAssetsLoaded = true;
-  return api('GET', '/api/assets').then(function (r) {
+  return api('GET', '/assets').then(function (r) {
     store.userAssets = {
       gifs: (r && r.gifs) || [],
       stickers: (r && r.stickers) || [],
@@ -882,7 +882,7 @@ const uploadUserAsset = async function (kind, file) {
     return null;
   }
   const up = await uploadMedia(file);
-  const r = await api('POST', '/api/assets', { kind: kind, media_id: up.id });
+  const r = await api('POST', '/assets', { kind: kind, media_id: up.id });
   if (r && r.asset) {
     const list = assetList(kind).slice();
     list.unshift(r.asset);
@@ -894,7 +894,7 @@ const uploadUserAsset = async function (kind, file) {
 };
 const removeUserAsset = function (kind, asset) {
   if (!asset) return Promise.resolve();
-  return api('DELETE', '/api/assets/' + asset.id).then(function () {
+  return api('DELETE', '/assets/' + asset.id).then(function () {
     const list = assetList(kind).filter(function (x) { return x.id !== asset.id; });
     if (kind === 'gif') store.userAssets.gifs = list;
     else store.userAssets.stickers = list;
@@ -909,7 +909,7 @@ const toggleStickerAsset = function (m) {
   }
   const p = found
     ? removeUserAsset('sticker', found)
-    : api('POST', '/api/assets', { kind: 'sticker', media_id: m.media.id })
+    : api('POST', '/assets', { kind: 'sticker', media_id: m.media.id })
       .then(function (r) {
         if (r && r.asset) store.userAssets.stickers = [r.asset].concat(store.userAssets.stickers || []);
       });
@@ -962,10 +962,10 @@ const toggleFavGif = function (m) {
   });
   const reqs = matches.length
     ? matches.map(function (f) {
-        return api('DELETE', '/api/gifs/favorites',
+        return api('DELETE', '/gifs/favorites',
           f.media_id ? { media_id: f.media_id } : { name: f.name });
       })
-    : [api('POST', '/api/gifs/favorites', { media_id: fid })];
+    : [api('POST', '/gifs/favorites', { media_id: fid })];
   Promise.all(reqs).then(function () {
     if (matches.length) {
       store.gifFavs = (store.gifFavs || []).filter(function (f) {
@@ -978,7 +978,7 @@ const toggleFavGif = function (m) {
 };
 const toggleLibGif = function (name) {
   const on = isLibGifFav(name);
-  api(on ? 'DELETE' : 'POST', '/api/gifs/favorites', { name: name })
+  api(on ? 'DELETE' : 'POST', '/gifs/favorites', { name: name })
     .then(function () {
       if (on) {
         store.gifFavs = store.gifFavs.filter(function (f) {
@@ -2701,7 +2701,7 @@ const RenameGroupModal = {
       busy.value = true;
       err.value = '';
       try {
-        await api('PATCH', '/api/chats/' + id, { title: name });
+        await api('PATCH', '/chats/' + id, { title: name });
         store.renameGroupId = 0;
         store.renameGroupTitle = '';
         toast(t('Nombre del grupo actualizado'), 'ok');
@@ -2984,7 +2984,7 @@ function askDeleteAccount() {
     requirePassword: true,
     okLabel: 'Eliminar mi cuenta',
     onOk: async function (creds) {
-      await api('DELETE', '/api/auth/account', {
+      await api('DELETE', '/auth/account', {
         password: creds.password,
         username: creds.username,
       }, { retry401: true });
@@ -3358,7 +3358,7 @@ const SettingsModal = {
       }
       pwBusy.value = true;
       try {
-        const r = await api('POST', '/api/auth/password', {
+        const r = await api('POST', '/auth/password', {
           current_password: pwCur.value,
           new_password: pwNew.value,
         }, { retry401: true });
@@ -3396,7 +3396,7 @@ const SettingsModal = {
       if (!emNew.value.trim()) return;
       emBusy.value = true;
       try {
-        const r = await api('POST', '/api/auth/email/change',
+        const r = await api('POST', '/auth/email/change',
           { email: emNew.value.trim() }, { retry401: true });
         emMask.value = r.email_masked || emNew.value.trim();
         emStep.value = 1;
@@ -3416,7 +3416,7 @@ const SettingsModal = {
       }
       emBusy.value = true;
       try {
-        const r = await api('POST', '/api/auth/email/change/verify',
+        const r = await api('POST', '/auth/email/change/verify',
           { code: emCode.value }, { retry401: true });
         if (r.user) {
           session.user = r.user;
@@ -4521,7 +4521,7 @@ const MeProfileModal = {
       statusErr.value = '';
       statusBusy.value = true;
       try {
-        const r = await api('PUT', '/api/auth/profile', {
+        const r = await api('PUT', '/auth/profile', {
           status_preset: preset,
           status_text: text,
         }, { retry401: true });
@@ -4877,7 +4877,7 @@ const MeProfileEditModal = {
         } else if (bannerGone.value) {
           body.banner_media_id = null;
         }
-        const r = await api('PUT', '/api/auth/profile', body, { retry401: true });
+        const r = await api('PUT', '/auth/profile', body, { retry401: true });
         if (r.user) {
           store.user = Object.assign({}, store.user, r.user);
           session.user = store.user;
@@ -5081,7 +5081,7 @@ const UsernameModal = {
       }
       busy.value = true;
       try {
-        const r = await api('PUT', '/api/auth/username',
+        const r = await api('PUT', '/auth/username',
           { username: val, password: pw.value }, { retry401: true });
         if (r.user) {
           store.user = Object.assign({}, store.user, r.user);
@@ -5471,7 +5471,7 @@ const CallBox = {
       const key = (p.id || 0) + '|' + p.username;
       if (peerFetch === key) return;
       peerFetch = key;
-      api('GET', '/api/users/' + encodeURIComponent(p.username))
+      api('GET', '/users/' + encodeURIComponent(p.username))
         .then(function (r) {
           if (r && r.user && store.call && store.call.peer) {
             store.call.peer = Object.assign({}, store.call.peer, r.user);
@@ -6762,7 +6762,7 @@ const ChatInfoPanel = {
       const c = chat.value;
       if (!c) return;
       const on = !!e.target.checked;
-      api('PATCH', '/api/chats/' + c.id, { invites_open: on }).then(function () {
+      api('PATCH', '/chats/' + c.id, { invites_open: on }).then(function () {
         c.invites_open = on;
         toast(on ? t('Enlace de invitación activado')
                  : t('Enlace de invitación desactivado'), 'ok');
@@ -6818,7 +6818,7 @@ const ChatInfoPanel = {
       if (!c) return;
       pinsLoading.value = true;
       try {
-        const r = await api('GET', '/api/chats/' + c.id + '/pins');
+        const r = await api('GET', '/chats/' + c.id + '/pins');
         if (!chat.value || chat.value.id !== c.id) return;
         pins.value = r.messages || [];
       } catch (e) {
@@ -6857,7 +6857,7 @@ const ChatInfoPanel = {
       if (!c) return;
       galLoading.value = true;
       try {
-        const r = await api('GET', '/api/chats/' + c.id + '/gallery');
+        const r = await api('GET', '/chats/' + c.id + '/gallery');
         if (!chat.value || chat.value.id !== c.id) return;
         gal.value = { images: r.images || [], files: r.files || [] };
       } catch (e) {
@@ -7366,7 +7366,7 @@ const PeoplePanel = {
         const s = q.value.trim();
         if (s.length < 2) { results.value = []; return; }
         if (/^\d{16}$/.test(s)) {
-          api('GET', '/api/users/pub/' + s).then(function (r) {
+          api('GET', '/users/pub/' + s).then(function (r) {
             results.value = r && r.user ? [r.user] : [];
           }).catch(function () {
             results.value = [];
@@ -8849,7 +8849,7 @@ export const ChatShell = {
     const onGifFav = function (f) {
       store.emoOpen = false;
       if (!f.media_id) { onGif(f.name); return; }
-      api('POST', '/api/chats/' + store.activeChatId + '/messages',
+      api('POST', '/chats/' + store.activeChatId + '/messages',
         { kind: 'image', body: '', media_id: f.media_id,
           client_msg_id: String(Date.now()) }).catch(function () {
         toast('No se pudo enviar el GIF', 'err');
@@ -8857,7 +8857,7 @@ export const ChatShell = {
     };
     const onFavDel = function (f) {
       const body = f.media_id ? { media_id: f.media_id } : { name: f.name };
-      api('DELETE', '/api/gifs/favorites', body).then(function () {
+      api('DELETE', '/gifs/favorites', body).then(function () {
         store.gifFavs = store.gifFavs.filter(function (x) {
           return f.media_id ? x.media_id !== f.media_id : x.name !== f.name;
         });
@@ -8901,7 +8901,7 @@ export const ChatShell = {
     const sendAsset = function (kind, a) {
       if (!a || !a.media_id) return;
       store.emoOpen = false;
-      api('POST', '/api/chats/' + store.activeChatId + '/messages', {
+      api('POST', '/chats/' + store.activeChatId + '/messages', {
         kind: kind === 'gif' ? 'image' : 'sticker',
         body: '',
         media_id: a.media_id,
@@ -9313,7 +9313,7 @@ export const ChatShell = {
       sErr.value = '';
       try {
         const r = await api('GET',
-          '/api/chats/' + cid + '/search?q=' + encodeURIComponent(q));
+          '/chats/' + cid + '/search?q=' + encodeURIComponent(q));
         /* respuesta tardía de un chat o búsqueda que ya no aplica */
         if (cid === store.activeChatId && q === sQ.value.trim()) {
           sResults.value = r.messages || [];
@@ -9363,7 +9363,7 @@ export const ChatShell = {
       }
       if (found) { scrollToMsg(replyId); return; }
       /* Si no está cargado, intenta traerlo */
-      api('GET', '/api/chats/' + cid + '/messages?around=' + replyId + '&limit=1')
+      api('GET', '/chats/' + cid + '/messages?around=' + replyId + '&limit=1')
         .then(function (r) {
           const msgs = r.messages || [];
           if (msgs.length) {
@@ -9410,7 +9410,7 @@ export const ChatShell = {
       if (!found) {
         /* no está cargado: traer una ventana alrededor del resultado */
         try {
-          const r = await api('GET', '/api/chats/' + cid +
+          const r = await api('GET', '/chats/' + cid +
             '/messages?before_seq=' + (m.seq + 1) + '&limit=50');
           mergeMessages(cid, r.messages || []);
         } catch (e) { return; }
@@ -9533,7 +9533,7 @@ export const ChatShell = {
         chatId: chatId, msgId: msgId,
         rows: null, total: 0, loading: true, error: '',
       };
-      api('GET', '/api/chats/' + chatId + '/messages/' + msgId + '/reads')
+      api('GET', '/chats/' + chatId + '/messages/' + msgId + '/reads')
         .then(function (r) {
           if (store.readsBox && store.readsBox.msgId === msgId) {
             store.readsBox.rows = r.reads || [];

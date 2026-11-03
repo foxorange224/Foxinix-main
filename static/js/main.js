@@ -84,7 +84,7 @@ const Root = {
       bootstrap();
       // W62: check for new version (web + APK)
       setTimeout(() => {
-        fetch(API_BASE + '/api/version').then(r => r.json()).then(v => {
+        fetch(API_BASE + '/version').then(r => r.json()).then(v => {
           const isAndroid = !!(window.FoxinixAndroid);
           const srvWeb = v.web_version || '';
           const srvApk = v.apk_version || '';
