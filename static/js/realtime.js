@@ -362,10 +362,16 @@ function absoluteAvatar(url) {
 function nativeAvatarUrl(raw) {
   if (!raw || raw.indexOf('blob:') === 0 || raw.indexOf('data:') === 0) return '';
   let u = raw;
-  if (!/[?&](sig|token)=/.test(u) && u.indexOf('/media/') !== 0) {
+  /* W80: guardar flags ANTES de prependear API_BASE. */
+  const isMedia = u.indexOf('/media/') === 0;
+  const isProfile = u.indexOf('/media/profile/') === 0;
+  if (isMedia) {
+    u = API_BASE + u;
+  }
+  if (!/[?&](sig|token)=/.test(u) && !isMedia) {
     u += (u.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(session.access || '');
   }
-  if (u.indexOf('/media/profile/') === 0 && u.indexOf('thumb=') < 0) {
+  if (isProfile && u.indexOf('thumb=') < 0) {
     u += (u.indexOf('?') >= 0 ? '&' : '?') + 'thumb=1';
   }
   return absoluteAvatar(u);

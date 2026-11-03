@@ -68,17 +68,21 @@ export function mediaUrl(url, noCache, full) {
   if (!url) return '';
   let u = stableProfileUrl(url);
   /* W80: el dominio de API es distinto al del landing. Todas las URLs de
-     media van contra api.foxinix.qzz.io (cloudflared → servidor 8444). */
-  if (u.indexOf('/media/') === 0) {
+     media van contra api.foxinix.qzz.io (cloudflared → servidor 8444).
+     Se guarda el path relativo ANTES de prependear API_BASE para que
+     los checks siguientes sigan funcionando. */
+  const isMedia = u.indexOf('/media/') === 0;
+  const isProfile = u.indexOf('/media/profile/') === 0;
+  if (isMedia) {
     u = API_BASE + u;
   }
-  if (!/[?&](sig|token)=/.test(u) && u.indexOf('/media/') !== 0) {
+  if (!/[?&](sig|token)=/.test(u) && !isMedia) {
     u = u + (u.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(session.access || '');
   }
   /* W15: los avatares se piden como miniatura del server (?thumb=1, la
      genera y cachea el server): cargan de una y se ven nítidos al tamaño
      real del avatar. W61: el visor de imágenes pide el original (full). */
-  if (!full && u.indexOf('/media/profile/') === 0 && u.indexOf('thumb=') < 0) {
+  if (!full && isProfile && u.indexOf('thumb=') < 0) {
     u = u + (u.indexOf('?') >= 0 ? '&' : '?') + 'thumb=1';
   }
   /* W15: si el archivo ya se bajó en esta sesión, sirve el blob (memoria);

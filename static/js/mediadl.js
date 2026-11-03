@@ -209,7 +209,9 @@ export function cachedUrl(url) {
 
 /* Miniatura de la misma URL firmada (la firma cubre solo el slug). */
 function thumbOf(url) {
-  if (url.indexOf('/media/') !== 0 || url.indexOf('thumb=') >= 0) return '';
+  /* W80: las URLs ahora son absolutas (https://api.foxinix.qzz.io/media/...),
+     así que buscamos /media/ en cualquier posición, no solo al inicio. */
+  if (url.indexOf('/media/') < 0 || url.indexOf('thumb=') >= 0) return '';
   return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'thumb=1';
 }
 
