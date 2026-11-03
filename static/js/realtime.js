@@ -1,7 +1,7 @@
 /* Foxinix — WebSocket de tiempo real. Reconecta con backoff y refresca
    la lista al reconectar (API.md §tiempo real). */
 import { store, toast } from './store.js';
-import { session, API_BASE, refreshTokens, authLost, ApiError, sessionHooks } from './api.js';
+import { session, API_BASE, CDN_BASE, refreshTokens, authLost, ApiError, sessionHooks } from './api.js';
 import { hooks, loadChats, loadMembers, loadPeople, loadBlocks,
   onIncomingMessage, catchUpChat, mediaUrl, openNotificationTarget } from './actions.js';
 import { t } from './i18n.js';
@@ -362,11 +362,11 @@ function absoluteAvatar(url) {
 function nativeAvatarUrl(raw) {
   if (!raw || raw.indexOf('blob:') === 0 || raw.indexOf('data:') === 0) return '';
   let u = raw;
-  /* W80: guardar flags ANTES de prependear API_BASE. */
+  /* W80: guardar flags ANTES de prependear CDN_BASE. */
   const isMedia = u.indexOf('/media/') === 0;
   const isProfile = u.indexOf('/media/profile/') === 0;
   if (isMedia) {
-    u = API_BASE + u;
+    u = CDN_BASE + u;
   }
   if (!/[?&](sig|token)=/.test(u) && !isMedia) {
     u += (u.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(session.access || '');

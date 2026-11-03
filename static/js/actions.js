@@ -1,6 +1,6 @@
 /* Foxinix — acciones de datos (chats, mensajes). Importa store + api; sin ciclos. */
 import { store, toast, syncUrl } from './store.js';
-import { api, uploadMedia, session, API_BASE } from './api.js';
+import { api, uploadMedia, session, API_BASE, CDN_BASE } from './api.js';
 import { t } from './i18n.js';
 
 /* Puentes que registra realtime.js para mandar 'seen' por WS (fallback: REST). */
@@ -67,14 +67,12 @@ function stableProfileUrl(url) {
 export function mediaUrl(url, noCache, full) {
   if (!url) return '';
   let u = stableProfileUrl(url);
-  /* W80: el dominio de API es distinto al del landing. Todas las URLs de
-     media van contra api.foxinix.qzz.io (cloudflared → servidor 8444).
-     Se guarda el path relativo ANTES de prependear API_BASE para que
-     los checks siguientes sigan funcionando. */
+  /* W80: el CDN de media es un subdominio aparte (cdn.foxinix.qzz.io).
+     Las URLs firmadas van al CDN, no a la API. */
   const isMedia = u.indexOf('/media/') === 0;
   const isProfile = u.indexOf('/media/profile/') === 0;
   if (isMedia) {
-    u = API_BASE + u;
+    u = CDN_BASE + u;
   }
   if (!/[?&](sig|token)=/.test(u) && !isMedia) {
     u = u + (u.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(session.access || '');

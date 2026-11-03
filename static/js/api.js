@@ -9,6 +9,9 @@ const SKEY = 'fm.session';
 /* W80: base de la API. Cuando la app se sirve desde foxinix.qzz.io (GitHub
    Pages) las peticiones van a api.foxinix.qzz.io vía cloudflared tunnel. */
 export const API_BASE = 'https://api.foxinix.qzz.io';
+/* W80: CDN de media en subdominio aparte. Las URLs firmadas
+   (/media/{kind}/{fname}?exp=&sig=) se sirven desde aquí. */
+export const CDN_BASE = 'https://cdn.foxinix.qzz.io';
 
 export const session = {
   access: '', refresh: '', user: null, pendingEmail: '',
