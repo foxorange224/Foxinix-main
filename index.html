@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foxinix Chat | Mensajería privada para tu gente</title>
-    <meta name="description" content="Foxinix Chat es un espacio de mensajería privado para conversar, compartir y organizarte. Conversaciones, grupos, multimedia y cifrado, sin anuncios.">
+    <meta name="description" content="Foxinix Chat es un espacio de mensajería privado para conversar, compartir y organizarte. Conversaciones, grupos y multimedia, sin anuncios.">
     <meta name="theme-color" content="#0d0d10">
     <meta name="author" content="Foxinix">
     <meta name="robots" content="index, follow">
@@ -25,7 +25,7 @@
     <meta name="twitter:title" content="Foxinix Chat | Mensajería privada para tu gente">
     <meta name="twitter:description" content="Conversaciones, grupos, fotos, voz y archivos en un espacio propio. Sin anuncios y sin ruido.">
     <meta name="twitter:image" content="https://foxinix.qzz.io/assets/chat/og.png?v=20261020b">
-    <link rel="stylesheet" href="styles.css?v=20261020b">
+    <link rel="stylesheet" href="styles.css?v=20261103b">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -34,7 +34,7 @@
       "url": "https://foxinix.qzz.io/",
       "applicationCategory": "CommunicationApplication",
       "operatingSystem": "Web",
-      "description": "Mensajería privada con conversaciones individuales, grupos, multimedia y cifrado de extremo a extremo siempre activo en los DMs.",
+      "description": "Mensajería privada con conversaciones individuales, grupos y multimedia.",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -74,6 +74,8 @@
     <main id="contenido">
         <section class="hero">
             <div class="hero-glow" aria-hidden="true"></div>
+            <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
+            <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
             <div class="wrap hero-grid">
                 <div class="hero-copy">
                     <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span> Hecho en casa. Sin anuncios.</p>
@@ -81,17 +83,23 @@
                     <p class="lead">Foxinix Chat es un espacio de mensajería privado para hablar, compartir y organizarte sin ruido, sin algoritmos y sin repartir tu vida entre mil aplicaciones.</p>
 
                     <div class="hero-actions">
-                        <a class="btn btn-primary btn-large" href="/app/">
-                            Entrar a Foxinix Chat
-                            <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </a>
+                        <div class="platform-group">
+                            <span class="platform-badge">
+                                <svg class="icon platform-badge-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                                <span class="platform-badge-text">Detectando…</span>
+                            </span>
+                            <a class="btn btn-primary btn-large platform-btn" href="#">
+                                Entrar a Foxinix Chat
+                                <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </a>
+                        </div>
                         <a class="btn btn-ghost btn-large" href="#funciones">Ver funciones</a>
                     </div>
 
                     <ul class="hero-points">
                         <li>
                             <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                            Cifrado E2E siempre activo
+                            Base de datos cifrada
                         </li>
                         <li>
                             <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 17h6M10 14v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -166,10 +174,10 @@
 
                     <article class="feature-card">
                         <span class="feature-icon">
-                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></svg>
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.8 3.5h3l1.5 4-2 1.4a12.5 12.5 0 0 0 5.8 5.8l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17.5 17.5 0 0 1 4.8 5.7a2 2 0 0 1 2-2.2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
                         </span>
-                        <h3>Cifrado de extremo a extremo</h3>
-                        <p>Tus conversaciones individuales van cifradas de extremo a extremo, sin interruptores ni pasos extra. La clave se queda en tus dispositivos.</p>
+                        <h3>Voz y videollamadas</h3>
+                        <p>Llamadas uno a uno o en grupo, con audio, video y pantalla compartida, sin salir del chat.</p>
                     </article>
 
                     <article class="feature-card">
@@ -244,7 +252,7 @@
                     <div class="privacy-rows">
                         <div class="privacy-row"><span>Publicidad</span><b>Ninguna</b></div>
                         <div class="privacy-row"><span>Algoritmo de recomendación</span><b>No</b></div>
-                        <div class="privacy-row"><span>Cifrado E2E en DMs</span><b>Siempre activo</b></div>
+                        <div class="privacy-row"><span>Cifrado en reposo</span><b>Sí</b></div>
                         <div class="privacy-row"><span>Funciona sin instalar</span><b>Sí</b></div>
                     </div>
                     <p class="privacy-note">Un proyecto casero, hecho con cuidado y sin métricas de engagement.</p>
@@ -328,6 +336,14 @@
                 <a href="terminos.html">Términos</a>
                 <a href="#inicio">Volver arriba</a>
             </div>
+
+            <div class="footer-col">
+                <b>Código abierto</b>
+                <a class="footer-github" href="https://github.com/foxorangestudios/foxinix-app" target="_blank" rel="noopener noreferrer">
+                    <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.167 6.839 9.489.5.092.682-.217.682-.484 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.154-1.11-1.461-1.11-1.461-.906-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.456-1.272.098-2.65 0 0 .84-.27 2.75 1.026.795-.222 1.65-.334 2.54-.334.89 0 1.745.112 2.54.334 1.91-1.296 2.747-1.026 2.747-1.026.554 1.378.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.933.36.314.69.924.69 1.854 0 1.338-.012 2.414-.012 2.747 0 .268.175.576.692.48A9.934 9.934 0 0 0 20 10c0-5.523-4.477-10-10-10z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    foxorangestudios/foxinix-app
+                </a>
+            </div>
         </div>
 
         <div class="wrap footer-bottom">
@@ -336,6 +352,6 @@
         </div>
     </footer>
 
-    <script src="app.js?v=20261020b"></script>
+    <script src="app.js?v=20261103b"></script>
 </body>
 </html>

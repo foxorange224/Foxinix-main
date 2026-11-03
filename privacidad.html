@@ -11,7 +11,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/chat/icon.svg">
     <link rel="icon" href="assets/chat/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="assets/chat/apple-touch-icon.png">
-    <link rel="stylesheet" href="styles.css?v=20261020b">
+    <link rel="stylesheet" href="styles.css?v=20261103b">
 </head>
 <body id="top">
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -66,7 +66,7 @@
                 </ul>
 
                 <h2>3. Cifrado y seguridad</h2>
-                <p>Las contraseñas se almacenan con hash. La base de datos del servidor se guarda cifrada y las conexiones con el sitio usan HTTPS. El cifrado de extremo a extremo está siempre activo en las conversaciones individuales: las claves se generan y permanecen en los dispositivos participantes, y el servidor no puede leer el contenido cifrado. La aplicación lo activa automáticamente en cuanto ambos participantes han publicado sus claves, y no hay un interruptor para desactivarlo. Las conversaciones grupales no están cubiertas por este cifrado.</p>
+                <p>Las contraseñas se almacenan con hash. La base de datos del servidor se guarda cifrada en reposo y las conexiones con el sitio usan HTTPS. El cifrado de extremo a extremo se retiró en una actualización reciente: los mensajes se almacenan y se sirven desde el servidor, que sí puede acceder a su contenido.</p>
                 <p>Ningún sistema es infalible. Te pedimos que uses una contraseña propia y que no la compartas.</p>
 
                 <h2>4. Conservación</h2>
@@ -129,6 +129,6 @@
         </div>
     </footer>
 
-    <script src="app.js?v=20261020b"></script>
+    <script src="app.js?v=20261103b"></script>
 </body>
 </html>
