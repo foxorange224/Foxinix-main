@@ -267,35 +267,13 @@ a:focus {
         var(--bg);
 }
 
-.hero-glow {
-    position: absolute;
-    top: -160px;
-    right: -120px;
-    width: 620px;
-    height: 620px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 106, 19, .15), rgba(255, 106, 19, 0) 68%);
-    pointer-events: none;
-}
-
 .hero-grid {
     position: relative;
     z-index: 2;
-    display: flex;
-    align-items: center;
 }
 
 .hero-copy {
-    width: 48%;
-    flex: 0 0 auto;
-    padding-right: 24px;
-}
-
-.hero-art {
-    position: relative;
-    width: 52%;
-    flex: 1 1 auto;
-    min-width: 0;
+    max-width: 720px;
 }
 
 .eyebrow {
@@ -372,79 +350,6 @@ a:focus {
     height: 16px;
     margin-right: 6px;
     color: var(--orange-soft);
-}
-
-/* ---------------------------------------------------------------- app preview */
-
-.app-preview {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    max-width: 620px;
-    margin-left: auto;
-    border: 1px solid #34343e;
-    border-radius: 17px;
-    background: #121217;
-    box-shadow: 0 28px 70px rgba(0, 0, 0, .52), 0 0 0 1px rgba(255, 255, 255, .03) inset;
-    transform: rotate(-1.2deg);
-    animation: float-app 9s ease-in-out infinite;
-}
-
-.browser-bar {
-    display: flex;
-    align-items: center;
-    height: 36px;
-    padding: 0 12px;
-    background: #1b1b21;
-    border-bottom: 1px solid #2a2a32;
-}
-
-.browser-dots {
-    display: flex;
-    align-items: center;
-    width: 46px;
-}
-
-.browser-dots i {
-    width: 7px;
-    height: 7px;
-    margin-right: 5px;
-    border-radius: 50%;
-    background: #4c4c56;
-}
-
-.browser-dots i:first-child { background: #ed6a5e; }
-.browser-dots i:nth-child(2) { background: #e9c46a; }
-.browser-dots i:nth-child(3) { background: #56b886; }
-
-.browser-url {
-    display: inline-flex;
-    align-items: center;
-    height: 22px;
-    padding: 0 10px;
-    border-radius: 6px;
-    background: #141419;
-    color: #8e8d99;
-    font-size: 9.5px;
-    letter-spacing: .2px;
-}
-
-.browser-url .icon {
-    width: 10px;
-    height: 10px;
-    margin-right: 5px;
-    color: #6f9b74;
-}
-
-.browser-space {
-    flex: 1;
-}
-
-.app-shot {
-    display: block;
-    width: 100%;
-    height: auto;
-    background: #17171d;
 }
 
 /* ---------------------------------------------------------------- proof strip */
@@ -982,7 +887,7 @@ a:focus {
 
 .footer-grid {
     display: grid;
-    grid-template-columns: 1.8fr 1fr 1fr 1fr;
+    grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr;
     padding-top: 56px;
     padding-bottom: 42px;
 }
@@ -1028,6 +933,34 @@ a:focus {
     color: var(--orange-soft);
 }
 
+.footer-github {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin-top: 6px;
+    transition: border-color .2s, background .2s, color .2s;
+}
+.footer-github:hover {
+    border-color: var(--orange);
+    background: rgba(255, 106, 19, .08);
+    color: var(--text);
+}
+.footer-github .icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    flex: 0 0 auto;
+}
+.footer-github:hover .icon {
+    fill: var(--orange);
+}
+
 .footer-bottom {
     display: flex;
     justify-content: space-between;
@@ -1045,11 +978,6 @@ a:focus {
     50% { opacity: .55; transform: scale(.8); }
 }
 
-@keyframes float-app {
-    0%, 100% { transform: rotate(-1.2deg) translateY(0); }
-    50% { transform: rotate(-.7deg) translateY(-8px); }
-}
-
 @keyframes rise-in {
     0% { opacity: 0; transform: translateY(14px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -1063,12 +991,7 @@ a:focus {
     }
 
     .hero-copy {
-        width: 48%;
-        padding-right: 20px;
-    }
-
-    .hero-art {
-        width: 52%;
+        max-width: 640px;
     }
 
     .privacy-copy {
@@ -1086,23 +1009,12 @@ a:focus {
     }
 
     .hero-copy {
-        width: 100%;
+        max-width: none;
         padding-right: 0;
     }
 
     .hero h1 {
         font-size: 58px;
-    }
-
-    .hero-art {
-        width: 100%;
-        max-width: 620px;
-        margin: 44px auto 0;
-    }
-
-    .app-preview {
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .privacy-grid {
@@ -1206,10 +1118,6 @@ a:focus {
         font-size: 11.5px;
     }
 
-    .hero-art {
-        margin-top: 30px;
-    }
-
     .proof-grid {
         flex-wrap: wrap;
     }
@@ -1304,11 +1212,6 @@ a:focus {
     .section-head h2,
     .privacy-copy h2 {
         font-size: 30px;
-    }
-
-    .app-preview {
-        transform: none;
-        animation: none;
     }
 
     .feature-grid {
