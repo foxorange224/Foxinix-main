@@ -345,8 +345,13 @@ async function isToken401(res) {
     retry401:false es solo para el reintento interno. */
 export async function api(method, path, body, opts = {}) {
   const retry401 = opts.retry401 !== false;
+  /* W81: la API vive en OTRO origen (api.foxinix.qzz.io). Sin
+     credentials:'include' el navegador ni envía ni GUARDA la cookie
+     fm_rt que setea el login, así que cada recarga moría en 401
+     (refresh sin cookie → cascada). Cubre login/register y el resto. */
   const http = {
     method,
+    credentials: 'include',
     headers: authHeaders(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
   };
   if (body !== undefined) http.body = JSON.stringify(body);
