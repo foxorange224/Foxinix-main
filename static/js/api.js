@@ -345,6 +345,17 @@ async function isToken401(res) {
     retry401:false es solo para el reintento interno. */
 export async function api(method, path, body, opts = {}) {
   const retry401 = opts.retry401 !== false;
+  /* W82: al recargar el access NO existe (solo vive en memoria), así que
+     los cargadores iniciales (/chats, /assets, /gifs/favorites) salían SIN
+     Bearer → 401 en consola → refresh → reintento (ráfaga cosmética que se
+     auto-cura). Con sesión local y sin access se espera aquí el refresh —
+     compartido: UNA POST para toda la ráfaga — y la petición ya sale con
+     token. Si el pre-refresh falla (red, 5xx, sesión muerta) se ignora y
+     todo sigue exactamente como antes: el flujo 401 → refresh → retry de
+     abajo sigue siendo el respaldo. */
+  if (retry401 && store.hasSession && !session.access) {
+    try { await refreshTokens(); } catch (e) {}
+  }
   /* W81: la API vive en OTRO origen (api.foxinix.qzz.io). Sin
      credentials:'include' el navegador ni envía ni GUARDA la cookie
      fm_rt que setea el login, así que cada recarga moría en 401
