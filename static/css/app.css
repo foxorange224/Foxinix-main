@@ -834,6 +834,28 @@ input[type="range"].wp-range::-moz-range-thumb {
   outline: none;
   color: var(--t1);
 }
+/* W84: X para vaciar la búsqueda (aparece con texto; visibility en vez
+   de v-if para no mover el ancho del input ni entrar en el tab-order
+   cuando está oculta). */
+.clr-x {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--t2);
+  cursor: pointer;
+  visibility: hidden;
+  transition: background .12s, color .12s;
+}
+.clr-x.show { visibility: visible; }
+.clr-x:hover { background: var(--panel2); color: var(--t1); }
+.clr-x .ic { width: 12px; height: 12px; }
 
 .chat-list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 8px; }
 
@@ -1957,6 +1979,7 @@ audio.b-audio { display: none; }
   font-size: 0.8125rem;
 }
 .ep-search input::placeholder { color: var(--t2); }
+.ep-search .clr-x { margin-left: 4px; }
 /* Tabs del panel de stickers/GIFs (W28g) — el panel de emoji ya no
    usa .ep-tabs (W29b: categorías a la izquierda). */
 .ep-tabs {
@@ -1971,6 +1994,7 @@ audio.b-audio { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   border: 0;
   background: none;
   font-size: 1rem;
@@ -1980,6 +2004,8 @@ audio.b-audio { display: none; }
   cursor: pointer;
   transition: background .12s;
 }
+.ep-tab .ic { opacity: .8; }
+.ep-tab.on .ic { opacity: 1; }
 .ep-tab:hover { background: var(--panel2); }
 .ep-tab.on { background: var(--panel2); box-shadow: inset 0 -2px 0 var(--accent); }
 /* W29b: panel estilo Discord — buscador arriba, categorías a la
@@ -3047,10 +3073,14 @@ html.wallimg .chat-pane.people-pane::after { content: none; }
 .modal.settings .m-tab.on .m-tab-ic { opacity: 1; }
 .modal.settings .m-tab:hover { background: var(--accent-wash, var(--panel2)); color: var(--t1); }
 .modal.settings .m-tab.on {
-  background: var(--panel2);
+  /* W84: selección visible en TODOS los temas — el panel2 sobre el panel
+     del modal apenas se notaba (solo la negrita). Tinte de acento + barra
+     lateral: legible en claro, oscuro y OLED. */
+  background: var(--accent-wash, var(--panel2));
   color: var(--t0);
   font-weight: 600;
   border-bottom: 0;
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .modal.settings .st-body { flex: 1; min-width: 0; }
 .st-title {

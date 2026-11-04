@@ -1104,6 +1104,9 @@ const EmojiPicker = {
         '<svg class="ic ic-sm"><use href="#i-search"></use></svg>' +
         '<input v-model="q" :placeholder="t(\'Buscar emoji\')" ' +
           ':aria-label="t(\'Buscar emoji\')" @keydown.esc.stop="q = \'\'">' +
+        '<button class="clr-x" :class="{ show: !!q }" type="button" ' +
+          ':title="t(\'Borrar\')" @click="q = \'\'">' +
+          '<svg class="ic ic-xs"><use href="#i-x"></use></svg></button>' +
       '</div>' +
       '<div class="ep-body">' +
         '<div class="ep-cats">' +
@@ -2930,6 +2933,9 @@ const NewChatModal = {
           '<svg class="ic ic-sm"><use href="#i-search"></use></svg>' +
           '<input ref="inputEl" v-model="q" :placeholder="t(\'Buscar por nombre o usuario…\')" ' +
             '@input="onQuery" @keydown.enter.prevent="pickFirst">' +
+          '<button class="clr-x" :class="{ show: !!q }" type="button" ' +
+            ':title="t(\'Borrar\')" @click="q = \'\'; onQuery()">' +
+            '<svg class="ic ic-xs"><use href="#i-x"></use></svg></button>' +
         '</div>' +
         '<div class="results">' +
           '<button class="res-item" type="button" v-for="u in results" :key="u.id" @click="pick(u)">' +
@@ -7479,6 +7485,9 @@ const PeoplePanel = {
           <svg class="ic ic-sm"><use href="#i-search"></use></svg>
           <input v-model="q" :placeholder="t('Buscar personas por usuario')"
             :aria-label="t('Buscar personas por usuario')">
+          <button class="clr-x" :class="{ show: !!q }" type="button"
+            :title="t('Borrar')" @click="q = ''">
+            <svg class="ic ic-xs"><use href="#i-x"></use></svg></button>
         </div>
 
         <div class="ppl-list" v-if="q.trim().length >= 2">
@@ -7536,6 +7545,9 @@ const PeoplePanel = {
           <svg class="ic ic-sm"><use href="#i-search"></use></svg>
           <input v-model="qReq" :placeholder="t('Buscar solicitudes')"
             :aria-label="t('Buscar solicitudes')">
+          <button class="clr-x" :class="{ show: !!qReq }" type="button"
+            :title="t('Borrar')" @click="qReq = ''">
+            <svg class="ic ic-xs"><use href="#i-x"></use></svg></button>
         </div>
         <div class="ppl-cta">
           <button class="btn btn-ghost btn-full" type="button" @click="buscarPersonas">
@@ -10114,6 +10126,9 @@ export const ChatShell = {
           '<div class="search-pill">' +
             '<svg class="ic ic-sm"><use href="#i-search"></use></svg>' +
             '<input v-model="store.search" :placeholder="store.showArchived ? t(\'Buscar archivados\') : t(\'Buscar chats y grupos\')" :aria-label="store.showArchived ? t(\'Buscar archivados\') : t(\'Buscar chats y grupos\')">' +
+            '<button class="clr-x" :class="{ show: !!store.search }" type="button" ' +
+              ':title="t(\'Borrar\')" @click="store.search = \'\'">' +
+              '<svg class="ic ic-xs"><use href="#i-x"></use></svg></button>' +
           '</div>' +
         '</div>' +
         /* W27c: opción "Personas" en el panel de chats, arriba de todos
@@ -10427,11 +10442,14 @@ export const ChatShell = {
             '<div class="st-panel" ref="pickEl" v-if="emoOpen" @click.stop>' +
               '<div class="ep-tabs">' +
                 '<button class="ep-tab" :class="{ on: pickTab === \'emo\' }" ' +
-                  'type="button" @click="setPickTab(\'emo\')">{{ t(\'Emojis\') }}</button>' +
+                  'type="button" @click="setPickTab(\'emo\')">' +
+                  '<svg class="ic ic-sm"><use href="#i-smile"></use></svg>{{ t(\'Emojis\') }}</button>' +
                 '<button class="ep-tab" :class="{ on: pickTab === \'st\' }" ' +
-                  'type="button" @click="setPickTab(\'st\')">{{ t(\'Stickers\') }}</button>' +
+                  'type="button" @click="setPickTab(\'st\')">' +
+                  '<svg class="ic ic-sm"><use href="#i-sticker"></use></svg>{{ t(\'Stickers\') }}</button>' +
                 '<button class="ep-tab" :class="{ on: pickTab === \'gif\' }" ' +
-                  'type="button" @click="setPickTab(\'gif\')">{{ t(\'GIFs\') }}</button>' +
+                  'type="button" @click="setPickTab(\'gif\')">' +
+                  '<svg class="ic ic-sm"><use href="#i-image"></use></svg>{{ t(\'GIFs\') }}</button>' +
               '</div>' +
               '<transition name="epfade" mode="out-in">' +
               '<emoji-picker v-if="pickTab === \'emo\'" key="emo" :embed="true" ' +
@@ -10694,6 +10712,9 @@ export const ChatShell = {
             '<svg class="ic ic-sm"><use href="#i-search"></use></svg>' +
             '<input v-model="fwdQ" :placeholder="t(\'Buscar en la lista…\')" ' +
               ':aria-label="t(\'Buscar en la lista…\')">' +
+            '<button class="clr-x" :class="{ show: !!fwdQ }" type="button" ' +
+              ':title="t(\'Borrar\')" @click="fwdQ = \'\'">' +
+              '<svg class="ic ic-xs"><use href="#i-x"></use></svg></button>' +
           '</div>' +
           '<div class="results fwd-list">' +
             '<button class="res-item" type="button" v-for="c in fwdChats" :key="c.id" ' +
@@ -10728,6 +10749,9 @@ export const ChatShell = {
             '<svg class="ic ic-sm"><use href="#i-search"></use></svg>' +
             '<input v-model="sQ" :placeholder="t(\'Buscar mensajes\')" ' +
               ':aria-label="t(\'Buscar mensajes\')" @input="onSearchInput">' +
+            '<button class="clr-x" :class="{ show: !!sQ }" type="button" ' +
+              ':title="t(\'Borrar\')" @click="sQ = \'\'; onSearchInput()">' +
+              '<svg class="ic ic-xs"><use href="#i-x"></use></svg></button>' +
           '</div>' +
           '<div class="sp-res" role="button" tabindex="0" v-for="m in sResults" :key="m.id" ' +
             '@click="jumpResult(m)" @keydown.enter="jumpResult(m)">' +
