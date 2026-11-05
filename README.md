@@ -1,6 +1,6 @@
 ![Foxinix](https://foxinix.qzz.io/assets/chat/logo.svg)
 
-**Foxinix** es un centro de mensajería propio: servidor en tu máquina (host SSH `1`, firuserver) + **cliente web** (Vue 3 sin build, PWA) + **portada pública**, todo servido por procesos propios (sin Docker). Liviano: corre bien incluso en máquinas muy modestas (objetivo mínimo: Mypal 78 / Firefox 78, 1 GB de RAM).
+**Foxinix** es un centro de mensajería: **cliente web** (Vue 3 sin build, PWA) + **portada pública**, todo servido por procesos propios (sin Docker). Liviano: corre bien incluso en máquinas muy modestas (objetivo mínimo: Mypal 78 / Firefox 78, 1 GB de RAM).
 
 **Enlaces rápidos**
 
