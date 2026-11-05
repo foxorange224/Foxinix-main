@@ -114,20 +114,38 @@ const Root = {
         }).catch(()=>{});
       }, 5000);
     });
+        /* W90: /version trae apk_url_arm64 y apk_url_armv7. Elige la del
+         dispositivo: UA-CH bitness '32' = WebView de 32 bits → armv7;
+         sin señal (o error) → arm64, que además instala en Android de
+         64 bits; los dispositivos de 32 bits puros reciben la suya. */
+      const pickApkUrl = async (v) => {
+        try {
+          const uad = navigator.userAgentData;
+          if (uad && uad.getHighEntropyValues) {
+            const hi = await uad.getHighEntropyValues(['bitness']);
+            if (hi && hi.bitness === '32') {
+              return v.apk_url_armv7 || v.apk_url_arm64 || '';
+            }
+          }
+        } catch (e) {}
+        return v.apk_url_arm64 || v.apk_url_armv7 || '';
+      };
         const startApkDownload = async () => {
       const v = store.versionInfo;
-      if (!v || !v.apk_url) return;
+      if (!v) return;
+      const apkUrl = await pickApkUrl(v);
+      if (!apkUrl) return;
       store.versionDownloading = true;
       store.versionProgress = 0;
       store.versionError = false;
       window.__foxinixApkProgress = (p) => { store.versionProgress = p; if (p >= 100) { store.versionDownloading = false; store.versionUpdate = false; localStorage.setItem('fm.apkVersion', v.apk_version); } };
       window.__foxinixApkDone = (ok) => { store.versionDownloading = false; if (!ok) { store.versionError = true; } else { store.versionUpdate = false; localStorage.setItem('fm.apkVersion', v.apk_version); } };
       if (window.FoxinixAndroid && window.FoxinixAndroid.downloadApk) {
-        window.FoxinixAndroid.downloadApk(v.apk_url);
+        window.FoxinixAndroid.downloadApk(apkUrl);
         return;
       }
       try {
-        const res = await fetch(v.apk_url);
+        const res = await fetch(apkUrl);
         const total = +res.headers.get('Content-Length') || 0;
         const reader = res.body.getReader();
         let received = 0;
