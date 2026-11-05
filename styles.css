@@ -1264,3 +1264,129 @@ a:focus {
         transition-duration: .01ms !important;
     }
 }
+
+/* ------------------------------------------------------------ tema claro
+   La portada sigue el tema de la app: theme.js (en <head>, antes del CSS)
+   pone data-theme="light"|"dark" en <html> según fm.theme o el modo del
+   navegador. Acá se redefinen las variables y los colores fijos en oscuro.
+   Sin data-theme (JS desactivado) la portada queda oscura, como siempre. */
+:root {
+    color-scheme: dark;
+}
+
+[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f3f1;
+    --bg-soft: #eeedea;
+    --panel: #ffffff;
+    --panel-2: #f1f0ee;
+    --line: #dcdad6;
+    --line-soft: #e6e4e1;
+    --text: #1b1b1f;
+    --muted: #55545c;        /* AA 4.5:1 sobre #f4f3f1 (oscuro: #a7a6b0) */
+    --muted-2: #6b6a73;      /* AA 4.5:1 sobre #f4f3f1 (oscuro: #7c7b86) */
+    --orange: #ff6a13;
+    --orange-soft: #c2410c;  /* legible como texto sobre fondo claro */
+    --orange-dark: #9c3a07;
+    --blue: #2f6fc2;
+    --green: #0e7a44;
+    --coral: #d9534f;
+}
+
+/* El hover del botón principal usa --orange-soft de fondo con texto casi
+   negro: en claro ese naranja ya es oscuro, se pasa a texto blanco. */
+[data-theme="light"] .btn-primary:hover,
+[data-theme="light"] .btn-primary:focus {
+    color: #fff;
+}
+
+/* ------------------------------------------------------------- header */
+[data-theme="light"] .site-header {
+    background: rgba(244, 243, 241, .96);
+}
+
+/* ------------------------------------------------------------- botones */
+[data-theme="light"] .btn-ghost:hover,
+[data-theme="light"] .btn-ghost:focus {
+    border-color: #a9a7a2;
+    background: rgba(0, 0, 0, .04);
+}
+
+[data-theme="light"] .btn-dark {
+    background: #ffffff;
+    border-color: var(--line);
+}
+
+[data-theme="light"] .btn-dark:hover,
+[data-theme="light"] .btn-dark:focus {
+    background: #e9e8e5;
+}
+
+/* -------------------------------------------------------- bandas fijas */
+[data-theme="light"] .proof-strip,
+[data-theme="light"] .privacy-section {
+    background: var(--bg-soft);
+}
+
+[data-theme="light"] .proof-item b,
+[data-theme="light"] .feature-card h3,
+[data-theme="light"] .check-list b,
+[data-theme="light"] .privacy-panel-head b,
+[data-theme="light"] .privacy-row b,
+[data-theme="light"] .step-card h3,
+[data-theme="light"] .legal-card h2,
+[data-theme="light"] .footer-col b {
+    color: var(--text);
+}
+
+/* --------------------------------------------------------------- cards */
+[data-theme="light"] .feature-card {
+    background: #ffffff;
+}
+
+[data-theme="light"] .feature-card:hover {
+    border-color: #c9c7c2;
+}
+
+[data-theme="light"] .privacy-panel {
+    border-color: var(--line);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(255, 106, 19, .12), transparent 42%),
+        #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .10);
+}
+
+[data-theme="light"] .privacy-rows {
+    border-top-color: var(--line);
+}
+
+[data-theme="light"] .privacy-row {
+    border-bottom-color: var(--line-soft);
+}
+
+[data-theme="light"] .step-card {
+    border-top-color: var(--line);
+    background: #ffffff;
+}
+
+[data-theme="light"] .legal-card {
+    background: #ffffff;
+}
+
+/* --------------------------------------------------------------- footer */
+[data-theme="light"] .site-footer {
+    background: var(--bg-soft);
+}
+
+[data-theme="light"] .footer-bottom {
+    border-top-color: var(--line);
+    color: var(--muted-2);
+}
+
+/* -------------------------------------------------- nav móvil (≤760px) */
+@media (max-width: 760px) {
+    [data-theme="light"] .site-nav {
+        background: var(--bg-soft);
+        box-shadow: 0 20px 30px rgba(0, 0, 0, .12);
+    }
+}
