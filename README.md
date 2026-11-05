@@ -1,11 +1,10 @@
-# Foxinix
+![Foxinix](https://foxinix.qzz.io/assets/chat/logo.svg)
 
-Sitio de presentación de **Foxinix**, el servicio de mensajería de
-Foxinix. La portada presenta las funciones del chat y enlaza a:
+Sitio de presentación de **Foxinix**, un servicio de mensajería. La portada presenta las funciones del chat y enlaza a:
 
 - Chat: <https://foxinix.qzz.io/>
 - Registro: <https://foxinix.qzz.io/register>
-- Comunidad: Discord y YouTube
+- Comunidad: Discord y YouTube desde el sitio
 
 ## Estructura
 
