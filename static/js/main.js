@@ -96,8 +96,17 @@ const Root = {
             window.location.reload(true);
           }
           if (isAndroid && srvApk) {
-            const localApk = localStorage.getItem('fm.apkVersion') || '0.0.0';
-            if (srvApk && srvApk !== localApk) {
+            /* Instalación fresca: el APK no expone su versión a la web y
+               fm.apkVersion arranca vacío. Quien corre esta web dentro del
+               APK con el campo vacío acaba de instalar la última APK
+               publicada (las anteriores apuntaban al dominio viejo y ni
+               cargan), así que se siembra con la versión del servidor y no
+               se ofrece una "actualización" contra sí misma. Con valor
+               previo (descarga hecha o versión real) se compara normal. */
+            const storedApk = localStorage.getItem('fm.apkVersion');
+            if (!storedApk) {
+              localStorage.setItem('fm.apkVersion', srvApk);
+            } else if (storedApk !== srvApk) {
               store.versionInfo = v;
               store.versionUpdate = true;
             }
