@@ -8,7 +8,7 @@
      aleatorio por subida → el contenido de una ruta nunca cambia.
    Firefox 78 (Mypal) lo soporta; en orígenes http no seguros el registro
    falla en main.js y la app sigue funcionando sin SW. */
-const SHELL_CACHE = 'foxinix-shell-v127';  // v127: la portada sigue el tema (fm.theme / prefers-color-scheme) vía /theme.js
+const SHELL_CACHE = 'foxinix-shell-v128';  // v128: /tonos/ servido en foxinix.qzz.io; el SW no cachea 206 (Range) ni intercepta tonos
 /* Los emojis Twemoji/Noto viven en su PROPIO caché: cambiar la versión
    del shell ya no obliga a volver a descargar cientos de SVG. */
 const EMOJI_CACHE = 'foxinix-emoji-v1';
@@ -209,6 +209,9 @@ self.addEventListener('fetch', function (e) {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;      // externos: directo
   if (url.pathname.indexOf('/api/') === 0) return;      // API: siempre red
+  /* W87: tonos de sonido (/tonos/…) van directo a la red: <audio> pide
+     con Range (206), que Cache.put no acepta, y no son parte del shell. */
+  if (url.pathname.indexOf('/tonos/') === 0) return;
 
   /* W36fix/W40: despertar del SW → reanudar la precarga si quedó a
      medias (los GIFs de UI siempre; los SVG de emoji solo con estilo
@@ -265,7 +268,7 @@ self.addEventListener('fetch', function (e) {
         const hit = await c.match(req);
         if (hit) return hit;
         const res = await fetch(req).catch(function () { return null; });
-        if (res && res.ok && res.type === 'basic') c.put(req, res.clone());
+        if (res && res.status === 200 && res.type === 'basic') c.put(req, res.clone());
         return res || new Response('Sin conexión', {
           status: 503,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -285,7 +288,7 @@ self.addEventListener('fetch', function (e) {
          offline. */
       try {
         const res = await fetch(req);
-        if (res && res.ok && res.type === 'basic') c.put(req, res.clone());
+        if (res && res.status === 200 && res.type === 'basic') c.put(req, res.clone());
         return res;
       } catch (err) {
         let hit = await c.match(req);
