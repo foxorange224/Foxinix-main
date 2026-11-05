@@ -2,19 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://foxinix.qzz.io/</loc>
-        <lastmod>2026-10-20</lastmod>
+        <lastmod>2026-11-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>https://foxinix.qzz.io/privacidad.html</loc>
-        <lastmod>2026-10-20</lastmod>
+        <loc>https://foxinix.qzz.io/privacy</loc>
+        <lastmod>2026-11-05</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>
     </url>
     <url>
-        <loc>https://foxinix.qzz.io/terminos.html</loc>
-        <lastmod>2026-10-20</lastmod>
+        <loc>https://foxinix.qzz.io/terms</loc>
+        <lastmod>2026-11-05</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>
     </url>
