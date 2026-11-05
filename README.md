@@ -1,10 +1,10 @@
-# Foxinix Chat — portada
+# Foxinix
 
-Sitio de presentación de **Foxinix Chat**, el servicio de mensajería de
+Sitio de presentación de **Foxinix**, el servicio de mensajería de
 Foxinix. La portada presenta las funciones del chat y enlaza a:
 
-- Chat: <https://chat.foxinix.qzz.io/>
-- Registro: <https://chat.foxinix.qzz.io/register>
+- Chat: <https://foxinix.qzz.io/>
+- Registro: <https://foxinix.qzz.io/register>
 - Comunidad: Discord y YouTube
 
 ## Estructura
