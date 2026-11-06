@@ -1,4 +1,4 @@
-![Foxinix](https://foxinix.qzz.io/assets/chat/logo.svg)
+![Foxinix](https://foxinix.qzz.io/assets/logo.svg)
 
 **Foxinix** es un centro de mensajería: **cliente web** (Vue 3 sin build, PWA) + **portada pública**, todo servido por procesos propios (sin Docker). Liviano: corre bien incluso en máquinas muy modestas (objetivo mínimo: Mypal 78 / Firefox 78, 1 GB de RAM).
 
@@ -54,14 +54,15 @@ chat/
 │   ├── index.html         #   portada
 │   ├── styles.css         #   portada + páginas legales (tema claro/oscuro)
 │   ├── theme.js           #   tema antes del 1er pintado (fm.theme o el del navegador)
-│   ├── privacidad.html    #   se sirve en /privacy (terminos.html → /terms; los .html dan 301)
-│   ├── static/            #   SPA: css/, js/ (views/), vendor/, emoji…
-│   ├── login|register|app/#   shells de la SPA (index.html)
+│   ├── privacy.html       #   se sirve en /privacy (terms.html → /terms; los .html dan 301)
+│   ├── app|login|register.html  # shells de la SPA (mismo index, rutas /app /login /register)
+│   ├── assets/            #   logo, favicon, og.png de la portada
+│   ├── static/            #   SPA: css/, js/ (views/), vendor/, gifs…
 │   └── sw.js              #   PWA: shell + cachés separadas de medios/descargas
 ├── server/                # FastAPI + WebSockets + SQLite
 │   ├── app/               #   config, db, security, mailer, realtime, cleanup
 │   │   └── routers/       #   auth, users, chats, media, ws
-│   ├── web/               #   shell de la SPA que sirve el API en "/"
+│   ├── web/               #   shell de la SPA que sirve el API en "/" + emoji/ y tonos/ (compartidos con la portada)
 │   ├── landing_main.py    #   servidor de la portada (8844 → landing-server.service)
 │   ├── deploy/            #   unidades systemd
 │   ├── tests/             #   e2e.sh, ws_test.py, cleanup_test.py
