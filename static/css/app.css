@@ -6793,6 +6793,36 @@ button.dl-group .dl-group-head { pointer-events: none; }
 .version-actions { display: flex; gap: 8px; justify-content: center; }
 .version-actions .btn { flex: 1; }
 
+/* W94: barra discreta de versión web nueva. NO bloquea el uso (antes la
+   pestaña visible se recargaba sola a los 5 s): la recarga la decide el
+   usuario. Arriba al centro para no chocar con los toasts (abajo) ni con
+   el modal de APK (encima, z 10000). */
+.update-bar {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;   /* sin esto, fixed+left:50% limita el ancho a la mitad del viewport y el texto se corta */
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(640px, 94vw);
+  padding: 8px 10px 8px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  color: var(--t1);
+  font-size: 0.875rem;
+}
+.update-bar .ic { width: 18px; height: 18px; flex: none; color: var(--accent); }
+.update-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.update-bar .btn { flex: none; }
+@media (max-width: 480px) {
+  .update-bar { font-size: 0.8rem; gap: 6px; padding: 6px 8px 6px 10px; top: 8px; }
+}
+
 .progress-bar { width: 100%; height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; margin: 12px 0; }
 .progress-fill { height: 100%; background: var(--accent); transition: width .2s; }
 

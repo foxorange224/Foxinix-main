@@ -89,11 +89,20 @@ const Root = {
           const srvWeb = v.web_version || '';
           const srvApk = v.apk_version || '';
           const localWeb = localStorage.getItem('fm.appVersion') || '0.0.0';
-          // Web update is automatic on reload
+          /* W94: antes la pestaña VISIBLE se recargaba sola a los 5 s
+             (recarga forzada a mitad de leer o escribir → molesta). Ahora:
+               - pestaña visible   → barra discreta; la recarga la decide
+                                     el usuario (Actualizar / Cerrar);
+               - pestaña en background → recarga silenciosa: nadie la nota
+                                     y las pestañas viejas toman el código
+                                     nuevo igual (fin original de W62). */
           if (srvWeb && srvWeb !== localWeb) {
-            localStorage.setItem('fm.appVersion', srvWeb);
-            // For web, just reload
-            window.location.reload(true);
+            if (document.hidden) {
+              localStorage.setItem('fm.appVersion', srvWeb);
+              window.location.reload();
+            } else {
+              store.webUpdate = srvWeb;
+            }
           }
           if (isAndroid && srvApk) {
             /* Instalación fresca: el APK no expone su versión a la web y
@@ -107,8 +116,14 @@ const Root = {
             if (!storedApk) {
               localStorage.setItem('fm.apkVersion', srvApk);
             } else if (storedApk !== srvApk) {
-              store.versionInfo = v;
-              store.versionUpdate = true;
+              /* W94: "Recordar más tarde" persiste por versión
+                 (fm.apkSeen): con la MISMA APK el modal no vuelve a
+                 salir en cada entrada; al publicar una nueva —una
+                 actualización real— vuelve a avisar. */
+              if ((localStorage.getItem('fm.apkSeen') || '') !== srvApk) {
+                store.versionInfo = v;
+                store.versionUpdate = true;
+              }
             }
           }
         }).catch(()=>{});
@@ -171,7 +186,20 @@ const Root = {
         store.toasts.push({id: Date.now(), kind: 'err', msg: 'Error al descargar actualización' });
       }
     };
-    return { comp, store, startApkDownload, isOnline, t, offlineVisible, offlineReason };
+    /* W94: recarga de versión web bajo el control del usuario. */
+    const applyWebUpdate = function () {
+      if (store.webUpdate) localStorage.setItem('fm.appVersion', store.webUpdate);
+      window.location.reload();
+    };
+    /* W94: snooze persistente del modal APK (una vez por versión). */
+    const snoozeApk = function () {
+      if (store.versionInfo && store.versionInfo.apk_version) {
+        localStorage.setItem('fm.apkSeen', store.versionInfo.apk_version);
+      }
+      store.versionUpdate = null;
+      store.versionError = false;
+    };
+    return { comp, store, startApkDownload, applyWebUpdate, snoozeApk, isOnline, t, offlineVisible, offlineReason };
   },
   template: `
     <transition name="fade" mode="out-in">
@@ -201,9 +229,17 @@ const Root = {
         <div class="version-actions">
           <button v-if="!store.versionDownloading" class="btn btn-primary" type="button" @click="startApkDownload()">{{t('Actualizar ahora')}}</button>
           <button v-if="store.versionError" class="btn btn-primary" type="button" @click="store.versionError=false; startApkDownload()">{{t('Reintentar')}}</button>
-          <button class="btn btn-ghost" type="button" @click="store.versionUpdate = null; store.versionError = false">{{t('Recordar más tarde')}}</button>
+          <button class="btn btn-ghost" type="button" @click="snoozeApk()">{{t('Recordar más tarde')}}</button>
         </div>
       </div>
+    </div>
+    <!-- W94: versión web nueva → barra NO bloqueante (antes: recarga
+         forzada a los 5 s). La recarga la decide el usuario. -->
+    <div v-if="store.webUpdate" class="update-bar" role="status">
+      <svg class="ic"><use href="#i-update"></use></svg>
+      <span>{{ t('Hay una nueva versión de Foxinix.') }}</span>
+      <button class="btn btn-primary" type="button" @click="applyWebUpdate()">{{ t('Actualizar ahora') }}</button>
+      <button class="btn btn-ghost" type="button" @click="store.webUpdate = null">{{ t('Cerrar') }}</button>
     </div>
     <transition-group name="pop" tag="div" class="toasts">
       <div v-for="tw in store.toasts" :key="tw.id" class="toast"

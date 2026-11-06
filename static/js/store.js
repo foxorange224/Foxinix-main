@@ -77,6 +77,9 @@ export const store = reactive({
   dlAutoRev: 0,
   /* W58: puerta de permisos a pantalla completa. */
   permGate: null,
+  /* W94: versión web nueva pendiente (null = sin aviso). La barra
+     update-bar la muestra; la recarga la decide el usuario. */
+  webUpdate: null,
   versionUpdate: false,
   versionInfo: null,
   versionDownloading: false,
