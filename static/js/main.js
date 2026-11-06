@@ -88,15 +88,18 @@ const Root = {
           const isAndroid = !!(window.FoxinixAndroid);
           const srvWeb = v.web_version || '';
           const srvApk = v.apk_version || '';
-          const localWeb = localStorage.getItem('fm.appVersion') || '0.0.0';
-          /* W94: antes la pestaña VISIBLE se recargaba sola a los 5 s
-             (recarga forzada a mitad de leer o escribir → molesta). Ahora:
-               - pestaña visible   → barra discreta; la recarga la decide
-                                     el usuario (Actualizar / Cerrar);
-               - pestaña en background → recarga silenciosa: nadie la nota
-                                     y las pestañas viejas toman el código
-                                     nuevo igual (fin original de W62). */
-          if (srvWeb && srvWeb !== localWeb) {
+          /* W95: primera visita (sin fm.appVersion) = instalación nueva:
+             se siembra la versión en SILENCIO. Antes faltaba la clave →
+             default '0.0.0' ≠ srvWeb → todo usuario de primera vez
+             recibía un "aviso de actualización" (y con el código viejo,
+             una recarga) nada más entrar. Igual que la rama APK (W88:
+             si fm.apkVersion vacío, siembra sin ofrecer nada).
+             Solo un usuario CON versión guardada distinta a la del
+             servidor ve la barra (o la recarga si está en background). */
+          const localWeb = localStorage.getItem('fm.appVersion');
+          if (srvWeb && !localWeb) {
+            localStorage.setItem('fm.appVersion', srvWeb);      // nueva instalación: silencio
+          } else if (srvWeb && localWeb !== srvWeb) {
             if (document.hidden) {
               localStorage.setItem('fm.appVersion', srvWeb);
               window.location.reload();
