@@ -8,7 +8,7 @@
      aleatorio por subida → el contenido de una ruta nunca cambia.
    Firefox 78 (Mypal) lo soporta; en orígenes http no seguros el registro
    falla en main.js y la app sigue funcionando sin SW. */
-const SHELL_CACHE = 'foxinix-shell-v132';  // v132 (W95): primera visita siembra fm.appVersion en silencio (sin aviso/recarga); v131 (W94): barra de versión + snooze modal APK; v130: apk_url_arm64/armv7 según bitness
+const SHELL_CACHE = 'foxinix-shell-v133';  // v133 (W96): fallback ignoreSearch al cachear shell con URLs ?v=BUILD_ID; v132 (W95): primera visita siembra fm.appVersion en silencio; v131 (W94): barra de versión + snooze modal APK
 /* Los emojis Twemoji/Noto viven en su PROPIO caché: cambiar la versión
    del shell ya no obliga a volver a descargar cientos de SVG. */
 const EMOJI_CACHE = 'foxinix-emoji-v1';
@@ -292,6 +292,12 @@ self.addEventListener('fetch', function (e) {
         return res;
       } catch (err) {
         let hit = await c.match(req);
+        /* W96: las URLs del shell llevan ?v=<build>. Si esa URL exacta
+           aún no está cacheada (p. ej. primera visita y sin red), se
+           sirve la copia SIN query del precache (ignoreSearch) en vez de
+           fallar: el contenido es el mismo archivo, solo cambia el
+           versionado. */
+        if (!hit) hit = await c.match(req, { ignoreSearch: true });
         /* W22: las rutas reales (/app/user/5) no están en la caché como
            documentos; el shell cacheado de '/' sirve de base offline. */
         if (!hit && req.mode === 'navigate') hit = await c.match('/');
