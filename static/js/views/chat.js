@@ -1367,7 +1367,11 @@ const MessageRow = {
         else forceFmt = audioFallbackFmt();
       }
       const alt = compatUrl(m.url, m.mime, tag, true, forceFmt);
-      if (!alt || alt === m.url) return '';
+      /* W93: la comparación ya no puede ser `alt === m.url` (compatUrl
+         prefixea CDN_BASE): un respaldo "sin fmt" significa que no hay
+         derivado aplicable (p. ej. vídeo no-WebM) — no swap, para no
+         entrar en bucle con el mismo archivo. */
+      if (!alt || alt.indexOf('fmt=') < 0) return '';
       if (tag === 'AUDIO' && cur === 'ogg') markOggBroken();
       markMediaCompat(m.mime);
       forgetCached(m.url);

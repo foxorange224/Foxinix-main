@@ -15,6 +15,7 @@
    Sin dependencias. FF78: XHR + Blob + IntersectionObserver (todo disponible). */
 import { t } from './i18n.js';
 import { toast } from './store.js';
+import { CDN_BASE } from './api.js';
 import {
   getDownloadBlob, saveDownload, requestPersistence,
   fetchBlob, saveBlobToDevice, saveBlobToDisk, androidBridge,
@@ -31,8 +32,16 @@ const COMPAT_KEY = 'fm.mc.';      // W51: MIME → "1" si ya falló el original
 const OGG_FAIL_KEY = 'audio/ogg-vorbis';
 
 function pathKey(url) {
-  const i = url.indexOf('?');
-  return i < 0 ? url : url.slice(0, i);
+  /* W93: la clave es la RUTA sin query y SIN origen: los llamadores
+     mezclan la URL relativa que da la API (/media/…) con la absoluta
+     del CDN (CDN_BASE + …), y olvidar/consultar debe encontrar la
+     misma entrada. blob:/data: no llevan // tras el esquema y quedan
+     intactos. */
+  let u = url;
+  const o = /^(?:[a-z][a-z0-9+.-]*:)?\/\/[^/?#]+/i.exec(u);
+  if (o) u = u.slice(o[0].length);
+  const i = u.indexOf('?');
+  return i < 0 ? u : u.slice(0, i);
 }
 
 function baseMime(mime) {
@@ -149,6 +158,12 @@ function addFmt(url, fmt) {
    ya falló de verdad. forceFmt permite encadenar Ogg → WAV. */
 export function compatUrl(url, mime, tag, force, forceFmt) {
   if (!url || url.indexOf('blob:') === 0) return url;
+  /* W93: la API devuelve las URLs de media RELATIVAS (/media/…). El
+     resto del código las prefixea con CDN_BASE (mediaUrl en
+     actions.js), pero aquí se pasaban en crudo: el navegador las
+     pedía al dominio de la página (foxinix.qzz.io) donde nada sirve
+     /media/ → 404 en cada fallback ?fmt=ogg/wav. */
+  if (url.indexOf('/media/') === 0) url = CDN_BASE + url;
   const fake = { tagName: tag || 'VIDEO' };
   const m = baseMime(mime);
   let fmt = '';
