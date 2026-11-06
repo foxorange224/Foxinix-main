@@ -1,4 +1,4 @@
-/* Foxinix Chat — interacciones mínimas de la portada.
+/* Foxinix — interacciones mínimas de la portada.
    Sin dependencias; pensado para funcionar también en navegadores antiguos. */
 (function () {
     'use strict';
