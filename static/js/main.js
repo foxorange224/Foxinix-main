@@ -19,6 +19,7 @@ import {
   DL_TYPES,
 } from './downloads.js';
 import { prefetchEmojis } from './emoji.js';
+import { startPresence } from './presence.js';
 
 const views = {
   boot: BootView,
@@ -275,6 +276,10 @@ app.directive('dl', dlDirective);
    usa en BootView (auth.js) y en el overlay .app-boot del chat. */
 app.component('boot-screen', BootScreen);
 app.mount('#app');
+
+/* W98: estado "Ausente" automático a los 3 min de inactividad
+   (se sincroniza con el servidor; ver presence.js). */
+startPresence();
 
 /* W29a/W37a: el título del documento refleja los no leídos — "(3)
    Foxinix", con tope "999+" — pero SOLO con la pestaña OCULTA (otra
