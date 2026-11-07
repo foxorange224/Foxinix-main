@@ -1060,6 +1060,28 @@ const EN = {
   'Verifica tu correo para continuar': 'Verify your email to continue',
   'Ya hay una solicitud pendiente': 'There is already a pending request',
   'Ya son amigos': 'They are already friends',
+
+  /* ---------- W97: UI de llamada + panel de GIFs/stickers (no cubiertas
+     por el primer barrido runtime) ---------- */
+  'Activar sonido': 'Turn on sound',
+  'Agregar a favoritos': 'Add to favorites',
+  'Biblioteca': 'Library',
+  'Chat de la llamada': 'Call chat',
+  'Compartir pantalla': 'Share screen',
+  'Dejar de compartir': 'Stop sharing',
+  'En llamada': 'In a call',
+  'Escribe un mensaje…': 'Type a message…',
+  'Escuchar de nuevo': 'Listen again',
+  'Favoritos': 'Favorites',
+  'Guardar en stickers': 'Save to stickers',
+  'Minimizar': 'Minimize',
+  'No hay mensajes todavía.': 'No messages yet.',
+  'Ocultar info del grupo': 'Hide group info',
+  'Quitar de favoritos': 'Remove from favorites',
+  'Silenciar para mí': 'Mute for me',
+  'Todos los stickers': 'All stickers',
+  'Ver {n} mensajes anteriores': 'View {n} earlier messages',
+  'Volver a la llamada': 'Back to call',
 };
 
 /**
