@@ -12,6 +12,7 @@
    status_text personalizado. */
 import { store } from './store.js';
 import { api, session, saveSession } from './api.js';
+import { DomAdapter } from './platform/dom.js';
 
 const IDLE_MS = 3 * 60 * 1000;
 /* click (no mousedown) a propósito: si el usuario pulsa un preset en el
@@ -110,12 +111,12 @@ export function startPresence() {
   if (startPresence.done) return;
   startPresence.done = true;
   ACT_EVENTS.forEach(function (ev) {
-    window.addEventListener(ev, onActivity, { passive: true });
+    DomAdapter.addWindowEventListener(ev, onActivity, { passive: true });
   });
   /* Volver a la pestaña/ventana cuenta como actividad: quien vuelve a
      mirar la app no está ausente. Irse (hidden) no resetea el timer. */
-  document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) onActivity();
+  DomAdapter.addEventListener('visibilitychange', function () {
+    if (!DomAdapter.getHidden()) onActivity();
   });
   schedule();
 }

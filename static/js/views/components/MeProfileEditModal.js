@@ -7,6 +7,7 @@ import {
 } from '../../api.js';
 import { t } from '../../i18n.js';
 import { FileAdapter } from '../../platform/index.js';
+import { DomAdapter } from '../../platform/dom.js';
 import { store } from '../../store.js';
 import { AvatarEditor } from '../../views/avatar-editor.js';
 import {
@@ -157,13 +158,13 @@ export const MeProfileEditModal = {
       };
       const up = function () {
         bannerDragging.value = false;
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', up);
-        window.removeEventListener('pointercancel', up);
+        DomAdapter.removeWindowEventListener('pointermove', move);
+        DomAdapter.removeWindowEventListener('pointerup', up);
+        DomAdapter.removeWindowEventListener('pointercancel', up);
       };
-      window.addEventListener('pointermove', move);
-      window.addEventListener('pointerup', up);
-      window.addEventListener('pointercancel', up);
+      DomAdapter.addWindowEventListener('pointermove', move);
+      DomAdapter.addWindowEventListener('pointerup', up);
+      DomAdapter.addWindowEventListener('pointercancel', up);
     };
 
     const removeAvatar = function () {

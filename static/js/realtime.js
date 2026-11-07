@@ -10,6 +10,9 @@ import { initCall, handleCallEvent, abortCall } from './call.js';
 /* W63: el aviso de mensaje nuevo usa el tono elegido en Ajustes. */
 import { selectedToneSrc } from './tones.js';
 import { clearMediaBlobs } from './mediadl.js';
+import { DomAdapter } from './platform/dom.js';
+import { MediaAdapter } from './platform/media.js';
+import { NotificationAdapter } from './platform/notifications.js';
 
 let ws = null;
 let pingTimer = null;
@@ -23,9 +26,10 @@ let lastPong = 0;
    sigue usando la Notification del navegador. Se consulta en cada aviso
    porque el objeto nativo puede inyectarse después del módulo. */
 function androidNotifier() {
-  if (typeof window === 'undefined' || !window.FoxinixAndroid) return null;
-  if (typeof window.FoxinixAndroid.notify !== 'function') return null;
-  return window.FoxinixAndroid;
+  const a = DomAdapter.getNativeBridge();
+  if (!a) return null;
+  if (typeof a.notify !== 'function') return null;
+  return a;
 }
 
 /* Solo cuenta como aviso nativo si Android ya concedió el permiso. Si no,
@@ -67,7 +71,8 @@ let focusBound = false;
 let lastPeopleRefresh = 0;
 function refreshPeopleSoon() {
   if (!store.hasSession || store.bootPhase !== 'ready') return;
-  if (document.visibilityState && document.visibilityState !== 'visible') return;
+  const vis = DomAdapter.getVisibilityState();
+  if (vis && vis !== 'visible') return;
   const now = Date.now();
   if (now - lastPeopleRefresh < 4000) return;
   lastPeopleRefresh = now;
@@ -75,10 +80,10 @@ function refreshPeopleSoon() {
   loadBlocks();
 }
 function bindFocusRefresh() {
-  if (focusBound || typeof document === 'undefined') return;
+  if (focusBound) return;
   focusBound = true;
-  document.addEventListener('visibilitychange', refreshPeopleSoon);
-  window.addEventListener('focus', refreshPeopleSoon);
+  DomAdapter.addEventListener('visibilitychange', refreshPeopleSoon);
+  DomAdapter.addWindowEventListener('focus', refreshPeopleSoon);
 }
 
 export function startWS() {
@@ -288,9 +293,10 @@ function blip() {
     } catch (e) { /* cae al pitido */ }
   }
   try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    if (!actx) actx = new AC();
+    if (!actx) {
+      actx = MediaAdapter.createAudioContext();
+      if (!actx) return;
+    }
     const t0 = actx.currentTime;
     const o = actx.createOscillator();
     const g = actx.createGain();
@@ -383,8 +389,7 @@ function browserNotify(m) {
   /* W55: resolver el puente ANTES del guard de Notification: el WebView
      de Android no define Notification, pero sí FoxinixAndroid. */
   const native = nativeNotifyReady();
-  if (!native && (typeof Notification === 'undefined' ||
-      Notification.permission !== 'granted')) return;
+  if (!native && NotificationAdapter.getPermission() !== 'granted') return;
   const who = m.sender ? (m.sender.display_name || m.sender.username) : '';
   /* W34c: más contexto — quién escribió, en qué grupo, y su foto de
      perfil como icono de la notificación. */
@@ -426,16 +431,15 @@ function browserNotify(m) {
   }
 
   try {
-    const n = new Notification(title, {
+    NotificationAdapter.notify(title, {
       body: previewBody(m),
       icon: icon,
       tag: 'foxmsg-' + m.chat_id,
+      onClick: function () {
+        DomAdapter.focusWindow();
+        openNotificationTarget(m.chat_id, m.id);
+      },
     });
-    n.onclick = function () {
-      window.focus();
-      try { n.close(); } catch (e) {}
-      openNotificationTarget(m.chat_id, m.id);
-    };
   } catch (e) {}
 }
 
@@ -457,8 +461,9 @@ function notifyIncoming(m) {
      (@usuario) sigue avisando. */
   if (dndSilences(m)) return;
   /* W55: el sonido del aviso nativo lo pone Android; no duplicamos el bip. */
-  if (store.prefs.sound && (!open || document.hidden) && !nativeNotifyReady()) blip();
-  if (document.hidden) {
+  const hidden = DomAdapter.getHidden();
+  if (store.prefs.sound && (!open || hidden) && !nativeNotifyReady()) blip();
+  if (hidden) {
     browserNotify(m);
   }
 }

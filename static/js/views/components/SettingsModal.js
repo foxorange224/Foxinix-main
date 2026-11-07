@@ -17,6 +17,8 @@ import {
 import {
   FileAdapter, StorageAdapter,
 } from '../../platform/index.js';
+import { DomAdapter } from '../../platform/dom.js';
+import { MediaAdapter } from '../../platform/media.js';
 import {
   checkArchiveLock, clearArchiveLock, setAccent, setArchiveLock, setFont, setMicDev, setPref, setPrefStr, setTheme, setWall, store, toast,
 } from '../../store.js';
@@ -74,7 +76,7 @@ export const SettingsModal = {
         desc: 'Correo, contraseña y sesión' },
     ];
 
-    const settingsMobile = Vue.ref(window.innerWidth <= 760);
+    const settingsMobile = Vue.ref(DomAdapter.getInnerWidth() <= 760);
     /* W65: la portada móvil y la categoría activa viven en el store
        porque ahora también forman parte de la URL (?settings=main,
        ?settings=appearance…). Así el botón atrás y los enlaces directos
@@ -93,12 +95,12 @@ export const SettingsModal = {
       store.settingsAtHome = !!(v && settingsMobile.value);
     };
     const onSettingsResize = function () {
-      settingsMobile.value = window.innerWidth <= 760;
+      settingsMobile.value = DomAdapter.getInnerWidth() <= 760;
       if (!settingsMobile.value) store.settingsAtHome = false;
     };
-    window.addEventListener('resize', onSettingsResize);
+    DomAdapter.addWindowEventListener('resize', onSettingsResize);
     Vue.onUnmounted(function () {
-      window.removeEventListener('resize', onSettingsResize);
+      DomAdapter.removeWindowEventListener('resize', onSettingsResize);
       store.settingsAtHome = false;
     });
 
@@ -138,9 +140,8 @@ export const SettingsModal = {
     let testCtx = null;
     const loadMics = async function () {
       try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
-        const list = await navigator.mediaDevices.enumerateDevices();
-        micDevices.value = list.filter(function (d) { return d.kind === 'audioinput'; });
+        const list = await MediaAdapter.listAudioInputs();
+        micDevices.value = list;
       } catch (e) {}
     };
     Vue.onMounted(loadMics);
@@ -163,18 +164,18 @@ export const SettingsModal = {
         return;
       }
       try {
-        testStream = await navigator.mediaDevices.getUserMedia({
+        testStream = await MediaAdapter.getMicrophone({
           audio: store.micDev ? { deviceId: { exact: store.micDev } } : true,
         });
       } catch (e) {
         /* W20: si el dispositivo guardado ya no existe, con el del sistema */
         if (store.micDev) {
-          try { testStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+          try { testStream = await MediaAdapter.getMicrophone({ audio: true }); }
           catch (e2) { testStream = null; }
         }
       }
       if (!testStream) {
-        toast(window.isSecureContext === false
+        toast(MediaAdapter.isSecure() === false
           ? 'El micrófono necesita HTTPS (o abrir Foxinix en localhost)'
           : 'No se pudo acceder al micrófono', 'err');
         return;
@@ -182,8 +183,8 @@ export const SettingsModal = {
       loadMics();                     /* con permiso aparecen las etiquetas */
       micTesting.value = true;
       try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        testCtx = new AC();
+        testCtx = MediaAdapter.createAudioContext();
+        if (!testCtx) { stopMicTest(); return; }
         const aSrc = testCtx.createMediaStreamSource(testStream);
         const an = testCtx.createAnalyser();
         an.fftSize = 512;
@@ -260,9 +261,8 @@ export const SettingsModal = {
     };
     /* Tono "predeterminado": pitido generado con Web Audio (no depende de archivos). */
     const playBeep = function () {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      const ctx = new AC();
+      const ctx = MediaAdapter.createAudioContext();
+      if (!ctx) return;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
@@ -300,7 +300,7 @@ export const SettingsModal = {
        nativo. En web/escritorio se deja el comportamiento normal (nueva
        pestaña). */
     const openToneNote = function (e) {
-      const bridge = window.FoxinixAndroid;
+      const bridge = DomAdapter.getNativeBridge();
       if (bridge && typeof bridge.openUrl === 'function') {
         if (e) e.preventDefault();
         try { bridge.openUrl('https://tonosdellamada.es'); } catch (err) {}
@@ -476,7 +476,7 @@ export const SettingsModal = {
     /* ---- notificaciones (navegador o APK Android) ---- */
     const nativeNotif = (function () {
       try {
-        const a = window.FoxinixAndroid;
+        const a = DomAdapter.getNativeBridge();
         return a && typeof a.notify === 'function' ? a : null;
       } catch (e) { return null; }
     })();
@@ -528,12 +528,12 @@ export const SettingsModal = {
       refreshPermissionStates();
     };
     Vue.onMounted(function () {
-      window.addEventListener('focus', refreshNotif);
-      document.addEventListener('visibilitychange', refreshNotif);
+      DomAdapter.addWindowEventListener('focus', refreshNotif);
+      DomAdapter.addEventListener('visibilitychange', refreshNotif);
     });
     Vue.onUnmounted(function () {
-      window.removeEventListener('focus', refreshNotif);
-      document.removeEventListener('visibilitychange', refreshNotif);
+      DomAdapter.removeWindowEventListener('focus', refreshNotif);
+      DomAdapter.removeEventListener('visibilitychange', refreshNotif);
     });
 
     /* ---- W50/W58: descargas persistentes (Cache Storage + IndexedDB) ---- */
@@ -623,11 +623,11 @@ export const SettingsModal = {
       }
     };
     const dlDelete = function (item) {
-      if (!window.confirm(t('¿Eliminar esta descarga guardada?'))) return;
+      if (!DomAdapter.confirm(t('¿Eliminar esta descarga guardada?'))) return;
       deleteDownload(item.key).then(dlLoad);
     };
     const dlClear = function () {
-      if (!window.confirm(t('¿Eliminar todas las descargas guardadas?'))) return;
+      if (!DomAdapter.confirm(t('¿Eliminar todas las descargas guardadas?'))) return;
       clearDownloads().then(dlLoad);
     };
     const dlDate = function (item) {

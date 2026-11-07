@@ -17,6 +17,9 @@ import { store } from './store.js';
 import { t } from './i18n.js';
 import { hooks as dlHooks } from './downloads.js';
 import { StorageAdapter } from './platform/storage.js';
+import { DomAdapter } from './platform/dom.js';
+import { MediaAdapter } from './platform/media.js';
+import { NotificationAdapter } from './platform/notifications.js';
 
 export const PERMISSIONS = [
   { id: 'mic', icon: 'i-mic', label: 'Micrófono' },
@@ -45,7 +48,7 @@ const PERM_DENIED = {
 };
 
 function bridge() {
-  try { return window.FoxinixAndroid || null; } catch (e) { return null; }
+  return DomAdapter.getNativeBridge();
 }
 
 function nativeKind(kind) {
@@ -54,17 +57,13 @@ function nativeKind(kind) {
 
 function isBootPlatform() {
   if (bridge()) return true;
-  try {
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
-  } catch (e) {}
-  return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent || '');
+  if (DomAdapter.isStandalone()) return true;
+  return DomAdapter.isMobileUserAgent();
 }
 
 function webPermissionQuery(kind) {
-  if (!navigator.permissions || !navigator.permissions.query) return null;
   const name = kind === 'mic' ? 'microphone' : 'camera';
-  try { return navigator.permissions.query({ name: name }); }
-  catch (e) { return null; }
+  return DomAdapter.queryPermission(name);
 }
 
 export async function permissionState(kind) {
@@ -87,12 +86,11 @@ export async function permissionState(kind) {
     } catch (e) {}
   }
   if (kind === 'notif') {
-    if (typeof Notification === 'undefined') return 'unavailable';
-    const p = Notification.permission;
-    return p === 'default' ? 'prompt' : p;
+    const p = NotificationAdapter.getPermission();
+    return p === 'unsupported' ? 'unavailable' : p;
   }
   if (kind === 'mic' || kind === 'camera') {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return 'unavailable';
+    if (!MediaAdapter.canUseMedia()) return 'unavailable';
     const q = webPermissionQuery(kind);
     if (q) {
       try {
@@ -131,7 +129,7 @@ function emitPermissionResult(kind, state) {
 let pendingNative = null;
 /* El puente Android llama a esta global desde onRequestPermissionsResult. */
 try {
-  window.__foxinixPermissionResult = function (kind, state) {
+  DomAdapter.setGlobal('__foxinixPermissionResult', function (kind, state) {
     let k = kind;
     let s = state;
     if (kind && typeof kind === 'object') {
@@ -139,7 +137,7 @@ try {
       s = kind.state;
     }
     emitPermissionResult(String(k || ''), String(s || 'prompt'));
-  };
+  });
 } catch (e) {}
 
 function requestNative(kind) {
@@ -166,17 +164,9 @@ function requestNative(kind) {
 }
 
 function requestWebNotify() {
-  return new Promise(function (resolve) {
-    if (typeof Notification === 'undefined') { resolve('unavailable'); return; }
-    try {
-      const p = Notification.requestPermission(function (r) { resolve(r || 'denied'); });
-      if (p && typeof p.then === 'function') {
-        p.then(function (r) { resolve(r || 'denied'); }).catch(function () {
-          resolve('denied');
-        });
-      }
-    } catch (e) { resolve('denied'); }
-  });
+  return NotificationAdapter.requestPermission().then(function (r) {
+    return r === 'unsupported' ? 'unavailable' : r;
+  }).catch(function () { return 'denied'; });
 }
 
 export async function requestPermission(kind) {
@@ -185,11 +175,11 @@ export async function requestPermission(kind) {
   if (kind === 'notif') return requestWebNotify();
   if (kind === 'storage') return 'unavailable';
   if (kind === 'mic' || kind === 'camera') {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!MediaAdapter.canUseMedia()) {
       return 'unavailable';
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await MediaAdapter.getMicrophone({
         audio: kind === 'mic',
         video: kind === 'camera',
       });
@@ -380,7 +370,7 @@ dlHooks.ensurePermission = ensurePermission;
 
 /* Toque de refresco para la sección de Ajustes al enfocar la app. */
 try {
-  window.addEventListener('focus', function () {
+  DomAdapter.addWindowEventListener('focus', function () {
     if (store.user) refreshPermissionStates();
   });
 } catch (e) {}

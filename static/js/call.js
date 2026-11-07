@@ -23,6 +23,8 @@ import { t } from './i18n.js';
 import { ensurePermission } from './permissions.js';
 /* W63: tono de llamada elegido en Ajustes. */
 import { selectedToneSrc } from './tones.js';
+import { DomAdapter } from './platform/dom.js';
+import { MediaAdapter } from './platform/media.js';
 
 let sendFn = null;          // lo inyecta realtime.js (su send() privado)
 let pc = null;              // PeerConnection del 1:1
@@ -121,9 +123,10 @@ function startRing() {
     } catch (e) { /* cae al pitido */ }
   }
   try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    if (!actx) actx = new AC();
+    if (!actx) {
+      actx = MediaAdapter.createAudioContext();
+      if (!actx) return;
+    }
     const pair = function () {
       beep(660, 0.35);
       setTimeout(function () { beep(520, 0.35); }, 480);
@@ -195,13 +198,14 @@ function iceServers() {
   /* Permite añadir TURN sin tocar el código: window.FOXINIX_ICE_SERVERS
      = [{urls:'turn:...', username:'...', credential:'...'}, ...].
      En redes móviles/NAT restrictivas STUN solo no basta. */
-  const custom = window.FOXINIX_ICE_SERVERS;
+  const custom = DomAdapter.getGlobal('FOXINIX_ICE_SERVERS');
   if (Array.isArray(custom) && custom.length) return custom;
   return [{ urls: 'stun:stun.l.google.com:19302' }];
 }
 
 function newPC(chatId, video) {
-  const P = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+  const P = MediaAdapter.getPeerConnectionCtor();
+  if (!P) throw new Error('WebRTC no disponible en esta plataforma');
   pc = new P({ iceServers: iceServers() });
   pc.onicecandidate = function (ev) {
     sendFn({
@@ -219,7 +223,7 @@ function newPC(chatId, video) {
        en flujos distintos: el panel podía quedarse solo con el video y
        no sonaba la llamada de voz. */
     if (!remoteStream) {
-      const MS = window.MediaStream || window.webkitMediaStream;
+      const MS = MediaAdapter.getMediaStreamCtor();
       remoteStream = MS ? new MS() : null;
     }
     if (remoteStream && ev.track) {
@@ -292,12 +296,12 @@ function audioConstraints() {
 }
 
 function acquireMedia(wantVideo) {
-  return navigator.mediaDevices.getUserMedia({
+  return MediaAdapter.getUserMedia({
     audio: audioConstraints(),
     video: wantVideo ? videoConstraints() : false,
   }).catch(function (err) {
     if (!wantVideo) throw err;
-    return navigator.mediaDevices.getUserMedia({
+    return MediaAdapter.getUserMedia({
       audio: audioConstraints(), video: false,
     });
   });
@@ -402,7 +406,8 @@ function removeGroupPeer(peerId, keepCall) {
 }
 
 function newGroupPC(peerId) {
-  const P = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+  const P = MediaAdapter.getPeerConnectionCtor();
+  if (!P) throw new Error('WebRTC no disponible en esta plataforma');
   const pcg = new P({ iceServers: iceServers() });
   const ent = { pc: pcg, stream: null, ice: [], video: false, connected: false };
   const waiting = groupIceWait.get(Number(peerId));
@@ -423,7 +428,7 @@ function newGroupPC(peerId) {
   };
   pcg.ontrack = function (ev) {
     if (!ent.stream) {
-      const MS = window.MediaStream || window.webkitMediaStream;
+      const MS = MediaAdapter.getMediaStreamCtor();
       ent.stream = MS ? new MS() : null;
       if (ent.stream) groupStreams.set(Number(peerId), ent.stream);
     }
@@ -486,7 +491,8 @@ function flushGroupIce(ent) {
 
 function groupOffer(peerId) {
   if (!store.call || !store.call.group || groupPCs.has(Number(peerId))) return;
-  const ent = newGroupPC(peerId);
+  let ent = null;
+  try { ent = newGroupPC(peerId); } catch (e) { return; }
   addLocalTracks(ent);
   ent.pc.createOffer()
     .then(function (offer) { return ent.pc.setLocalDescription(offer); })
@@ -506,7 +512,7 @@ function groupAnswer(ev) {
   const peer = ensureGroupPeer(ev.from);
   let ent = groupPCs.get(pid);
   if (!ent) {
-    ent = newGroupPC(pid);
+    try { ent = newGroupPC(pid); } catch (e) { return; }
     addLocalTracks(ent);
   }
   const isRenegotiation = !!ent.pc.remoteDescription;
@@ -565,8 +571,7 @@ export async function startGroupCall(chat, video) {
   if (starting) { toast(t('Ya hay una llamada en curso')); return; }
   let ok = false;
   try {
-    ok = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
-            (window.RTCPeerConnection || window.webkitRTCPeerConnection));
+    ok = MediaAdapter.canCall();
   } catch (e) { ok = false; }
   if (!ok) { toast(t('No se pudo iniciar la llamada')); return; }
   starting = true;
@@ -635,8 +640,7 @@ export async function joinGroupCall(chat) {
   if (starting) { toast(t('Ya hay una llamada en curso')); return; }
   let ok = false;
   try {
-    ok = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
-            (window.RTCPeerConnection || window.webkitRTCPeerConnection));
+    ok = MediaAdapter.canCall();
   } catch (e) { ok = false; }
   if (!ok) { toast(t('No se pudo iniciar la llamada')); return; }
   starting = true;
@@ -754,8 +758,7 @@ export async function startCall(chat, video) {
   const peer = chat.title || null;
   let ok = false;
   try {
-    ok = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
-            (window.RTCPeerConnection || window.webkitRTCPeerConnection));
+    ok = MediaAdapter.canCall();
   } catch (e) { ok = false; }
   if (!ok) { toast(t('No se pudo iniciar la llamada')); return; }
   if (starting) { toast(t('Ya hay una llamada en curso')); return; }
@@ -966,8 +969,7 @@ export async function shareScreen() {
   const c = store.call;
   if (!c) return;
   if (c.screen) { stopScreenShare(); return; }
-  const md = navigator.mediaDevices;
-  if (!md || typeof md.getDisplayMedia !== 'function') {
+  if (!MediaAdapter.canShareScreen()) {
     toast(t('Compartir pantalla no está disponible'), 'err');
     return;
   }
@@ -976,7 +978,7 @@ export async function shareScreen() {
     return;
   }
   try {
-    const stream = await md.getDisplayMedia({
+    const stream = await MediaAdapter.getDisplayMedia({
       video: {
         width: { ideal: 854, max: 854 },
         height: { ideal: 480, max: 480 },
@@ -1110,6 +1112,6 @@ export function handleCallEvent(ev) {
 /* W28h: al recargar o cerrar la pestaña con una llamada abierta, avisar
    al otro lado (best-effort: el WS suele alcanzar a enviarlo antes de
    morir; si no, el peer lo corta con su timeout de conexión). */
-window.addEventListener('pagehide', function () {
+DomAdapter.addWindowEventListener('pagehide', function () {
   if (store.call) abortCall('hangup');
 });

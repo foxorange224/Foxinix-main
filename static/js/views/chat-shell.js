@@ -80,6 +80,8 @@ import { startWS, stopWS } from '../realtime.js';
 import { AvatarEditor } from './avatar-editor.js';
 import { FileAdapter } from '../platform/files.js';
 import { StorageAdapter } from '../platform/storage.js';
+import { DomAdapter } from '../platform/dom.js';
+import { MediaAdapter } from '../platform/media.js';
 import { ConfirmBox } from './components/ConfirmBox.js';
 import { ReadsBox } from './components/ReadsBox.js';
 import { SpamBox } from './components/SpamBox.js';
@@ -454,15 +456,17 @@ export const ChatShell = {
        quede a la vista junto al composer. */
     const keepComposerVisible = function () {
       setTimeout(function () {
-        if (document.activeElement === input.value) scrollBottom();
+        if (DomAdapter.isFocused(input.value)) scrollBottom();
       }, 280);
     };
     const onKeyboardViewport = function () {
-      if (document.activeElement !== input.value) return;
+      if (!DomAdapter.isFocused(input.value)) return;
       setTimeout(function () {
-        if (document.activeElement === input.value) scrollBottom();
+        if (DomAdapter.isFocused(input.value)) scrollBottom();
       }, 80);
     };
+    /* Para poder soltar el listener del viewport visual al desmontar. */
+    let unbindKeyboardViewport = null;
 
     /* La imagen crece el layout al terminar de cargar: si estábamos
        pegados al final, volver a scrollear. */
@@ -504,14 +508,11 @@ export const ChatShell = {
     let rowRO = null;
     const syncRowsRO = function () {
       const el = scroller.value;
-      if (!el || !window.ResizeObserver) return;
-      if (!rowRO) {
-        rowRO = new ResizeObserver(function () {
-          if (stick.value) scrollBottom();
-        });
-      }
-      rowRO.disconnect();
-      for (let i = 0; i < el.children.length; i++) rowRO.observe(el.children[i]);
+      if (!el) return;
+      if (rowRO) { rowRO(); rowRO = null; }
+      rowRO = DomAdapter.observeResizeAll(el.children, function () {
+        if (stick.value) scrollBottom();
+      });
     };
 
     Vue.watch(rows, async function () {
@@ -652,11 +653,11 @@ export const ChatShell = {
 
     const startRec = async function () {
       if (rec.value === 'on') return;
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      if (!MediaAdapter.canRecordAudio()) {
         /* W19: sobre HTTP con IP ajena a localhost el navegador BLOQUEA
            el micrófono (contexto inseguro): decirlo claro, no culpar al
            navegador. */
-        toast(window.isSecureContext === false
+        toast(MediaAdapter.isSecure() === false
           ? 'El micrófono necesita HTTPS (o abrir Foxinix en localhost)'
           : 'Tu navegador no soporta notas de voz', 'err');
         return;
@@ -675,7 +676,7 @@ export const ChatShell = {
           noiseSuppression: true,
           echoCancellation: true,
         };
-        recStream = await navigator.mediaDevices.getUserMedia({
+        recStream = await MediaAdapter.getMicrophone({
           audio: store.micDev
             ? Object.assign({ deviceId: { exact: store.micDev } }, recAudio)
             : recAudio,
@@ -684,7 +685,7 @@ export const ChatShell = {
         let lastErr = e;
         if (store.micDev) {
           try {
-            recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recStream = await MediaAdapter.getMicrophone({ audio: true });
           } catch (e2) {
             lastErr = e2;
             recStream = null;
@@ -702,9 +703,9 @@ export const ChatShell = {
          (alimenta la onda EN VIVO mientras graba y la del mensaje enviado).
          Si falla, el audio se manda igual (onda falsa CSS al grabar). */
       try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) {
-          recCtx = new AC();
+        const actx = MediaAdapter.createAudioContext();
+        if (actx) {
+          recCtx = actx;
           const aSrc = recCtx.createMediaStreamSource(recStream);
           recAnalyser = recCtx.createAnalyser();
           recAnalyser.fftSize = 1024;
@@ -733,16 +734,10 @@ export const ChatShell = {
       } catch (e) { recAnalyser = null; }
       let rec1;
       try {
-        let mime = '';
         const cands = ['audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg'];
-        for (let i = 0; i < cands.length; i++) {
-          if (window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported(cands[i])) {
-            mime = cands[i]; break;
-          }
-        }
-        rec1 = mime
-          ? new window.MediaRecorder(recStream, { mimeType: mime })
-          : new window.MediaRecorder(recStream);
+        const mime = MediaAdapter.pickAudioMimeType(cands);
+        rec1 = MediaAdapter.createRecorder(recStream, mime);
+        if (!rec1) throw new Error('no recorder');
       } catch (e) {
         clearRec();
         toast('No se pudo iniciar la grabación', 'err');
@@ -1090,7 +1085,7 @@ export const ChatShell = {
        app vuelve a primer plano (una notificación pudo tocarse mientras
        el WebView estaba suspendido). */
     const consumeNativeTarget = function () {
-      const an = window.FoxinixAndroid;
+      const an = DomAdapter.getNativeBridge();
       if (!an || typeof an.pendingTarget !== 'function') return;
       let raw = '';
       try { raw = an.pendingTarget(); } catch (e) { return; }
@@ -1100,7 +1095,7 @@ export const ChatShell = {
         openNotificationTarget(o.chat_id, o.message_id);
       } catch (e) {}
     };
-    window.__foxinixNativeTarget = consumeNativeTarget;
+    DomAdapter.setGlobal('__foxinixNativeTarget', consumeNativeTarget);
 
     /* W57: popups animados al terminar/fallar una descarga nativa. El
        APK manda el tipo (video, imagen…), no un texto ya conjugado. */
@@ -1118,23 +1113,23 @@ export const ChatShell = {
       }
       return t('No se pudo guardar el archivo');
     };
-    window.__foxinixDownloadDone = function (raw) {
+    DomAdapter.setGlobal('__foxinixDownloadDone', function (raw) {
       let o = raw;
       try { if (typeof raw === 'string') o = JSON.parse(raw); } catch (e) { return; }
       if (!o) return;
       toast(dlDoneText(o.type), 'ok');
-    };
-    window.__foxinixDownloadError = function (raw) {
+    });
+    DomAdapter.setGlobal('__foxinixDownloadError', function (raw) {
       let o = raw;
       try { if (typeof raw === 'string') o = JSON.parse(raw); } catch (e) { return; }
       if (!o) return;
       toast(dlFailText(o.type), 'err');
-    };
+    });
     const onNativeVisible = function () {
-      if (!document.hidden) consumeNativeTarget();
+      if (!DomAdapter.getHidden()) consumeNativeTarget();
     };
-    document.addEventListener('visibilitychange', onNativeVisible);
-    window.addEventListener('focus', onNativeVisible);
+    DomAdapter.addEventListener('visibilitychange', onNativeVisible);
+    DomAdapter.addWindowEventListener('focus', onNativeVisible);
 
     /* ---------- ciclo de vida ---------- */
 
@@ -1211,16 +1206,14 @@ export const ChatShell = {
          se abra el selector. */
       ensureGifFavs();
       ensureUserAssets();
-      document.addEventListener('click', onDocClick);
-      window.addEventListener('keydown', onEsc);
+      DomAdapter.addEventListener('click', onDocClick);
+      DomAdapter.addWindowEventListener('keydown', onEsc);
       /* W54d: teclado de Android (resize del WebView o viewport visual) */
-      window.addEventListener('resize', onKeyboardViewport);
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', onKeyboardViewport);
-      }
+      DomAdapter.addWindowEventListener('resize', onKeyboardViewport);
+      unbindKeyboardViewport = DomAdapter.onViewportResize(onKeyboardViewport);
       /* W11: pegar (Ctrl+V) + arrastrar y soltar archivos */
-      document.addEventListener('paste', onPasteEv);
-      document.addEventListener('error', onEmojiImgError, true);
+      DomAdapter.addEventListener('paste', onPasteEv);
+      DomAdapter.addEventListener('error', onEmojiImgError, true);
       const root = rootEl.value;
       if (root) {
         root.addEventListener('dragover', onDragOver);
@@ -1236,22 +1229,20 @@ export const ChatShell = {
       if (rec.value === 'on') stopRec(false);
       clearRec();
       stopWS();
-      window.removeEventListener('resize', onPickResize);   // W29g
-      window.removeEventListener('resize', onKeyboardViewport);
-      window.removeEventListener('focus', onNativeVisible);   // W57
-      document.removeEventListener('visibilitychange', onNativeVisible);
-      if (window.__foxinixNativeTarget === consumeNativeTarget) {
-        window.__foxinixNativeTarget = null;
+      DomAdapter.removeWindowEventListener('resize', onPickResize);   // W29g
+      DomAdapter.removeWindowEventListener('resize', onKeyboardViewport);
+      DomAdapter.removeWindowEventListener('focus', onNativeVisible);   // W57
+      DomAdapter.removeEventListener('visibilitychange', onNativeVisible);
+      if (DomAdapter.getGlobal('__foxinixNativeTarget') === consumeNativeTarget) {
+        DomAdapter.setGlobal('__foxinixNativeTarget', null);
       }
-      window.__foxinixDownloadDone = null;
-      window.__foxinixDownloadError = null;
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', onKeyboardViewport);
-      }
-      document.removeEventListener('click', onDocClick);
-      window.removeEventListener('keydown', onEsc);
-      document.removeEventListener('paste', onPasteEv);
-      document.removeEventListener('error', onEmojiImgError, true);
+      DomAdapter.setGlobal('__foxinixDownloadDone', null);
+      DomAdapter.setGlobal('__foxinixDownloadError', null);
+      if (unbindKeyboardViewport) { unbindKeyboardViewport(); unbindKeyboardViewport = null; }
+      DomAdapter.removeEventListener('click', onDocClick);
+      DomAdapter.removeWindowEventListener('keydown', onEsc);
+      DomAdapter.removeEventListener('paste', onPasteEv);
+      DomAdapter.removeEventListener('error', onEmojiImgError, true);
       const root = rootEl.value;
       if (root) {
         root.removeEventListener('dragover', onDragOver);
@@ -1322,7 +1313,7 @@ export const ChatShell = {
          deja ver el fondo y pasar de Archivados a Chats de golpe
          parpadeaba: la lista se queda detrás mientras Ajustes entra y se
          limpia al cerrar (close/openWallPanel), igual que antes. */
-      store.settingsAtHome = !tab && window.innerWidth <= 760;
+      store.settingsAtHome = !tab && DomAdapter.getInnerWidth() <= 760;
       store.settingsOpen = true;
     };
 
@@ -1348,7 +1339,7 @@ export const ChatShell = {
     const onPickResize = function () {
       if (store.emoOpen && pickEl.value) clampPanel(pickEl.value, false);
     };
-    window.addEventListener('resize', onPickResize);
+    DomAdapter.addWindowEventListener('resize', onPickResize);
     /* W17: el selector de emojis vive en store.emoOpen (compartido). */
     const toggleEmo = function () {
       const on = !store.emoOpen;
@@ -1627,7 +1618,7 @@ export const ChatShell = {
 
     /* El panel derecho queda abierto por defecto si hay lugar (W7). */
     const initInfoPanel = function () {
-      store.infoOpen = window.innerWidth > 1100;
+      store.infoOpen = DomAdapter.getInnerWidth() > 1100;
     };
 
     /* W19: sidebar colapsable (solo escritorio; en móvil manda el
@@ -1639,13 +1630,13 @@ export const ChatShell = {
        arriba de la lista. En escritorio lleva al centro (y cierra el
        chat si hay uno abierto); en móvil va a pantalla completa. Siempre
        vuelve a la pantalla principal (pestaña Activos). */
-    const isNarrow = Vue.ref(window.innerWidth <= 760);
+    const isNarrow = Vue.ref(DomAdapter.getInnerWidth() <= 760);
     const onResizeW = function () {
-      isNarrow.value = window.innerWidth <= 760;
+      isNarrow.value = DomAdapter.getInnerWidth() <= 760;
     };
-    window.addEventListener('resize', onResizeW);
+    DomAdapter.addWindowEventListener('resize', onResizeW);
     Vue.onUnmounted(function () {
-      window.removeEventListener('resize', onResizeW);
+      DomAdapter.removeWindowEventListener('resize', onResizeW);
     });
     const peopleActive = Vue.computed(function () {
       if (store.showArchived) return false;
@@ -2210,7 +2201,7 @@ export const ChatShell = {
       if (e.shiftKey) return;            // salto de línea
       /* W60: en el móvil el teclado (Gboard) muestra una tecla de enviar
          y Enter envía; en escritorio manda la preferencia del usuario. */
-      const touchKb = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent || '');
+      const touchKb = DomAdapter.isMobileUserAgent();
       if (store.prefs.enter || touchKb) {
         e.preventDefault();
         send();

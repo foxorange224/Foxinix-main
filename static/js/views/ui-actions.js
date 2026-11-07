@@ -15,6 +15,7 @@ import {
   rejectFriendRequest, sendFriendRequest, blockUser, unblockUser,
 } from '../actions.js';
 import { FileAdapter } from '../platform/files.js';
+import { DomAdapter } from '../platform/dom.js';
 import { StorageAdapter } from '../platform/storage.js';
 import { toastErr, openProfile, askLeave, askDeleteDm } from './helpers.js';
 
@@ -28,10 +29,7 @@ export const clampPos = function (v, max) {
 /* W37b: en móvil/táctil no hay hover — la barra flotante no sirve y el
    menú contextual se abre como BOTTOM SHEET abajo de la pantalla. */
 export function isTouchUI() {
-  try {
-    return window.matchMedia('(pointer: coarse)').matches ||
-      window.innerWidth < 640;
-  } catch (e) { return window.innerWidth < 640; }
+  return DomAdapter.isCoarsePointer();
 }
 export const openCtx = function (e, items, anchor, key, head) {
   /* W36i: si el menú de ESTE botón ya está abierto, un segundo clic
@@ -53,14 +51,15 @@ export const openCtx = function (e, items, anchor, key, head) {
     };
     return;
   }
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const vp = DomAdapter.getViewportSize();
+  const vw = vp.width;
+  const vh = vp.height;
   const estW = 200;
   const estH = items.length * 37 + 10;
   let x;
   let y;
   if (anchor) {
-    const r = anchor.getBoundingClientRect();
+    const r = DomAdapter.getRect(anchor);
     /* A la derecha de la burbuja si cabe; si no, a su izquierda. */
     x = (r.right + 8 + estW <= vw - 4) ? r.right + 8 : r.left - estW - 8;
     if (x < 4) x = clampPos(r.right, vw);
@@ -77,7 +76,7 @@ export const openCtx = function (e, items, anchor, key, head) {
   /* W29c: corrección con medida REAL — corre SIEMPRE (antes solo con
      ancla); offset* es inmune al transform de la animación de entrada. */
   Vue.nextTick(function () {
-    const el = document.querySelector('.ctx-menu');
+    const el = DomAdapter.querySelector('.ctx-menu');
     if (!el || !store.ctx) return;
     const w = el.offsetWidth;
     const h = el.offsetHeight;
@@ -104,15 +103,17 @@ export function saveCropState(key, st) { if (key && st) cropStates[key] = st; }
    la usan (c.my_role) y el server vuelve a validar el rol. */
 export function pickGroupPhoto(c) {
   if (!c) return;
-  const inp = document.createElement('input');
+  const inp = DomAdapter.createElement('input');
+  if (!inp) return;
   inp.type = 'file';
   inp.accept = 'image/*';
   /* W27b: va al DOM (oculto) para poder manipularlo desde fuera */
   inp.className = 'tmp-file';
   inp.style.display = 'none';
-  document.body.appendChild(inp);
+  DomAdapter.bodyAppendChild(inp);
   inp.addEventListener('change', function () {
-    inp.remove();
+    if (inp.remove) inp.remove();
+    else DomAdapter.bodyRemoveChild(inp);
     const f = inp.files && inp.files[0];
     if (!f) return;
     if (!/^image\//.test(f.type)) { toast('Elige una imagen', 'err'); return; }
@@ -370,16 +371,7 @@ export function menuKey(ev, c) {
 
 /* Copiar al portapapeles (FF78: execCommand, sin depender de clipboard API). */
 export function copyText(txt) {
-  try {
-    const ta = document.createElement('textarea');
-    ta.value = txt;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-  } catch (e) {
+  if (!DomAdapter.copyToClipboard(txt)) {
     toast('No se pudo copiar el texto', 'err');
   }
 }
@@ -399,9 +391,10 @@ export const clampPanel = function (el, anim) {
   const par = el.parentElement;
   const enChips = !!(par && par.classList && par.classList.contains('react-picker'));
   const sonChips = !!(el.classList && el.classList.contains('react-picker'));
-  const msgsEl = document.querySelector('.msgs');
-  const bb = msgsEl ? msgsEl.getBoundingClientRect() : null;
-  const vw = window.innerWidth, vh = window.innerHeight;
+  const msgsEl = DomAdapter.querySelector('.msgs');
+  const bb = msgsEl ? DomAdapter.getRect(msgsEl) : null;
+  const vp = DomAdapter.getViewportSize();
+  const vw = vp.width, vh = vp.height;
   const L = Math.max(bb ? bb.left : 0, 4);
   const T = Math.max(bb ? bb.top : 0, 4);
   const R = Math.min(bb ? bb.right : vw, vw - 4);
@@ -412,7 +405,7 @@ export const clampPanel = function (el, anim) {
   el.style.position = ''; el.style.left = ''; el.style.top = '';
   el.style.right = ''; el.style.bottom = ''; el.style.maxWidth = '';
   el.style.height = '';              /* W36fix: recorte previo del panel */
-  const nat = el.getBoundingClientRect();
+  const nat = DomAdapter.getRect(el);
   // achicar la zona scrolleable si la altura no da (el resto es fijo):
   // W29b: el panel de emoji scrollea en .ep-body (estilo Discord); el
   // de stickers/gif conserva el .ep-grid con scroll interno (W28g).
@@ -454,7 +447,7 @@ export const clampPanel = function (el, anim) {
   el.style.top = Math.round(y) + 'px';
   // Gecko puede renderizar el panel corrido unos píxeles (márgenes u otro
   // quirk del ancestro): se mide el rectángulo real y se corrige el delta.
-  const r2 = el.getBoundingClientRect();
+  const r2 = DomAdapter.getRect(el);
   el.style.left = Math.round(x + (x - r2.left)) + 'px';
   el.style.top = Math.round(y + (y - r2.top)) + 'px';
   if (anim) el.style.animation = animWas || '';  // la entrada arranca en su sitio

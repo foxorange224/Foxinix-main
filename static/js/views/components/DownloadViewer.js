@@ -5,6 +5,7 @@ import { store } from '../../store.js';
 import { fmtSize } from '../../actions.js';
 import { saveDownloadToDevice } from '../../downloads.js';
 import { FileAdapter } from '../../platform/files.js';
+import { DomAdapter } from '../../platform/dom.js';
 import { t } from '../../i18n.js';
 
 export const DownloadViewer = {
@@ -21,8 +22,8 @@ export const DownloadViewer = {
     const onKey = function (e) {
       if (e.key === 'Escape') close();
     };
-    Vue.onMounted(function () { document.addEventListener('keydown', onKey); });
-    Vue.onUnmounted(function () { document.removeEventListener('keydown', onKey); });
+    Vue.onMounted(function () { DomAdapter.addEventListener('keydown', onKey); });
+    Vue.onUnmounted(function () { DomAdapter.removeEventListener('keydown', onKey); });
     const save = async function () {
       const v = store.dlViewer;
       if (!v || !v.key) return;

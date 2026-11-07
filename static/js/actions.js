@@ -21,6 +21,7 @@ export function charCount(txt) {
    ?token= por compatibilidad. */
 import { cachedUrl } from './mediadl.js';
 import { FileAdapter } from './platform/files.js';
+import { DomAdapter } from './platform/dom.js';
 import {
   autoDownload, dlCategory, listDownloads, hooks as dlHooks,
 } from './downloads.js';
@@ -106,14 +107,10 @@ export function preloadImage(url) {
   return imgPreloads[key];
 }
 
-/* uuid (crypto.randomUUID llegó en FF92; acá fallback para FF78). */
+/* uuid (crypto.randomUUID llegó en FF92; el adaptador trae el fallback
+   para FF78 y para NativeScript). */
 export function uuid() {
-  if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return DomAdapter.randomUUID();
 }
 
 function dec(s) {
@@ -551,7 +548,7 @@ export async function catchUpChat(chatId) {
   } finally {
     if (ok) delete store.syncNeeded[chatId];
   }
-  if (added && store.activeChatId === chatId && !document.hidden) {
+  if (added && store.activeChatId === chatId && !DomAdapter.getHidden()) {
     sendSeen(chatId, maxSeq(store.msgs[chatId]));
   }
   return added;
@@ -926,7 +923,7 @@ function finishIncoming(m) {
     }
     /* W34d: con la pestaña OCULTA no se confirma el visto solo — el
        (N) del título espera a que entres al chat. */
-    if (!mine && open && !document.hidden) sendSeen(m.chat_id, m.seq);
+    if (!mine && open && !DomAdapter.getHidden()) sendSeen(m.chat_id, m.seq);
   }
   const chat = findChat(m.chat_id);
   if (chat) {

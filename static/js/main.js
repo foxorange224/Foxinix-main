@@ -39,7 +39,7 @@ const Root = {
   name: 'Root',
   setup() {
     const comp = Vue.computed(() => views[store.route] || LoginView);
-    const isOnline = () => typeof navigator !== 'undefined' && navigator.onLine !== false;
+    const isOnline = () => DomAdapter.getOnline();
     /* El overlay offline solo aparece si la conexión estuvo caída
        5+ segundos seguidos, así una reconexión rápida no lo muestra. */
     const offlineVisible = Vue.ref(false);
@@ -50,8 +50,7 @@ const Root = {
        (connect-src 'self'…) lo bloqueaba SIEMPRE: salía un aviso en
        consola en cada overlay y el motivo quedaba en 'internet'. */
     const checkInternet = function () {
-      return Promise.resolve(typeof navigator === 'undefined' ||
-                              navigator.onLine !== false);
+      return Promise.resolve(DomAdapter.getOnline());
     };
     Vue.watch(() => store.ws, (val) => {
       if (val === 'on' || val === 'connecting') {
@@ -73,14 +72,15 @@ const Root = {
          Foxinix.probe.offline('server')    → "Servidor caído"
          Foxinix.probe.offline('hide')       → cerrarlo
        Cancela el timer real para que no se cruce con una caída de verdad. */
-    window.Foxinix = window.Foxinix || {};
-    window.Foxinix.probe = window.Foxinix.probe || {};
-    window.Foxinix.probe.offline = function (reason) {
+    const foxGlobal = DomAdapter.getGlobal('Foxinix') || {};
+    foxGlobal.probe = foxGlobal.probe || {};
+    foxGlobal.probe.offline = function (reason) {
       if (offlineTimer) { clearTimeout(offlineTimer); offlineTimer = null; }
       if (reason === 'hide') { offlineVisible.value = false; return; }
       offlineReason.value = reason === 'internet' ? 'internet' : 'server';
       offlineVisible.value = true;
     };
+    DomAdapter.setGlobal('Foxinix', foxGlobal);
     Vue.onMounted(() => {
       // Orden: sesión → URL inicial (deep links) → arranque.
       loadSession();
@@ -89,7 +89,7 @@ const Root = {
       // W62: check for new version (web + APK)
       setTimeout(() => {
         fetch(API_BASE + '/version').then(r => r.json()).then(v => {
-          const isAndroid = !!(window.FoxinixAndroid);
+          const isAndroid = !!DomAdapter.getNativeBridge();
           const srvWeb = v.web_version || '';
           const srvApk = v.apk_version || '';
           /* W95: primera visita (sin fm.appVersion) = instalación nueva:
@@ -106,7 +106,7 @@ const Root = {
           } else if (srvWeb && localWeb !== srvWeb) {
             if (DomAdapter.getHidden()) {
               StorageAdapter.setItem('fm.appVersion', srvWeb);
-              window.location.reload();
+              DomAdapter.reload();
             } else {
               store.webUpdate = srvWeb;
             }
@@ -142,7 +142,7 @@ const Root = {
          64 bits; los dispositivos de 32 bits puros reciben la suya. */
       const pickApkUrl = async (v) => {
         try {
-          const uad = navigator.userAgentData;
+          const uad = DomAdapter.getUserAgentData();
           if (uad && uad.getHighEntropyValues) {
             const hi = await uad.getHighEntropyValues(['bitness']);
             if (hi && hi.bitness === '32') {
@@ -160,10 +160,11 @@ const Root = {
       store.versionDownloading = true;
       store.versionProgress = 0;
       store.versionError = false;
-      window.__foxinixApkProgress = (p) => { store.versionProgress = p; if (p >= 100) { store.versionDownloading = false; store.versionUpdate = false; StorageAdapter.setItem('fm.apkVersion', v.apk_version); } };
-      window.__foxinixApkDone = (ok) => { store.versionDownloading = false; if (!ok) { store.versionError = true; } else { store.versionUpdate = false; StorageAdapter.setItem('fm.apkVersion', v.apk_version); } };
-      if (window.FoxinixAndroid && window.FoxinixAndroid.downloadApk) {
-        window.FoxinixAndroid.downloadApk(apkUrl);
+      DomAdapter.setGlobal('__foxinixApkProgress', (p) => { store.versionProgress = p; if (p >= 100) { store.versionDownloading = false; store.versionUpdate = false; StorageAdapter.setItem('fm.apkVersion', v.apk_version); } });
+      DomAdapter.setGlobal('__foxinixApkDone', (ok) => { store.versionDownloading = false; if (!ok) { store.versionError = true; } else { store.versionUpdate = false; StorageAdapter.setItem('fm.apkVersion', v.apk_version); } });
+      const nativeBridge = DomAdapter.getNativeBridge();
+      if (nativeBridge && nativeBridge.downloadApk) {
+        nativeBridge.downloadApk(apkUrl);
         return;
       }
       try {
@@ -181,7 +182,8 @@ const Root = {
         }
         const blob = new Blob(chunks);
         const url = FileAdapter.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = DomAdapter.createElement('a');
+        if (!a) throw new Error('no anchor');
         a.href = url;
         a.download = 'Foxinix.apk';
         a.click();
@@ -196,7 +198,7 @@ const Root = {
     /* W94: recarga de versión web bajo el control del usuario. */
     const applyWebUpdate = function () {
       if (store.webUpdate) StorageAdapter.setItem('fm.appVersion', store.webUpdate);
-      window.location.reload();
+      DomAdapter.reload();
     };
     /* W94: snooze persistente del modal APK (una vez por versión). */
     const snoozeApk = function () {
@@ -297,26 +299,26 @@ function refreshTitle() {
   let n = 0;
   const chats = store.chats || [];
   for (let i = 0; i < chats.length; i++) n += chats[i].unread || 0;
-  document.title = n > 0
+  DomAdapter.setDocumentTitle(n > 0
     ? '(' + (n > 999 ? '999+' : n) + ') Foxinix'
-    : 'Foxinix';
+    : 'Foxinix');
 }
 Vue.watchEffect(refreshTitle);
-document.addEventListener('visibilitychange', refreshTitle);
+DomAdapter.addEventListener('visibilitychange', refreshTitle);
 
 /* W34d: el (N) del título sólo se quita al VISITAR el chat — al volver
    a la pestaña con un chat activo no leído cuenta como visita; con la
    pestaña oculta los mensajes ya no se confirman solos
    (finishIncoming no manda seen si document.hidden). */
-document.addEventListener('visibilitychange', function () {
-  if (document.hidden) return;
+DomAdapter.addEventListener('visibilitychange', function () {
+  if (DomAdapter.getHidden()) return;
   if (store.activeChatId) markChatRead(store.activeChatId);
 });
 
 /* W70: al volver la red no hay por qué esperar al backoff de la WS (hasta
    30 s): si el arranque quedó colgado sin usuario cacheado se relanza, y
    la conexión se reintenta de inmediato. */
-window.addEventListener('online', function () {
+DomAdapter.addWindowEventListener('online', function () {
   if (store.hasSession && !store.user && store.route !== 'verify') bootstrap();
   reconnectNow();
 });
@@ -335,15 +337,10 @@ Vue.watch(function () { return store.user && store.user.id; },
    precarga el lote completo de Twemoji si el usuario lo usa (con
    'system' no se descarga NADA de emoji; 'noto' lo baja el cliente
    en idle con prefetchEmojis). */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(function () {});
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  DomAdapter.registerServiceWorker('/sw.js').catch(function () {});
   const tellStyle = function () {
-    const msg = { type: 'emo-style', style: store.prefs.emo };
-    const c = navigator.serviceWorker.controller;
-    if (c) { c.postMessage(msg); return; }
-    navigator.serviceWorker.ready.then(function (reg) {
-      if (reg.active) reg.active.postMessage(msg);
-    }).catch(function () {});
+    DomAdapter.postToServiceWorker({ type: 'emo-style', style: store.prefs.emo });
   };
   tellStyle();
   /* W40: al cambiar el estilo en Ajustes se avisa al SW y se lanza
@@ -360,9 +357,9 @@ if ('serviceWorker' in navigator) {
    ante cada cambio del usuario en Ajustes. */
 function applyNoAnim() {
   if (store.prefs.noAnim) {
-    document.documentElement.classList.add('no-anim');
+    DomAdapter.addRootClass('no-anim');
   } else {
-    document.documentElement.classList.remove('no-anim');
+    DomAdapter.removeRootClass('no-anim');
   }
 }
 applyNoAnim();
@@ -370,12 +367,12 @@ Vue.watch(function () { return store.prefs.noAnim; }, applyNoAnim);
 
 /* Ayuda de prueba/desarrollo: permite conducir la UI desde fuera
    (herramientas de screenshot, tests). No usar en lógica de producto. */
-window.__fm = { store, go: goRef, goReplace: goReplaceRef, bootstrap,
+DomAdapter.setGlobal('__fm', { store, go: goRef, goReplace: goReplaceRef, bootstrap,
                 theme: setTheme, toggleTheme,
                 rt: { start: startWS, stop: stopWS },
                 dl: { dlCategory, saveDownload, saveDownloadToDevice,
                       listDownloads, deleteDownload, hasDownload,
                       clearDownloads, autoDlPrefs, setAutoDl,
                       types: DL_TYPES },
-                mediadl: { startDownload } };
+                mediadl: { startDownload } });
 

@@ -4,7 +4,14 @@
    W14: vive en un archivo propio (y no como <script> inline) para poder
    servir una CSP estricta: script-src 'self' sin 'unsafe-inline'.
    Clásico (sin type=module) a propósito: los módulos se difieren y el
-   tema tendría que aplicarse antes del primer pintado. */
+   tema tendría que aplicarse antes del primer pintado.
+
+   EXCEPCIÓN DOCUMENTADA A LA REGLA DE LA FASE 3.2:
+   este archivo (y theme-detect.js) tocan document/window a propósito:
+   son los scripts PRE-PINTADO que corren en <head> antes de que exista
+   el sistema de módulos. En NativeScript no existen: la app nativa
+   aplica el tema leyendo ApplicationSettings.
+   El resto de la app NO toca el DOM directamente: va por platform/. */
 (function () {
   try {
     var t = localStorage.getItem('fm.theme');

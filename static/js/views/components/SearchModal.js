@@ -5,6 +5,7 @@
    el shell (necesita su lista de mensajes y su ventana de render).
    Extraído de views/chat.js (Fase 3.1). */
 import Vue from '../../vue.js';
+import { DomAdapter } from '../../platform/dom.js';
 import { store } from '../../store.js';
 import { t } from '../../i18n.js';
 import { api } from '../../api.js';
@@ -24,7 +25,7 @@ export const SearchModal = {
     /* W37b: al abrir el modal, el cursor queda listo para escribir. */
     Vue.onMounted(function () {
       Vue.nextTick(function () {
-        const el = document.querySelector('.search-modal input');
+        const el = DomAdapter.querySelector('.search-modal input');
         if (el) el.focus();
       });
     });

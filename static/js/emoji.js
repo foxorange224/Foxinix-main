@@ -8,6 +8,7 @@ import { CATS, CODES, DESC, EMO_FILE } from './emoji-data.js';
 import { EMO_FILE_NOTO } from './emoji-noto-data.js';
 import { store } from './store.js';
 import { StorageAdapter } from './platform/storage.js';
+import { DomAdapter } from './platform/dom.js';
 
 /* Nombres de búsqueda (español). No hace falta nombrar todo: los emojis
    sin nombre se encuentran pegando el emoji mismo en el buscador. */
@@ -231,8 +232,7 @@ export function prefetchEmojis() {
      posterior de estilo sí lance su lote. */
   const st = emoStyle();
   if (st === 'system') return;
-  const conn = navigator.connection;
-  if (conn && conn.saveData) return;
+  if (DomAdapter.isSaveDataEnabled()) return;
   _prefetched = true;
   const files = [];
   const seen = {};
@@ -251,11 +251,9 @@ export function prefetchEmojis() {
   let i = 0;
   const BATCH = 24;          // SVG por franja de idle
   const GAP = 220;           // ms entre franjas (no saturar la red)
-  const idle = window.requestIdleCallback || function (cb) {
-    return setTimeout(cb, 400);
-  };
+  const idle = DomAdapter.requestIdle;
   function slice() {
-    if (!navigator.onLine) { setTimeout(slice, 3000); return; }
+    if (!DomAdapter.getOnline()) { setTimeout(slice, 3000); return; }
     const end = Math.min(i + BATCH, files.length);
     for (; i < end; i++) {
       /* El SW los cachea; el resultado no interesa (best-effort). */

@@ -9,6 +9,7 @@ import { store, toast } from '../store.js';
 import { t } from '../i18n.js';
 import { humanError, api, logout } from '../api.js';
 import { applyProfileFields } from '../realtime.js';
+import { ImageAdapter } from '../platform/images.js';
 import {
   mediaUrl, chatTitle, leaveGroup, deleteDmChat,
   setMemberRole, transferOwner, removeMember,
@@ -270,35 +271,11 @@ export function callBlurBanner(url, position) {
   if (callBlurCache[cacheKey] !== undefined) {
     return Promise.resolve(callBlurCache[cacheKey]);
   }
-  return new Promise(function (resolve) {
-    let done = false;
-    const finish = function (v) {
-      if (done) return;
-      done = true;
+  return ImageAdapter.makeSmallDataUrl(mediaUrl(url), pos)
+    .then(function (v) {
       callBlurCache[cacheKey] = v;
-      resolve(v);
-    };
-    const img = new Image();
-    img.onload = function () {
-      try {
-        const c = document.createElement('canvas');
-        c.width = 48;
-        c.height = 27;
-        const ctx = c.getContext('2d');
-        const sw = img.naturalWidth || img.width || 1;
-        const sh = img.naturalHeight || img.height || 1;
-        const scale = Math.max(48 / sw, 27 / sh);
-        const dw = sw * scale;
-        const dh = sh * scale;
-        ctx.drawImage(img, (48 - dw) / 2, (27 - dh) * (pos / 100), dw, dh);
-        finish(c.toDataURL('image/jpeg', 0.55));
-      } catch (e) {
-        finish('');
-      }
-    };
-    img.onerror = function () { finish(''); };
-    img.src = mediaUrl(url);
-  });
+      return v;
+    });
 }
 
 /* W66e: frases del estado vacío de "Activos" cuando no hay nadie en

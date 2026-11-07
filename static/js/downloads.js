@@ -16,6 +16,7 @@
 import { store } from './store.js';
 import { StorageAdapter } from './platform/storage.js';
 import { FileAdapter } from './platform/files.js';
+import { DomAdapter } from './platform/dom.js';
 
 /* P1: las descargas persistentes son por CUENTA. Antes el mismo caché e
    IndexedDB se compartían entre usuarios del mismo dispositivo y la
@@ -126,10 +127,7 @@ export function autoDlEnabled(type, network) {
 }
 
 export function androidBridge() {
-  try {
-    const a = window.FoxinixAndroid;
-    return a || null;
-  } catch (e) { return null; }
+  return DomAdapter.getNativeBridge();
 }
 
 export function nativeDownloadAvailable() {
@@ -151,8 +149,7 @@ export function currentNetwork() {
   const native = nativeNetwork();
   if (native === 'wifi' || native === 'mobile') return native;
   try {
-    const conn = navigator.connection || navigator.mozConnection ||
-      navigator.webkitConnection;
+    const conn = DomAdapter.getConnection();
     if (conn) {
       const type = String(conn.type || '').toLowerCase();
       if (type === 'wifi' || type === 'ethernet' || type === 'bluetooth') return 'wifi';
@@ -160,7 +157,7 @@ export function currentNetwork() {
       if (conn.saveData) return 'off';
       if (conn.effectiveType) {
         if (/^(slow-2g|2g|3g)$/.test(conn.effectiveType)) return 'mobile';
-        if (/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent || '')) return 'mobile';
+        if (DomAdapter.isMobileUserAgent()) return 'mobile';
       }
     }
   } catch (e) {}
@@ -168,15 +165,14 @@ export function currentNetwork() {
 }
 
 export function shouldAutoDownload(type) {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+  if (!DomAdapter.getOnline()) return false;
   const net = currentNetwork();
   if (net) return autoDlEnabled(type, net);
   /* W60: el límite Wi-Fi/datos es cosa del CELULAR. Si el navegador no
      puede decir la red (Firefox de escritorio, por ejemplo), en PC se
      usa el ajuste de Wi-Fi; en un móvil sin puente nativo no se asume
      nada para no gastar el plan de datos. */
-  const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
-  if (/android|iphone|ipad|ipod|mobile/i.test(ua)) return false;
+  if (DomAdapter.isMobileUserAgent()) return false;
   return autoDlEnabled(type, 'wifi');
 }
 
@@ -188,7 +184,7 @@ export function nativeDownload(url, name, mime, type, silent) {
       String(url).indexOf('blob:') === 0) return false;
   let full = String(url);
   if (full.charAt(0) === '/' && full.charAt(1) !== '/') {
-    full = window.location.origin + full;
+    full = DomAdapter.getLocationOrigin() + full;
   }
   try {
     return !!a.download(full, String(name || 'archivo'),
@@ -318,14 +314,15 @@ function cacheOpen() {
 export function saveBlobToDisk(blob, name) {
   if (!blob) return false;
   const obj = FileAdapter.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = DomAdapter.createElement('a');
+  if (!a) return false;
   a.href = obj;
   a.download = name || 'archivo';
   a.style.display = 'none';
   a.target = '_self';           /* nunca abrir pestaña nueva */
-  document.body.appendChild(a);
+  DomAdapter.bodyAppendChild(a);
   a.click();
-  document.body.removeChild(a);
+  DomAdapter.bodyRemoveChild(a);
   setTimeout(function () { FileAdapter.revokeObjectURL(obj); }, 1200);
   return true;
 }
@@ -544,12 +541,7 @@ function blobToBase64(blob) {
 
 /* Pide al navegador que no borre el almacenamiento si puede. */
 export function requestPersistence() {
-  try {
-    if (navigator.storage && navigator.storage.persist) {
-      return navigator.storage.persist().catch(function () { return false; });
-    }
-  } catch (e) {}
-  return Promise.resolve(false);
+  return DomAdapter.requestPersistentStorage();
 }
 
 /* GET silencioso con XHR (FF78, progreso no necesario) para las

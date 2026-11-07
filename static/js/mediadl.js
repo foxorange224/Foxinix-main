@@ -18,6 +18,7 @@ import { toast } from './store.js';
 import { CDN_BASE } from './api.js';
 import { StorageAdapter } from './platform/storage.js';
 import { FileAdapter } from './platform/files.js';
+import { DomAdapter } from './platform/dom.js';
 import {
   getDownloadBlob, saveDownload, requestPersistence,
   fetchBlob, saveBlobToDevice, saveBlobToDisk, androidBridge,
@@ -99,8 +100,8 @@ export function clearMediaBlobs() {
 
 function canPlay(tag, type) {
   try {
-    const el = document.createElement(tag === 'VIDEO' ? 'video' : 'audio');
-    return !!el.canPlayType(type);
+    const el = DomAdapter.createElement(tag === 'VIDEO' ? 'video' : 'audio');
+    return !!(el && el.canPlayType && el.canPlayType(type));
   } catch (e) { return false; }
 }
 
@@ -246,7 +247,8 @@ function setBtnIcon(btn, href, title) {
 function ensureOverlay(frame) {
   let ov = frame.querySelector('.mf-ov');
   if (ov) return ov;
-  ov = document.createElement('span');
+  ov = DomAdapter.createElement('span');
+  if (!ov) return null;
   ov.className = 'mf-ov';
   ov.innerHTML =
     '<svg class="up-c" viewBox="0 0 48 48" aria-hidden="true">' +

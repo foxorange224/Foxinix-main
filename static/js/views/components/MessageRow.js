@@ -20,6 +20,8 @@ import {
   getCurrentAudioEl, setCurrentAudioEl,
 } from '../../views/ui-actions.js';
 import Vue from '../../vue.js';
+import { DomAdapter } from '../../platform/dom.js';
+import { MediaAdapter } from '../../platform/media.js';
 import { EmojiPicker } from './EmojiPicker.js';
 
 export const MessageRow = {
@@ -124,13 +126,13 @@ export const MessageRow = {
       Vue.nextTick(function () {
         const el = rpEl.value;
         if (!el) return;
-        const msg = document.querySelector(
+        const msg = DomAdapter.querySelector(
           '.msg[data-msg-id="' + props.row.ref.id + '"]');
         const bub = msg && msg.querySelector('.bubble');
-        const msgs = document.querySelector('.msgs');
+        const msgs = DomAdapter.querySelector('.msgs');
         if (!bub || !msgs) return;
-        const br = bub.getBoundingClientRect();
-        const mb = msgs.getBoundingClientRect();
+        const br = DomAdapter.getRect(bub);
+        const mb = DomAdapter.getRect(msgs);
         /* El ancho se decide por el estado, no por offsetWidth: al abrir
            el panel completo la clase .rp-wide puede aplicarse un instante
            después de esta medición. */
@@ -160,12 +162,12 @@ export const MessageRow = {
     const rpMove = function () { placeRp(); };
     const bindRpMove = function (on) {
       if (on && !rpScrollEl) {
-        rpScrollEl = document.querySelector('.msgs');
+        rpScrollEl = DomAdapter.querySelector('.msgs');
         if (rpScrollEl) rpScrollEl.addEventListener('scroll', rpMove, { passive: true });
-        window.addEventListener('resize', rpMove);
+        DomAdapter.addWindowEventListener('resize', rpMove);
       } else if (!on && rpScrollEl) {
         rpScrollEl.removeEventListener('scroll', rpMove);
-        window.removeEventListener('resize', rpMove);
+        DomAdapter.removeWindowEventListener('resize', rpMove);
         rpScrollEl = null;
       }
     };
@@ -291,10 +293,8 @@ export const MessageRow = {
     const aResolving = Vue.ref(false);
     const decodeDurBuf = function (buf) {
       if (!buf) { aResolving.value = false; return; }
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { aResolving.value = false; return; }
-      let ctx;
-      try { ctx = new AC(); } catch (e) { aResolving.value = false; return; }
+      const ctx = MediaAdapter.createAudioContext();
+      if (!ctx) { aResolving.value = false; return; }
       let closed = false;
       const finish = function () {
         aResolving.value = false;
@@ -371,11 +371,11 @@ export const MessageRow = {
       const move = function (ev) { waveSeekTo(bar, ev.clientX); };
       const up = function () {
         waveDrag = false;
-        window.removeEventListener('mousemove', move);
-        window.removeEventListener('mouseup', up);
+        DomAdapter.removeWindowEventListener('mousemove', move);
+        DomAdapter.removeWindowEventListener('mouseup', up);
       };
-      window.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', up);
+      DomAdapter.addWindowEventListener('mousemove', move);
+      DomAdapter.addWindowEventListener('mouseup', up);
     };
     const waveDownTouch = function (e) {
       const el = aEl.value;
@@ -391,13 +391,13 @@ export const MessageRow = {
       };
       const up = function () {
         waveDrag = false;
-        window.removeEventListener('touchmove', move);
-        window.removeEventListener('touchend', up);
-        window.removeEventListener('touchcancel', up);
+        DomAdapter.removeWindowEventListener('touchmove', move);
+        DomAdapter.removeWindowEventListener('touchend', up);
+        DomAdapter.removeWindowEventListener('touchcancel', up);
       };
-      window.addEventListener('touchmove', move, { passive: false });
-      window.addEventListener('touchend', up);
-      window.addEventListener('touchcancel', up);
+      DomAdapter.addWindowEventListener('touchmove', move, { passive: false });
+      DomAdapter.addWindowEventListener('touchend', up);
+      DomAdapter.addWindowEventListener('touchcancel', up);
     };
     /* W37d: velocidad de la NOTA DE VOZ (1× → 1,5× → 2× → 1×) */
     const aRateV = Vue.ref(1);
@@ -577,30 +577,22 @@ export const MessageRow = {
        vFs cambia icono (expand/collapse) y rótulo. */
     const vFs = Vue.ref(false);
     const vFsChange = function () {
-      const doc = document;
-      vFs.value = (doc.fullscreenElement || doc.webkitFullscreenElement)
-        === vWrapEl.value;
+      vFs.value = DomAdapter.getFullscreenElement() === vWrapEl.value;
     };
-    document.addEventListener('fullscreenchange', vFsChange);
-    document.addEventListener('webkitfullscreenchange', vFsChange);
+    DomAdapter.addEventListener('fullscreenchange', vFsChange);
+    DomAdapter.addEventListener('webkitfullscreenchange', vFsChange);
     Vue.onUnmounted(function () {
-      document.removeEventListener('fullscreenchange', vFsChange);
-      document.removeEventListener('webkitfullscreenchange', vFsChange);
+      DomAdapter.removeEventListener('fullscreenchange', vFsChange);
+      DomAdapter.removeEventListener('webkitfullscreenchange', vFsChange);
     });
     const vFull = function () {
       const el = vWrapEl.value;
-      const doc = document;
       if (!el) return;
-      const cur = doc.fullscreenElement || doc.webkitFullscreenElement;
-      if (cur === el) {
-        if (doc.exitFullscreen) doc.exitFullscreen();
-        else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+      if (DomAdapter.getFullscreenElement() === el) {
+        DomAdapter.exitFullscreen();
         return;
       }
-      let p = null;
-      if (el.requestFullscreen) p = el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) p = el.webkitRequestFullscreen();
-      if (p && p.catch) p.catch(function () {});   /* bloqueado: no-op */
+      DomAdapter.requestFullscreen(el);
     };
     const vMeta = function (e) {
       const d = e.target.duration;
@@ -857,7 +849,7 @@ export const MessageRow = {
       if (w < 1 || h < 1) return null;
       /* tope 360×340, manteniendo la proporción; en móvil se ajusta al
          ancho visible para que el marco no desborde la burbuja. */
-      const vw = (typeof window !== 'undefined' && window.innerWidth) || 1000;
+      const vw = DomAdapter.getInnerWidth() || 1000;
       const cap = Math.max(160, Math.min(360, vw - 96));
       const bw = Math.min(cap, Math.round(340 * w / h), w);
       return {
@@ -884,7 +876,7 @@ export const MessageRow = {
       /* tope 300×340 (los mismos del .b-img), manteniendo la proporción;
          en pantallas angostas se descuenta el avatar/margen para que la
          imagen no desborde la burbuja (W51, sin aspect-ratio). */
-      const vw = (typeof window !== 'undefined' && window.innerWidth) || 1000;
+      const vw = DomAdapter.getInnerWidth() || 1000;
       const cap = Math.max(120, Math.min(300, vw - 96));
       const bw = Math.min(cap, Math.round(340 * w / h), w);
       return {

@@ -2,6 +2,7 @@
    No importa api.js (sin ciclos). */
 const { reactive, watch } = Vue;
 import { StorageAdapter } from './platform/storage.js';
+import { DomAdapter } from './platform/dom.js';
 
 export function readLs(key) {
   try { return StorageAdapter.getItem(key) || ''; } catch (e) { return ''; }
@@ -153,7 +154,7 @@ export const store = reactive({
   editFor: 0,             // id del mensaje que se está editando (0 = ninguno)
   editDraft: '',          // texto en curso de la edición
   /* apariencia: el pre-paint de index.html ya los aplicó al DOM */
-  theme: document.documentElement.getAttribute('data-theme') || 'dark',
+  theme: DomAdapter.getRootAttribute('data-theme') || 'dark',
   accent: readLs('fm.accent') || '#ff751f',
   wall: readLs('fm.wall'),
   /* W19: foto de fondo (data-URL) y sidebar contraído (escritorio) */
@@ -165,11 +166,11 @@ export const store = reactive({
   wblur: parseInt(readLs('fm.wblur'), 10) || 0,
   micDev: readLs('fm.mic'),
   wallPanelOpen: false,
-  font: document.documentElement.getAttribute('data-font') || 'normal',
+  font: DomAdapter.getRootAttribute('data-font') || 'normal',
   /* W10: idioma de la interfaz (pre-paint setea <html lang> sin parpadeo) */
   /* W97: el idioma por defecto es INGLÉS; solo es español si el pre-paint
      (boot.js) lo determinó así — idioma del sistema o fm.lang guardado. */
-  lang: document.documentElement.getAttribute('lang') === 'es' ? 'es' : 'en',
+  lang: DomAdapter.getRootAttribute('lang') === 'es' ? 'es' : 'en',
   /* preferencias de chat (dispositivo): default encendido si no hay clave */
   prefs: {
     sound: readLs('fm.p.sound') !== '0',
@@ -212,7 +213,7 @@ export const store = reactive({
      pantalla. Lo levanta api.js con el 429 {spam:true} del server. */
   spamUntil: 0,
 
-  online: typeof navigator !== 'undefined' ? navigator.onLine !== false : true,
+  online: DomAdapter.getOnline(),
   toasts: [],
 });
 
@@ -335,7 +336,7 @@ export function urlForState() {
   }
   const q = [];
   if (store.settingsOpen) {
-    const home = store.settingsAtHome && window.innerWidth <= 760;
+    const home = store.settingsAtHome && DomAdapter.getInnerWidth() <= 760;
     q.push('settings=' + (home ? 'main' : settingsSlug(store.settingsTab)));
   }
   if (store.jumpMsg) q.push('m=' + store.jumpMsg);
@@ -448,14 +449,14 @@ function applyState(p) {
       /* W65: slugs semánticos (appearance, notifications, …). `1` sigue
          funcionando para enlaces viejos; `main` es la portada móvil. */
       if (rawSettings === 'main') {
-        store.settingsAtHome = window.innerWidth <= 760;
+        store.settingsAtHome = DomAdapter.getInnerWidth() <= 760;
       } else if (rawSettings === '1') {
-        store.settingsAtHome = window.innerWidth <= 760;
+        store.settingsAtHome = DomAdapter.getInnerWidth() <= 760;
       } else if (SETTINGS_TABS[rawSettings]) {
         store.settingsTab = SETTINGS_TABS[rawSettings];
         store.settingsAtHome = false;
       } else {
-        store.settingsAtHome = window.innerWidth <= 760;
+        store.settingsAtHome = DomAdapter.getInnerWidth() <= 760;
       }
     } else {
       store.settingsAtHome = false;
@@ -490,7 +491,7 @@ export function syncPath() {
   applyState(locPath());
 }
 
-window.addEventListener('popstate', function () {
+DomAdapter.addWindowEventListener('popstate', function () {
   const p = locPath();
   if (nav) {
     const st = history.state;
@@ -562,14 +563,12 @@ export function toast(msg, kind = 'info', onRetry) {
    pasa nada. */
 function syncNativeTheme() {
   try {
-    const cs = getComputedStyle(document.documentElement);
-    const header = String(cs.getPropertyValue('--header') || '').trim();
+    const header = String(DomAdapter.getRootComputedValue('--header') || '').trim();
     const color = header || (store.theme === 'light' ? '#f2f3f5' : '#2b2d31');
-    const metas = document.querySelectorAll('meta[name="theme-color"]');
-    for (let i = 0; i < metas.length; i++) metas[i].setAttribute('content', color);
+    DomAdapter.setMetaThemeColor(color);
   } catch (e) {}
   try {
-    const a = window.FoxinixAndroid;
+    const a = DomAdapter.getNativeBridge();
     if (a && typeof a.setSystemBars === 'function') {
       a.setSystemBars(store.theme === 'light');
     }
@@ -578,7 +577,7 @@ function syncNativeTheme() {
 
 export function setTheme(mode) {
   if (mode !== 'dark' && mode !== 'light' && mode !== 'black') return;
-  document.documentElement.setAttribute('data-theme', mode);
+  DomAdapter.setRootAttribute('data-theme', mode);
   store.theme = mode;
   try { StorageAdapter.setItem('fm.theme', mode); } catch (e) {}
   updateMetaContrast();
@@ -599,7 +598,7 @@ function applyAccent(hex) {
   const r = Math.round(R * 0.72),
         g = Math.round(G * 0.72),
         b = Math.round(B * 0.72);
-  const root = document.documentElement.style;
+  const root = DomAdapter.getRootStyle();
   root.setProperty('--accent', hex);
   root.setProperty('--accent-d', '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1));
   /* W9: tinte translúcido del acento (chips activos, hover de fila, etc.) */
@@ -630,25 +629,22 @@ function lum(css) {
 }
 
 export function updateMetaContrast() {
-  const cs = getComputedStyle(document.documentElement);
-  const root = document.documentElement.style;
-  const mine = lum(cs.getPropertyValue('--bubble-me'));   /* acento oscurecido */
-  root.setProperty('--meta-mine', mine > 0.5 ? 'rgba(0,0,0,.6)' : 'rgba(255,255,255,.92)');
-  const you = lum(cs.getPropertyValue('--bubble-you'));
-  root.setProperty('--meta-you', you > 0.5 ? 'rgba(0,0,0,.5)' : 'rgba(255,255,255,.7)');
+  const mine = lum(DomAdapter.getRootComputedValue('--bubble-me'));   /* acento oscurecido */
+  DomAdapter.setRootStyle('--meta-mine', mine > 0.5 ? 'rgba(0,0,0,.6)' : 'rgba(255,255,255,.92)');
+  const you = lum(DomAdapter.getRootComputedValue('--bubble-you'));
+  DomAdapter.setRootStyle('--meta-you', you > 0.5 ? 'rgba(0,0,0,.5)' : 'rgba(255,255,255,.7)');
 }
 /* El pre-paint de index.html ya aplicó tema y acento: afinar al cargar. */
 updateMetaContrast();
 syncNativeTheme();
-if (window.addEventListener) window.addEventListener('load', syncNativeTheme);
+DomAdapter.addWindowEventListener('load', syncNativeTheme);
 setTimeout(syncNativeTheme, 0);
 
 /* '' = automático (el color del tema vía var(--bg)). */
 export function setWall(hex) {
   store.wall = hex || '';
-  const root = document.documentElement.style;
-  if (store.wall) root.setProperty('--wall', store.wall);
-  else root.removeProperty('--wall');
+  if (store.wall) DomAdapter.setRootStyle('--wall', store.wall);
+  else DomAdapter.removeRootStyle('--wall');
   try {
     if (store.wall) StorageAdapter.setItem('fm.wall', store.wall);
     else StorageAdapter.removeItem('fm.wall');
@@ -660,13 +656,12 @@ export function setWall(hex) {
    pone sobre --wall con un velo oscuro para que las burbujas se lean. */
 export function setWallImg(dataUrl) {
   store.wallimg = dataUrl || '';
-  const root = document.documentElement.style;
   if (store.wallimg) {
-    root.setProperty('--wallimg', 'url("' + store.wallimg + '")');
-    document.documentElement.classList.add('wallimg');
+    DomAdapter.setRootStyle('--wallimg', 'url("' + store.wallimg + '")');
+    DomAdapter.addRootClass('wallimg');
   } else {
-    root.removeProperty('--wallimg');
-    document.documentElement.classList.remove('wallimg');
+    DomAdapter.removeRootStyle('--wallimg');
+    DomAdapter.removeRootClass('wallimg');
   }
   try {
     if (store.wallimg) StorageAdapter.setItem('fm.wallimg', store.wallimg);
@@ -678,8 +673,8 @@ export function setWallImg(dataUrl) {
    El <html> lleva la clase desde boot.js para que no parpadee. */
 export function setSideCollapsed(v) {
   store.sideCollapsed = !!v;
-  if (store.sideCollapsed) document.documentElement.classList.add('side-collapsed');
-  else document.documentElement.classList.remove('side-collapsed');
+  if (store.sideCollapsed) DomAdapter.addRootClass('side-collapsed');
+  else DomAdapter.removeRootClass('side-collapsed');
   try { StorageAdapter.setItem('fm.side', store.sideCollapsed ? '1' : '0'); } catch (e) {}
 }
 
@@ -688,15 +683,13 @@ export function setSideCollapsed(v) {
    fondo y la conversación real se muevan juntas, en vivo. */
 export function setWallDim(v) {
   store.wdim = Math.max(0, Math.min(100, Math.round(+v) || 0));
-  document.documentElement.style
-    .setProperty('--wall-dim', (store.wdim / 100).toFixed(2));
+  DomAdapter.setRootStyle('--wall-dim', (store.wdim / 100).toFixed(2));
   try { StorageAdapter.setItem('fm.wdim', String(store.wdim)); } catch (e) {}
 }
 
 export function setWallBlur(v) {
   store.wblur = Math.max(0, Math.min(20, Math.round(+v) || 0));
-  document.documentElement.style
-    .setProperty('--wall-blur', store.wblur + 'px');
+  DomAdapter.setRootStyle('--wall-blur', store.wblur + 'px');
   try { StorageAdapter.setItem('fm.wblur', String(store.wblur)); } catch (e) {}
 }
 
@@ -730,7 +723,7 @@ export function setPrefStr(key, val) {
 export function setFont(size) {
   if (size !== 'small' && size !== 'normal' && size !== 'large') return;
   store.font = size;
-  document.documentElement.setAttribute('data-font', size);
+  DomAdapter.setRootAttribute('data-font', size);
   try { StorageAdapter.setItem('fm.font', size); } catch (e) {}
 }
 
@@ -773,15 +766,9 @@ function bytesToHex(buf) {
 
 function archiveDigest(pw) {
   const text = 'foxinix-archivo:' + pw;
-  if (window.crypto && window.crypto.subtle && window.TextEncoder) {
-    try {
-      const data = new TextEncoder().encode(text);
-      return window.crypto.subtle.digest('SHA-256', data).then(function (buf) {
-        return bytesToHex(buf);
-      }).catch(function () { return localHash(pw); });
-    } catch (e) { /* cae al hash local */ }
-  }
-  return Promise.resolve(localHash(pw));
+  return DomAdapter.digestSha256(text).then(function (buf) {
+    return buf ? bytesToHex(buf) : localHash(pw);
+  }).catch(function () { return localHash(pw); });
 }
 
 export function hasArchiveLock() {

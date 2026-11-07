@@ -12,6 +12,8 @@ import {
   bannerPositionOf, callBlurBanner, fmtTime, openProfile, toastErr,
 } from '../../views/helpers.js';
 import Vue from '../../vue.js';
+import { DomAdapter } from '../../platform/dom.js';
+import { MediaAdapter } from '../../platform/media.js';
 
 export const CallBox = {
   setup: function () {
@@ -170,8 +172,7 @@ export const CallBox = {
       const c = store.call;
       if (!c || !c.hasCam) return false;
       try {
-        return !!(navigator.mediaDevices &&
-          typeof navigator.mediaDevices.getDisplayMedia === 'function');
+        return MediaAdapter.canShareScreen();
       } catch (e) { return false; }
     };
     const toggleScreen = function () {
@@ -223,10 +224,9 @@ export const CallBox = {
     /* W60: aro verde al hablar. Se analiza la forma de onda del micrófono
        local y del flujo remoto SIN conectarlos a la salida (no hay eco). */
     const bindAudio = function (local, remote) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
       if (!audioCtx) {
-        try { audioCtx = new AC(); } catch (e) { return; }
+        audioCtx = MediaAdapter.createAudioContext();
+        if (!audioCtx) return;
       }
       if (audioCtx.state === 'suspended') {
         try {
@@ -390,8 +390,8 @@ export const CallBox = {
     const openMenu = function (ev, who) {
       const w = 210;
       const h = 190;
-      const x = Math.max(8, Math.min(ev.clientX, (window.innerWidth || 360) - w - 8));
-      const y = Math.max(8, Math.min(ev.clientY, (window.innerHeight || 640) - h - 8));
+      const x = Math.max(8, Math.min(ev.clientX, (DomAdapter.getInnerWidth() || 360) - w - 8));
+      const y = Math.max(8, Math.min(ev.clientY, (DomAdapter.getInnerHeight() || 640) - h - 8));
       menu.value = { x: x, y: y, who: who };
     };
     const menuThen = function (fn) {
@@ -463,8 +463,8 @@ export const CallBox = {
       const p = panelPos.value;
       if (!p || full.value) return;
       const m = 6;
-      const vw = window.innerWidth || 360;
-      const vh = window.innerHeight || 640;
+      const vw = DomAdapter.getInnerWidth() || 360;
+      const vh = DomAdapter.getInnerHeight() || 640;
       const w = Math.min(p.width, vw - m * 2);
       const h = Math.min(p.height, vh - m * 2);
       panelPos.value = {
@@ -476,7 +476,7 @@ export const CallBox = {
     const startPanelDrag = function (e) {
       if (!e || e.button) return;
       if (full.value || minimized.value) return;
-      if (window.innerWidth <= 760) return;
+      if (DomAdapter.getInnerWidth() <= 760) return;
       if (e.target && e.target.closest && e.target.closest('button, input')) return;
       const el = panelEl.value;
       if (!el) return;
@@ -492,8 +492,8 @@ export const CallBox = {
         if (!moved && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 4) return;
         moved = true;
         const m = 6;
-        const vw = window.innerWidth || 360;
-        const vh = window.innerHeight || 640;
+        const vw = DomAdapter.getInnerWidth() || 360;
+        const vh = DomAdapter.getInnerHeight() || 640;
         panelPos.value = {
           left: Math.max(m, Math.min(r.left + (ev.clientX - x0), vw - w - m)),
           top: Math.max(m, Math.min(r.top + (ev.clientY - y0), vh - h - m)),
@@ -502,13 +502,13 @@ export const CallBox = {
       };
       const up = function () {
         panelDragging.value = false;
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', up);
-        window.removeEventListener('pointercancel', up);
+        DomAdapter.removeWindowEventListener('pointermove', move);
+        DomAdapter.removeWindowEventListener('pointerup', up);
+        DomAdapter.removeWindowEventListener('pointercancel', up);
       };
-      window.addEventListener('pointermove', move);
-      window.addEventListener('pointerup', up);
-      window.addEventListener('pointercancel', up);
+      DomAdapter.addWindowEventListener('pointermove', move);
+      DomAdapter.addWindowEventListener('pointerup', up);
+      DomAdapter.addWindowEventListener('pointercancel', up);
     };
     const toggleFull = function () {
       full.value = !full.value;
@@ -526,8 +526,8 @@ export const CallBox = {
       const size = 62;
       const m = 6;
       fabPos.value = {
-        left: Math.max(m, Math.min(p.left, (window.innerWidth || 360) - size - m)),
-        top: Math.max(m, Math.min(p.top, (window.innerHeight || 640) - size - m)),
+        left: Math.max(m, Math.min(p.left, (DomAdapter.getInnerWidth() || 360) - size - m)),
+        top: Math.max(m, Math.min(p.top, (DomAdapter.getInnerHeight() || 640) - size - m)),
       };
     };
     const startFabDrag = function (e) {
@@ -546,21 +546,21 @@ export const CallBox = {
         const m = 6;
         fabPos.value = {
           left: Math.max(m, Math.min(r.left + (ev.clientX - x0),
-            (window.innerWidth || 360) - size - m)),
+            (DomAdapter.getInnerWidth() || 360) - size - m)),
           top: Math.max(m, Math.min(r.top + (ev.clientY - y0),
-            (window.innerHeight || 640) - size - m)),
+            (DomAdapter.getInnerHeight() || 640) - size - m)),
         };
       };
       const up = function () {
         fabDragging.value = false;
         if (moved) fabDragEnd = Date.now();
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', up);
-        window.removeEventListener('pointercancel', up);
+        DomAdapter.removeWindowEventListener('pointermove', move);
+        DomAdapter.removeWindowEventListener('pointerup', up);
+        DomAdapter.removeWindowEventListener('pointercancel', up);
       };
-      window.addEventListener('pointermove', move);
-      window.addEventListener('pointerup', up);
-      window.addEventListener('pointercancel', up);
+      DomAdapter.addWindowEventListener('pointermove', move);
+      DomAdapter.addWindowEventListener('pointerup', up);
+      DomAdapter.addWindowEventListener('pointercancel', up);
     };
     const fabClick = function () {
       /* Un arrastre no debe restaurar la llamada al soltar. */
@@ -575,10 +575,10 @@ export const CallBox = {
       setTimeout(attach, 0);
       makeBgs();
       ensurePeerProfile();
-      document.addEventListener('click', closeMenu);
-      document.addEventListener('keydown', closeMenu);
-      window.addEventListener('resize', clampFab);
-      window.addEventListener('resize', clampCallPanel);
+      DomAdapter.addEventListener('click', closeMenu);
+      DomAdapter.addEventListener('keydown', closeMenu);
+      DomAdapter.addWindowEventListener('resize', clampFab);
+      DomAdapter.addWindowEventListener('resize', clampCallPanel);
     });
     Vue.onUpdated(function () {
       attach();
@@ -588,10 +588,10 @@ export const CallBox = {
     Vue.onUnmounted(function () {
       if (timer) clearInterval(timer);
       if (speakTimer) clearInterval(speakTimer);
-      document.removeEventListener('click', closeMenu);
-      document.removeEventListener('keydown', closeMenu);
-      window.removeEventListener('resize', clampFab);
-      window.removeEventListener('resize', clampCallPanel);
+      DomAdapter.removeEventListener('click', closeMenu);
+      DomAdapter.removeEventListener('keydown', closeMenu);
+      DomAdapter.removeWindowEventListener('resize', clampFab);
+      DomAdapter.removeWindowEventListener('resize', clampCallPanel);
       if (audioCtx) {
         try { audioCtx.close(); } catch (e) {}
       }

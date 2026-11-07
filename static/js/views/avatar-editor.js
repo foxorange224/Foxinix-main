@@ -4,6 +4,8 @@
    control deslizante y el botón Girar. La vista previa y la salida
    final se pintan con la MISMA función de canvas. */
 
+import { DomAdapter } from '../platform/dom.js';
+
 const SQ = 300;      // lado lógico de la vista previa
 const OUT = 512;     // lado de la imagen que se sube
 
@@ -241,7 +243,8 @@ export const AvatarEditor = {
        si se vuelve a editar (W27b). */
     const apply = function () {
       if (!img) return;
-      const off = document.createElement('canvas');
+      const off = DomAdapter.createElement('canvas');
+      if (!off) return;
       off.width = OUT;
       off.height = OUT;
       const st = state();

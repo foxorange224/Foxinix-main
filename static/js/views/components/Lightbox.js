@@ -3,6 +3,7 @@
    desde el modal "Archivos y medios" de la info del chat.
    Extraído de views/chat.js (Fase 3.1). */
 import Vue from '../../vue.js';
+import { DomAdapter } from '../../platform/dom.js';
 import { store } from '../../store.js';
 import { t } from '../../i18n.js';
 import { startDownload } from '../../mediadl.js';
@@ -60,13 +61,13 @@ export const Lightbox = {
        se pierde fuera de ella. El visor queda entre los controles. */
     const lbClamp = function () {
       if (lbScale.value <= 1) { lbTx.value = 0; lbTy.value = 0; return; }
-      const img = document.querySelector('.lightbox .lb-img');
+      const img = DomAdapter.querySelector('.lightbox .lb-img');
       if (!img) return;
       const rect = img.getBoundingClientRect();
       const baseW = rect.width / lbScale.value;
       const baseH = rect.height / lbScale.value;
-      const maxX = Math.max(0, (baseW * lbScale.value - window.innerWidth) / 2 + 10);
-      const maxY = Math.max(0, (baseH * lbScale.value - window.innerHeight) / 2 + 10);
+      const maxX = Math.max(0, (baseW * lbScale.value - DomAdapter.getInnerWidth()) / 2 + 10);
+      const maxY = Math.max(0, (baseH * lbScale.value - DomAdapter.getInnerHeight()) / 2 + 10);
       lbTx.value = Math.max(-maxX, Math.min(maxX, lbTx.value));
       lbTy.value = Math.max(-maxY, Math.min(maxY, lbTy.value));
     };
@@ -104,12 +105,12 @@ export const Lightbox = {
       };
       const up = function () {
         lbDragging.value = false;
-        document.removeEventListener('mousemove', move);
-        document.removeEventListener('mouseup', up);
+        DomAdapter.removeEventListener('mousemove', move);
+        DomAdapter.removeEventListener('mouseup', up);
         lbMoveOff = null;
       };
-      document.addEventListener('mousemove', move);
-      document.addEventListener('mouseup', up);
+      DomAdapter.addEventListener('mousemove', move);
+      DomAdapter.addEventListener('mouseup', up);
       lbMoveOff = up;
     };
 

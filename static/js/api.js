@@ -5,6 +5,7 @@ import { t } from './i18n.js';
 import { resetDownloadStore } from './downloads.js';
 import { HttpClient } from './platform/net.js';
 import { StorageAdapter } from './platform/storage.js';
+import { DomAdapter } from './platform/dom.js';
 
 const SKEY = 'fm.session';
 
@@ -493,11 +494,7 @@ export function uploadMedia(file, onProgress, ctl) {
    la caché de emojis; se espera a que esté ACTIVO (rápido desde la
    segunda visita) con tope de 2,5 s para no colgar el arranque. */
 function resourcesReady() {
-  if (!('serviceWorker' in navigator)) return Promise.resolve(null);
-  return Promise.race([
-    navigator.serviceWorker.ready.catch(function () { return null; }),
-    new Promise(function (r) { setTimeout(r, 2500); }),
-  ]);
+  return DomAdapter.waitForServiceWorker(2500);
 }
 
 /* W70: reintento del arranque cuando falló por red y la sesión sigue

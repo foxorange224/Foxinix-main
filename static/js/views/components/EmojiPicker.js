@@ -4,6 +4,7 @@ import Vue from '../../vue.js';
 import { store } from '../../store.js';
 import { t } from '../../i18n.js';
 import { clampPanel } from '../../views/ui-actions.js';
+import { DomAdapter } from '../../platform/dom.js';
 import {
   emojiCats, emojiRecent, emojiCat, emojiSearch, emojiPush,
   emoStyle, emoFile, emoSrc, emojiCode,
@@ -97,20 +98,24 @@ export const EmojiPicker = {
     const noClamp = function () { return props.embed || props.anchored; };
     if (!noClamp()) Vue.onMounted(function () { doClamp(true); });
     const onPanelResize = function () { if (!noClamp()) doClamp(false); };
-    window.addEventListener('resize', onPanelResize);
+    DomAdapter.addWindowEventListener('resize', onPanelResize);
     /* W16: el panel puede crecer después de montar (fuentes, lista, etc.):
        el ResizeObserver vuelve a ajustarlo, dejando pasar la animación
        de entrada (140 ms) para no medir a mitad del transform. */
     let roTimer = 0;
-    const roPanel = new ResizeObserver(function () {
-      clearTimeout(roTimer);
-      roTimer = setTimeout(function () { if (!noClamp()) doClamp(false); }, 180);
-    });
-    if (!noClamp()) Vue.onMounted(function () { roPanel.observe(rootEl.value); });
+    let disconnectRo = function () {};
+    if (!noClamp()) {
+      Vue.onMounted(function () {
+        disconnectRo = DomAdapter.observeResize(rootEl.value, function () {
+          clearTimeout(roTimer);
+          roTimer = setTimeout(function () { if (!noClamp()) doClamp(false); }, 180);
+        });
+      });
+    }
     Vue.onUnmounted(function () {
-      window.removeEventListener('resize', onPanelResize);
+      DomAdapter.removeWindowEventListener('resize', onPanelResize);
       clearTimeout(roTimer);
-      roPanel.disconnect();
+      disconnectRo();
     });
     return { q, tab, cats, sections, flat, empty, pick, t, rootEl,
              scrollEl, jump, onScroll, fileOf, srcOf, titleOf, emoSystem };

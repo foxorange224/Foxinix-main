@@ -835,6 +835,7 @@ const EN = {
   'Sticker agregado': 'Sticker added',
   'No se pudo subir el archivo': 'Could not upload the file',
   'No se pudo borrar el archivo': 'Could not delete the file',
+  'No se pudo eliminar el mensaje': 'Could not delete the message',
   /* ---------- W63: tonos de mensaje y llamada ---------- */
   'Sonidos': 'Sounds',
   'Tono de mensaje': 'Message tone',

@@ -4,6 +4,7 @@
    FileSystem/knownFolders sin tocar el resto de la app. */
 
 import { StorageAdapter } from './storage.js';
+import { DomAdapter } from './dom.js';
 
 export const FileAdapter = {
   createObjectURL(blob) {
@@ -17,14 +18,15 @@ export const FileAdapter = {
   saveBlobToDisk(blob, name) {
     if (!blob) return false;
     const obj = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = DomAdapter.createElement('a');
+    if (!a) return false;
     a.href = obj;
     a.download = name || 'archivo';
     a.style.display = 'none';
     a.target = '_self';
-    document.body.appendChild(a);
+    DomAdapter.bodyAppendChild(a);
     a.click();
-    document.body.removeChild(a);
+    DomAdapter.bodyRemoveChild(a);
     setTimeout(function () { URL.revokeObjectURL(obj); }, 1200);
     return true;
   },
@@ -54,7 +56,8 @@ export function shrinkWall(file, cb) {
       w = Math.round(w * k);
       h = Math.round(h * k);
     }
-    const c = document.createElement('canvas');
+    const c = DomAdapter.createElement('canvas');
+    if (!c) { cb('', 'La foto es muy pesada: prueba con una más chica'); return; }
     c.width = w;
     c.height = h;
     c.getContext('2d').drawImage(img, 0, 0, w, h);
