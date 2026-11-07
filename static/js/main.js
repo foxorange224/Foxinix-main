@@ -3,7 +3,7 @@
 import { store, syncPath, go as goRef, goReplace as goReplaceRef,
   setTheme, toggleTheme } from './store.js';
 import { bootstrap, loadSession, API_BASE } from './api.js';
-import { t } from './i18n.js';
+import { t, sysText } from './i18n.js';
 import {
   BootView, LoginView, RegisterView, ProfileView,
   VerifyView, ForgotView, ResetView,
@@ -269,6 +269,10 @@ app.config.errorHandler = function (err, _inst, info) {
 /* W10: t() disponible en TODOS los templates (lee store.lang reactivo, así
    que cambiar el idioma repinta la interfaz sin recargar). */
 app.config.globalProperties.t = t;
+/* W99: sysText se usa en templates (mensajes de sistema) — sin esto
+   _ctx.sysText es undefined y el render de la fila explota con
+   "sysText is not a function". */
+app.config.globalProperties.sysText = sysText;
 /* W15: v-dl="url" → descarga con anillo de progreso, ✕ de cancelar y
    reintento (mediadl.js); en imágenes empieza difuminada con la miniatura. */
 app.directive('dl', dlDirective);
