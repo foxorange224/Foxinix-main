@@ -239,7 +239,7 @@ async function openProfile(username) {
     store.profile = { loading: false, user: r.user, error: '', username: username };
   } catch (e) {
     store.profile = {
-      loading: false, user: null, error: (e && e.detail) || 'No se pudo cargar el perfil',
+      loading: false, user: null, error: (e && t(e.detail)) || t('No se pudo cargar el perfil'),
       username: username,
     };
   }
@@ -269,7 +269,7 @@ async function openGroupProfile(chatId) {
     store.groupProfile = {
       loading: false,
       chat: null, members: [], gallery: [],
-      error: (e && e.detail) || 'No se pudo cargar la información del grupo',
+      error: (e && t(e.detail)) || t('No se pudo cargar la información del grupo'),
     };
   }
 }
@@ -2714,7 +2714,7 @@ const RenameGroupModal = {
         toast(t('Nombre del grupo actualizado'), 'ok');
         await loadChats();
       } catch (e) {
-        err.value = (e && e.detail) || t('No se pudo cambiar el nombre');
+        err.value = (e && t(e.detail)) || t('No se pudo cambiar el nombre');
       } finally {
         busy.value = false;
       }
@@ -2834,7 +2834,7 @@ const NewChatModal = {
          Si aún no son amigos, este click envía la solicitud. */
       if (!isFriend(u)) {
         if (sentTo(u)) {
-          toast('Ya enviaste una solicitud a @' + u.username, 'info');
+          toast(t('Ya enviaste una solicitud a @{n}', { n: u.username }), 'info');
           return;
         }
         const incoming = receivedFrom(u);
@@ -3295,7 +3295,7 @@ const SettingsModal = {
     const validateAudio = function (file, maxSec, maxKB) {
       return new Promise(function (resolve, reject) {
         if (file.size > maxKB * 1024) {
-          reject(new Error('El archivo supera ' + maxKB + ' KB'));
+          reject(new Error(t('El archivo supera {n} KB', { n: maxKB })));
           return;
         }
         const url = URL.createObjectURL(file);
@@ -3303,7 +3303,7 @@ const SettingsModal = {
         audio.onloadedmetadata = function () {
           URL.revokeObjectURL(url);
           if (audio.duration > maxSec) {
-            reject(new Error('La duración maxima es ' + maxSec + ' segundos'));
+            reject(new Error(t('La duración máxima es {n} segundos', { n: maxSec })));
           } else {
             resolve();
           }
@@ -3387,7 +3387,7 @@ const SettingsModal = {
         pwRep.value = '';
         store.pwOpen = false;              // W8: cerrar la ventana al terminar
       } catch (e) {
-        pwErr.value = (e && e.detail) || 'No se pudo cambiar la contraseña';
+        pwErr.value = (e && t(e.detail)) || t('No se pudo cambiar la contraseña');
       } finally {
         pwBusy.value = false;
       }
@@ -3412,7 +3412,7 @@ const SettingsModal = {
         emStep.value = 1;
         emCode.value = '';
       } catch (e) {
-        emErr.value = (e && e.detail) || 'No se pudo enviar el código';
+        emErr.value = (e && t(e.detail)) || t('No se pudo enviar el código');
       } finally {
         emBusy.value = false;
       }
@@ -3438,7 +3438,7 @@ const SettingsModal = {
         emCode.value = '';
         store.emOpen = false;              // W8: cerrar la ventana al terminar
       } catch (e) {
-        emErr.value = (e && e.detail) || 'Código incorrecto';
+        emErr.value = (e && t(e.detail)) || t('Código incorrecto');
       } finally {
         emBusy.value = false;
       }
@@ -4008,7 +4008,7 @@ const SettingsModal = {
                 <div class="st-col"><b>{{ t('Tono de mensaje') }}</b><span>{{ t('Suena cuando llega un mensaje nuevo') }}</span></div>
                 <div class="tone-pick">
                   <select class="input tone-select" :value="messageTone" @change="pickMessageTone">
-                    <option v-for="tm in messageTones" :key="tm.id" :value="tm.id">{{ tm.name }}</option>
+                    <option v-for="tm in messageTones" :key="tm.id" :value="tm.id">{{ t(tm.name) }}</option>
                   </select>
                   <button class="btn btn-ghost btn-sm tone-play" type="button"
                     :title="(previewingId === messageTone && previewingKind === 'message') ? t('Detener') : t('Previsualizar')"
@@ -4021,7 +4021,7 @@ const SettingsModal = {
                 <div class="st-col"><b>{{ t('Tono de llamada') }}</b><span>{{ t('Suena cuando te llaman') }}</span></div>
                 <div class="tone-pick">
                   <select class="input tone-select" :value="callTone" @change="pickCallTone">
-                    <option v-for="tc in callTones" :key="tc.id" :value="tc.id">{{ tc.name }}</option>
+                    <option v-for="tc in callTones" :key="tc.id" :value="tc.id">{{ t(tc.name) }}</option>
                   </select>
                   <button class="btn btn-ghost btn-sm tone-play" type="button"
                     :title="(previewingId === callTone && previewingKind === 'call') ? t('Detener') : t('Previsualizar')"
@@ -4547,7 +4547,7 @@ const MeProfileModal = {
         }
         menuOpen.value = false;
       } catch (e) {
-        statusErr.value = (e && e.detail) || t('No se pudo actualizar el estado');
+        statusErr.value = (e && t(e.detail)) || t('No se pudo actualizar el estado');
       } finally {
         statusBusy.value = false;
       }
@@ -4895,7 +4895,7 @@ const MeProfileEditModal = {
         }
         close();
       } catch (e) {
-        err.value = (e && e.detail) || 'No se pudo guardar el perfil';
+        err.value = (e && t(e.detail)) || t('No se pudo guardar el perfil');
       } finally {
         busy.value = false;
       }
@@ -5102,7 +5102,7 @@ const UsernameModal = {
         pw.value = '';
         toast(t('Usuario actualizado') + ': @' + val, 'ok');
       } catch (e) {
-        err.value = (e && e.detail) || t('No se pudo cambiar el usuario');
+        err.value = (e && t(e.detail)) || t('No se pudo cambiar el usuario');
       } finally {
         busy.value = false;
       }
@@ -5248,7 +5248,7 @@ const ConfirmBox = {
       } catch (e) {
         if (store.confirmBox === b) {
           b.busy = false;
-          b.error = (e && e.detail) || 'No se pudo completar la acción';
+          b.error = (e && t(e.detail)) || t('No se pudo completar la acción');
         }
         return;
       }
@@ -7281,8 +7281,8 @@ const WallPreview = {
         '<div class="msg" :class="{ mine: r.mine }" v-for="(r, i) in rows" :key="i">' +
           '<div class="bubble">' +
             '<div class="b-sender wp-name" v-if="r.showName">{{ r.name }}</div>' +
-            '<div class="b-text">{{ r.text }}</div>' +
-            '<div class="b-meta" v-if="r.time"><span class="b-time">{{ r.time }}</span></div>' +
+            '<div class="b-text">{{ t(r.text) }}</div>' +
+            '<div class="b-meta" v-if="r.time"><span class="b-time">{{ t(r.time) }}</span></div>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -9335,7 +9335,7 @@ export const ChatShell = {
           sResults.value = r.messages || [];
         }
       } catch (e) {
-        sErr.value = (e && e.detail) || t('No se pudo buscar');
+        sErr.value = (e && t(e.detail)) || t('No se pudo buscar');
       } finally {
         sBusy.value = false;
       }
@@ -9560,7 +9560,7 @@ export const ChatShell = {
         .catch(function (e) {
           if (store.readsBox && store.readsBox.msgId === msgId) {
             store.readsBox.loading = false;
-            store.readsBox.error = (e && e.detail) || 'No se pudo cargar';
+            store.readsBox.error = (e && t(e.detail)) || t('No se pudo cargar');
           }
         });
     };

@@ -331,8 +331,8 @@ const EN = {
   'Vas a salir de Foxinix en este dispositivo.\nSe limpia todo lo local: la sesión, los chats en memoria y los borradores. Puedes volver a entrar cuando quieras.':
     'You are signing out of Foxinix on this device.\nEverything local is cleared: the session, the chats in memory and the drafts. You can sign back in anytime.',
   'Eliminar cuenta': 'Delete account',
-  'Esta acción es PERMANENTE y no se puede deshacer:\n• Se borra tu cuenta, tu perfil y tu correo.\n• Se borran tus mensajes y tus archivos (fotos, notas de voz).\n• En cada chat queda un aviso de que tu cuenta fue eliminada.\n\nEscribe tu usuario y contraseña para confirmar.':
-    'This action is PERMANENT and cannot be undone:\n• Your account, profile and email are deleted.\n• Your messages and files (photos, voice messages) are deleted.\n• Every chat shows a notice that your account was deleted.\n\nEnter your username and password to confirm.',
+  'Esta acción es PERMANENTE y no se puede deshacer:\n• Se borra tu cuenta, tu perfil y tu correo.\n• Se borran tus mensajes y tus archivos (fotos, notas de voz).\n• Tus MD se eliminan por completo; en los grupos queda un aviso de que tu cuenta fue eliminada.\n\nEscribe tu usuario y contraseña para confirmar.':
+    'This action is PERMANENT and cannot be undone:\n• Your account, profile and email are deleted.\n• Your messages and files (photos, voice notes) are deleted.\n• Your DMs are completely removed; in groups a notice remains that your account was deleted.\n\nType your username and password to confirm.',
   'Eliminar mi cuenta': 'Delete my account',
   'Escribe tu usuario para confirmar': 'Enter your username to confirm',
   'Confirmar': 'Confirm',
@@ -934,6 +934,132 @@ const EN = {
   'Volver a Chats': 'Back to Chats',
   'Ya enviaste una solicitud de amistad': 'You already sent a friend request',
   'borra para siempre tu perfil, tus mensajes y tus archivos. Tus MD se eliminan por completo; en los grupos queda un aviso. No se puede deshacer.': 'permanently deletes your profile, messages and files. Your DMs are deleted completely; in groups a notice remains. This cannot be undone.',
+
+  /* ---------- W97: claves que se usaban en t() sin traducción ---------- */
+  'Algo salió mal. Inténtalo de nuevo.': 'Something went wrong. Try again.',
+  'Archivos compartidos': 'Shared files',
+  'Borrar': 'Clear',
+  'Chat archivado': 'Chat archived',
+  'Chat desarchivado': 'Chat unarchived',
+  'Dueño': 'Owner',
+  'ID': 'ID',
+  'Info del grupo': 'Group info',
+  'La propiedad pasó a {n}': 'Ownership passed to {n}',
+  'Miembro': 'Member',
+  'Miembros': 'Members',
+  'Tu rol: {n}': 'Your role: {n}',
+  'Vas a eliminar "{n}" de tu lista.\nEl otro usuario conservará su copia. Si te vuelve a escribir, el chat reaparecerá.':
+    'You are about to remove "{n}" from your list.\nThe other user will keep their copy. If they message you again, the chat will reappear.',
+  '{n} rechazó la llamada': '{n} rejected the call',
+  '¿Transferir la propiedad de este grupo a {n}? Tú pasarás a ser admin y {n} podrá administrar el grupo.':
+    'Transfer ownership of this group to {n}? You will become an admin and {n} will be able to manage the group.',
+  /* W97: antes era concatenación ('…a @' + user), que t() no podía
+     traducir; ahora lleva placeholder como el resto. */
+  'Ya enviaste una solicitud a @{n}': 'You already sent a request to @{n}',
+
+  /* ---------- W97: toasts y errores que no llegaban al diccionario ---------- */
+  'No se pudo fijar el mensaje': 'Could not pin the message',
+  'No se pudo fijar el chat': 'Could not pin the chat',
+  'No se pudo silenciar el chat': 'Could not mute the chat',
+  'No se pudo renovar la sesión': 'Could not renew the session',
+  'Sesión expirada…': 'Session expired…',
+  'Error al descargar actualización': 'Error downloading the update',
+  'No se pudo conceder el permiso': 'Could not grant the permission',
+  'No se pudo cargar la información del grupo': 'Could not load the group info',
+  'No se pudo archivar el chat': 'Could not archive the chat',
+  'No se pudo aceptar la solicitud': 'Could not accept the request',
+  'El archivo supera {n} KB': 'The file is larger than {n} KB',
+  'La duración máxima es {n} segundos': 'The maximum duration is {n} seconds',
+
+  /* ---------- W97: pestañas de Ajustes (t(tb.name) / t(tb.desc)) ---------- */
+  'Ajustes de la aplicación': 'App settings',
+  'Bloqueo con contraseña de Archivados': 'Password lock for Archived',
+  'Descargas automáticas y archivos guardados': 'Automatic downloads and saved files',
+  'Animaciones y estímulos visuales': 'Animations and visual stimuli',
+  'Correo, contraseña y sesión': 'Email, password and session',
+
+  /* ---------- W97: nombres de tono (antes se pintaban sin t()) ---------- */
+  'Predeterminado': 'Default',
+  'Notificación predeterminada': 'Default notification',
+  'Notificación 2': 'Notification 2',
+  'Sonido de Discord': 'Discord sound',
+  'Maullido Saturado': 'Saturated meow',
+  'Silbido WhatsApp': 'WhatsApp whistle',
+  'Sácame del bolsillo': 'Take me out of your pocket',
+  'Nya Music (Otakus)': 'Nya Music (Otakus)',
+
+  /* ---------- W97: conversación de ejemplo del preview de fondo ---------- */
+  '¡Hola!': 'Hello!',
+  '¿Qué tal tu día?': 'How was your day?',
+  '¡Hola! Todo bien por aquí': 'Hello! All good here',
+  'Acomodando unas cosas': 'Tidying up a few things',
+  '¿Y tú qué tal?': 'How about you?',
+  'Bien también, descansando un rato': 'Good too, resting a bit',
+  'Hablamos más tarde': 'Let\'s talk later',
+  '¡Dale, perfecto!': 'Sure, perfect!',
+  'Un abrazo 👍': 'A hug 👍',
+  '6:10 p.m.': '6:10 PM',
+  '6:11 p.m.': '6:11 PM',
+  '6:12 p.m.': '6:12 PM',
+
+  /* ---------- W97: strings de UI que solo se veían en español ---------- */
+  'Buscar archivados': 'Search archived chats',
+  'No hay chats archivados.': 'No archived chats.',
+  'No se pudo cargar': 'Could not load',
+
+  /* ---------- W97: errores del backend que la app pinta en la UI.
+     El backend responde en español (fuente: HTTPException de server/app);
+     aquí se traducen al pasar por t() en humanError()/auth.js sin tocar
+     Python. Los 5 f-strings interpolados del backend (p. ej.
+     "Código incorrecto, te quedan N intentos") no son traducibles con
+     clave exacta y quedan en español. ---------- */
+  'Archivo de portada inválido': 'Invalid banner file',
+  'Cuota de almacenamiento llena': 'Storage quota full',
+  'El GIF debe ser un archivo .gif': 'The GIF must be a .gif file',
+  'El GIF debe ser un archivo .gif o WebP animado': 'The GIF must be a .gif file or animated WebP',
+  'El destino es el mismo chat': 'The destination is the same chat',
+  'El mensaje citado no existe en este chat': 'The quoted message does not exist in this chat',
+  'El nombre no puede estar vacío': 'The name cannot be empty',
+  'El sticker debe ser una imagen': 'The sticker must be an image',
+  'Enlace de media inválido o caducado': 'Invalid or expired media link',
+  'Enlace no permitido': 'Link not allowed',
+  'Envía una solicitud de amistad y espera a que la acepten': 'Send a friend request and wait for it to be accepted',
+  'Este grupo no permite unirse por enlace': 'This group does not allow joining via link',
+  'Formato no aplicable': 'Format not applicable',
+  'GIF no encontrado': 'GIF not found',
+  'GIF no válido': 'Invalid GIF',
+  'La foto del grupo debe ser una imagen': 'The group photo must be an image',
+  'La portada debe ser una imagen': 'The banner must be an image',
+  'La página es demasiado grande': 'The page is too large',
+  'La página respondió con error': 'The page returned an error',
+  'La solicitud ya fue respondida': 'The request has already been answered',
+  'Miembro destino inválido': 'Invalid target member',
+  'Nada que cambiar': 'Nothing to change',
+  'Necesitas una solicitud de amistad aceptada para usar este MD': 'You need an accepted friend request to use this DM',
+  'No eres miembro del chat destino': 'You are not a member of the target chat',
+  'No eres miembro del grupo': 'You are not a member of the group',
+  'No hay amistad con ese usuario': 'You are not friends with that user',
+  'No puedes bloquearte a ti mismo': 'You cannot block yourself',
+  'No puedes enviarte una solicitud': 'You cannot send yourself a request',
+  'No se pudo leer la página': 'Could not read the page',
+  'No se pudo preparar el formato compatible': 'Could not prepare the compatible format',
+  'No se puede reenviar un mensaje del sistema': 'A system message cannot be resent',
+  'Redirección no permitida': 'Redirect not allowed',
+  'Solicitud no encontrada': 'Request not found',
+  'Solo disponible en grupos': 'Only available in groups',
+  'Solo el owner o un admin pueden cambiar estos ajustes': 'Only the owner or an admin can change these settings',
+  'Solo el owner o un admin pueden cambiar la foto': 'Only the owner or an admin can change the photo',
+  'Solo el propietario puede transferir el grupo': 'Only the owner can transfer the group',
+  'Solo los grupos tienen propietario': 'Only groups have an owner',
+  'Solo puedes ver las lecturas de tus mensajes': 'You can only see the read receipts of your own messages',
+  'Solo se pueden eliminar los MD': 'Only DMs can be deleted',
+  'Sticker inválido': 'Invalid sticker',
+  'Sólo se aceptan enlaces http/https': 'Only http/https links are accepted',
+  'Sólo se pueden marcar imágenes': 'Only images can be marked',
+  'Tipo de archivo inválido': 'Invalid file type',
+  'Verifica tu correo para continuar': 'Verify your email to continue',
+  'Ya hay una solicitud pendiente': 'There is already a pending request',
+  'Ya son amigos': 'They are already friends',
 };
 
 /**

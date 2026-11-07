@@ -50,9 +50,11 @@ export function humanError(e) {
   if (e.status >= 500) {
     return t('Algo salió mal en nuestros servidores. Por favor, inténtalo de nuevo más tarde.');
   }
-  /* 4xx (excepto 401/403 que se manejan aparte) -> usar el detalle si es legible */
+  /* 4xx (excepto 401/403 que se manejan aparte) -> usar el detalle si es legible.
+     W97: el backend responde en español, así que pasa por t() — si no hay
+     clave EN, t() devuelve el original y no se pierde nada. */
   if (e.detail && e.detail.length > 0 && !e.detail.includes('Error')) {
-    return e.detail;
+    return t(e.detail);
   }
   return t('Algo salió mal. Inténtalo de nuevo.');
 }

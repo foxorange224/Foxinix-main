@@ -163,7 +163,9 @@ export const store = reactive({
   wallPanelOpen: false,
   font: document.documentElement.getAttribute('data-font') || 'normal',
   /* W10: idioma de la interfaz (pre-paint setea <html lang> sin parpadeo) */
-  lang: document.documentElement.getAttribute('lang') === 'en' ? 'en' : 'es',
+  /* W97: el idioma por defecto es INGLÉS; solo es español si el pre-paint
+     (boot.js) lo determinó así — idioma del sistema o fm.lang guardado. */
+  lang: document.documentElement.getAttribute('lang') === 'es' ? 'es' : 'en',
   /* preferencias de chat (dispositivo): default encendido si no hay clave */
   prefs: {
     sound: readLs('fm.p.sound') !== '0',

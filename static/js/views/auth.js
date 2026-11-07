@@ -3,6 +3,7 @@ import { store, go, goReplace, toast } from '../store.js';
 import { api, applyAuth, bootstrap, logout, uploadMedia, session, saveSession } from '../api.js';
 /* W66c: GIF/WebP animados como foto de perfil (se suben tal cual) */
 import { isAnimWebp } from '../actions.js';
+import { t } from '../i18n.js';
 import { AvatarEditor } from './avatar-editor.js';
 
 const { ref, computed, onMounted, onUnmounted } = Vue;
@@ -55,7 +56,7 @@ export const LoginView = {
           goReplace('app');
         }
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
       } finally {
         busy.value = false;
       }
@@ -148,7 +149,7 @@ export const RegisterView = {
         applyAuth(r);
         go('profile');
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
       } finally {
         busy.value = false;
       }
@@ -298,7 +299,7 @@ export const ProfileView = {
         if (r.user) { session.user = r.user; store.user = r.user; saveSession(); }
         go('verify');
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
       } finally {
         busy.value = false;
       }
@@ -394,7 +395,7 @@ export const VerifyView = {
         if (r.tokens) applyAuth({ tokens: r.tokens, user: r.user });
         await bootstrap();
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
         code.value = '';
         const info = store.pendingInfo;
         attempts.value = info && info.attempts_left != null ? info.attempts_left : null;
@@ -419,7 +420,7 @@ export const VerifyView = {
         attempts.value = r.attempts_left != null ? r.attempts_left : attempts.value;
         startTimer();
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
         if (e.retryAfter) {
           cd.value = e.retryAfter;
           startTimer();
@@ -503,7 +504,7 @@ export const ForgotView = {
         // (retry_after > 0) el código anterior sigue vigente: se puede usar.
         go('reset');
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
       } finally {
         busy.value = false;
       }
@@ -567,7 +568,7 @@ export const ResetView = {
         applyAuth(r);
         await bootstrap();
       } catch (e) {
-        err.value = e.detail;
+        err.value = t(e.detail);
       } finally {
         busy.value = false;
       }

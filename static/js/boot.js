@@ -59,9 +59,15 @@
     }
     var f = localStorage.getItem('fm.font');
     if (f === 'small' || f === 'large') document.documentElement.setAttribute('data-font', f);
-    /* W10: idioma de la interfaz antes del primer pintado (sin parpadeo) */
+    /* W10/W97: idioma de la interfaz antes del primer pintado (sin parpadeo).
+       W97: si el usuario no eligió nada, se detecta el idioma del sistema
+       (navigator.language); si no se puede consultar, se usa inglés. */
     var lg = localStorage.getItem('fm.lang');
-    if (lg === 'en' || lg === 'es') document.documentElement.setAttribute('lang', lg);
+    if (lg !== 'en' && lg !== 'es') {
+      var nav = String(navigator.language || navigator.userLanguage || '').toLowerCase();
+      lg = nav.indexOf('es') === 0 ? 'es' : 'en';
+    }
+    document.documentElement.setAttribute('lang', lg);
   } catch (e) {}
 })();
 

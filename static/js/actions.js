@@ -293,7 +293,7 @@ async function resolveUserDeepLink(uid) {
             store.profile.user && store.profile.user.id === u.id) {
           store.profile.relation = 'sent';
         } else if (!e || e.status !== 409) {
-          toast((e && e.detail) || t('No se pudo enviar la solicitud'), 'err');
+          toast((e && t(e.detail)) || t('No se pudo enviar la solicitud'), 'err');
         }
       }
     }
@@ -334,7 +334,7 @@ async function resolveGroupDeepLink(pub) {
     if (pendingGroupPub !== pub) return;
     if (e && e.status === 401) return;   // bootstrap se encarga
     toast(e && e.status === 404 ? t('Grupo no encontrado')
-      : (e && e.detail) || t('No se pudo abrir el grupo'), 'err');
+      : (e && t(e.detail)) || t('No se pudo abrir el grupo'), 'err');
     syncUrl();
   }
 }
@@ -353,7 +353,7 @@ export async function joinGroupByPub() {
     if (c) openChat(c.id, true);
   } catch (e) {
     p.joining = false;
-    p.error = (e && e.detail) || t('No se pudo unir al grupo');
+    p.error = (e && t(e.detail)) || t('No se pudo unir al grupo');
   }
 }
 
@@ -694,7 +694,7 @@ export async function loadMembers(chatId) {
     if (!store.info || store.info.chatId !== chatId) return;
     store.info = {
       chatId: chatId, loading: false, members: [],
-      error: (e && e.detail) || 'No se pudo cargar la info del chat',
+      error: (e && t(e.detail)) || t('No se pudo cargar la info del chat'),
     };
   }
 }
@@ -1119,7 +1119,7 @@ function runUpload(chatId, cid) {
     }
     // La burbuja queda en error con su botón de reintento (sin toasts).
     var row2 = findPending(chatId, cid);
-    if (row2) { row2.upload.state = 'fail'; row2.upload.err = e.detail || ''; }
+    if (row2) { row2.upload.state = 'fail'; row2.upload.err = e.detail ? t(e.detail) : ''; }
     else if (!e.spam) toast(e.detail || 'No se pudo enviar el archivo', 'err');   // W18
   });
 }
@@ -1222,7 +1222,7 @@ export async function toggleReaction(chatId, msgId, emoji) {
       '/chats/' + chatId + '/reactions/' + msgId, { emoji: emoji });
   } catch (e) {
     msg.reactions = prev;
-    toast((e && e.detail) || 'No se pudo reaccionar', 'err');
+    toast((e && t(e.detail)) || t('No se pudo reaccionar'), 'err');
   }
 }
 
@@ -1307,7 +1307,7 @@ export async function setPinned(chatId, v) {
     const chat = findChat(chatId);
     if (chat) { chat.pinned = !!v; sortChats(); }
   } catch (e) {
-    toast((e && e.detail) || 'No se pudo fijar el chat', 'err');
+    toast((e && t(e.detail)) || t('No se pudo fijar el chat'), 'err');
   }
 }
 
@@ -1319,7 +1319,7 @@ export async function setMuted(chatId, v) {
     const chat = findChat(chatId);   // ídem: objeto vigente, no huérfano
     if (chat) chat.muted = !!v;
   } catch (e) {
-    toast((e && e.detail) || 'No se pudo silenciar el chat', 'err');
+    toast((e && t(e.detail)) || t('No se pudo silenciar el chat'), 'err');
   }
 }
 
