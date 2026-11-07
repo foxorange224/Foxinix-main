@@ -14,6 +14,8 @@
 
    Sin dependencias. FF78: Cache API + IndexedDB + Blob + XHR. */
 import { store } from './store.js';
+import { StorageAdapter } from './platform/storage.js';
+import { FileAdapter } from './platform/files.js';
 
 /* P1: las descargas persistentes son por CUENTA. Antes el mismo caché e
    IndexedDB se compartían entre usuarios del mismo dispositivo y la
@@ -78,7 +80,7 @@ function emptyAuto() {
 export function autoDlPrefs() {
   const out = emptyAuto();
   let raw = null;
-  try { raw = JSON.parse(localStorage.getItem(DL_AUTO_KEY) || '{}'); } catch (e) { raw = null; }
+  try { raw = JSON.parse(StorageAdapter.getItem(DL_AUTO_KEY) || '{}'); } catch (e) { raw = null; }
   let hadStored = false;
   if (raw && typeof raw === 'object') {
     for (let i = 0; i < DL_TYPES.length; i++) {
@@ -96,10 +98,10 @@ export function autoDlPrefs() {
      preferencias guardadas; móvil conserva lo que eligió (por defecto,
      apagado). Quien quiera apagarlo, lo hace en Ajustes → Descargas. */
   try {
-    if (hadStored && localStorage.getItem('fm.dlauto.v') !== '2') {
+    if (hadStored && StorageAdapter.getItem('fm.dlauto.v') !== '2') {
       for (let i = 0; i < DL_TYPES.length; i++) out[DL_TYPES[i].id].wifi = true;
-      localStorage.setItem(DL_AUTO_KEY, JSON.stringify(out));
-      localStorage.setItem('fm.dlauto.v', '2');
+      StorageAdapter.setItem(DL_AUTO_KEY, JSON.stringify(out));
+      StorageAdapter.setItem('fm.dlauto.v', '2');
     }
   } catch (e) {}
   return out;
@@ -110,9 +112,9 @@ export function setAutoDl(type, network, on) {
   if (!prefs[type] || (network !== 'wifi' && network !== 'mobile')) return prefs;
   prefs[type][network] = !!on;
   try {
-    localStorage.setItem(DL_AUTO_KEY, JSON.stringify(prefs));
+    StorageAdapter.setItem(DL_AUTO_KEY, JSON.stringify(prefs));
     /* W59: una elección explícita ya no se pisa con la migración. */
-    localStorage.setItem('fm.dlauto.v', '2');
+    StorageAdapter.setItem('fm.dlauto.v', '2');
   } catch (e) {}
   return prefs;
 }
@@ -315,7 +317,7 @@ function cacheOpen() {
 /* Blob -> archivo público. La objectURL se revoca al terminar el clic. */
 export function saveBlobToDisk(blob, name) {
   if (!blob) return false;
-  const obj = URL.createObjectURL(blob);
+  const obj = FileAdapter.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = obj;
   a.download = name || 'archivo';
@@ -324,7 +326,7 @@ export function saveBlobToDisk(blob, name) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(function () { URL.revokeObjectURL(obj); }, 1200);
+  setTimeout(function () { FileAdapter.revokeObjectURL(obj); }, 1200);
   return true;
 }
 
@@ -452,7 +454,7 @@ export async function openAppDownload(urlOrKey) {
   const mime = blob.type || (meta && meta.mime) || '';
   const name = (meta && meta.name) || 'archivo';
   const kind = (meta && meta.kind) || dlCategory('', mime, name);
-  const url = URL.createObjectURL(blob);
+  const url = FileAdapter.createObjectURL(blob);
   store.dlViewer = {
     url: url,
     name: name,

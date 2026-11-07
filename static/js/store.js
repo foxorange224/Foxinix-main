@@ -1,9 +1,10 @@
 /* Estado global + router W22 (History API: rutas reales, sin #).
    No importa api.js (sin ciclos). */
 const { reactive, watch } = Vue;
+import { StorageAdapter } from './platform/storage.js';
 
 export function readLs(key) {
-  try { return localStorage.getItem(key) || ''; } catch (e) { return ''; }
+  try { return StorageAdapter.getItem(key) || ''; } catch (e) { return ''; }
 }
 
 export const store = reactive({
@@ -145,6 +146,9 @@ export const store = reactive({
   galModal: false,        // W29l: modal "Archivos y medios" (abre desde la info)
   ctx: null,              // menú contextual {x, y, items: [{label, danger, fn}]}
   reactFor: 0,            // id de mensaje cuyo picker se abre desde el menú
+  /* ---- W13: buscar en el chat y reenviar mensajes ---- */
+  searchOpen: false,      // modal de búsqueda dentro del chat (SearchModal)
+  fwdFor: null,           // {msg, src} mientras se reenvía un mensaje (ForwardModal)
   /* ---- W8: editar mensaje en línea ---- */
   editFor: 0,             // id del mensaje que se está editando (0 = ninguno)
   editDraft: '',          // texto en curso de la edición
@@ -576,7 +580,7 @@ export function setTheme(mode) {
   if (mode !== 'dark' && mode !== 'light' && mode !== 'black') return;
   document.documentElement.setAttribute('data-theme', mode);
   store.theme = mode;
-  try { localStorage.setItem('fm.theme', mode); } catch (e) {}
+  try { StorageAdapter.setItem('fm.theme', mode); } catch (e) {}
   updateMetaContrast();
   syncNativeTheme();
 }
@@ -607,7 +611,7 @@ export function setAccent(hex) {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
   store.accent = hex;
   applyAccent(hex);
-  try { localStorage.setItem('fm.accent', hex); } catch (e) {}
+  try { StorageAdapter.setItem('fm.accent', hex); } catch (e) {}
 }
 
 /* W12: la hora y las palomitas se pintan del color que CONTRASTE con el
@@ -646,8 +650,8 @@ export function setWall(hex) {
   if (store.wall) root.setProperty('--wall', store.wall);
   else root.removeProperty('--wall');
   try {
-    if (store.wall) localStorage.setItem('fm.wall', store.wall);
-    else localStorage.removeItem('fm.wall');
+    if (store.wall) StorageAdapter.setItem('fm.wall', store.wall);
+    else StorageAdapter.removeItem('fm.wall');
   } catch (e) {}
 }
 
@@ -665,8 +669,8 @@ export function setWallImg(dataUrl) {
     document.documentElement.classList.remove('wallimg');
   }
   try {
-    if (store.wallimg) localStorage.setItem('fm.wallimg', store.wallimg);
-    else localStorage.removeItem('fm.wallimg');
+    if (store.wallimg) StorageAdapter.setItem('fm.wallimg', store.wallimg);
+    else StorageAdapter.removeItem('fm.wallimg');
   } catch (e) {}
 }
 
@@ -676,7 +680,7 @@ export function setSideCollapsed(v) {
   store.sideCollapsed = !!v;
   if (store.sideCollapsed) document.documentElement.classList.add('side-collapsed');
   else document.documentElement.classList.remove('side-collapsed');
-  try { localStorage.setItem('fm.side', store.sideCollapsed ? '1' : '0'); } catch (e) {}
+  try { StorageAdapter.setItem('fm.side', store.sideCollapsed ? '1' : '0'); } catch (e) {}
 }
 
 /* W20: opacidad del velo oscuro del fondo (0-100) y difuminado (0-20 px).
@@ -686,22 +690,22 @@ export function setWallDim(v) {
   store.wdim = Math.max(0, Math.min(100, Math.round(+v) || 0));
   document.documentElement.style
     .setProperty('--wall-dim', (store.wdim / 100).toFixed(2));
-  try { localStorage.setItem('fm.wdim', String(store.wdim)); } catch (e) {}
+  try { StorageAdapter.setItem('fm.wdim', String(store.wdim)); } catch (e) {}
 }
 
 export function setWallBlur(v) {
   store.wblur = Math.max(0, Math.min(20, Math.round(+v) || 0));
   document.documentElement.style
     .setProperty('--wall-blur', store.wblur + 'px');
-  try { localStorage.setItem('fm.wblur', String(store.wblur)); } catch (e) {}
+  try { StorageAdapter.setItem('fm.wblur', String(store.wblur)); } catch (e) {}
 }
 
 /* W20: micrófono preferido (deviceId; '' = el del sistema). */
 export function setMicDev(id) {
   store.micDev = id || '';
   try {
-    if (store.micDev) localStorage.setItem('fm.mic', store.micDev);
-    else localStorage.removeItem('fm.mic');
+    if (store.micDev) StorageAdapter.setItem('fm.mic', store.micDev);
+    else StorageAdapter.removeItem('fm.mic');
   } catch (e) {}
 }
 
@@ -710,7 +714,7 @@ export function setMicDev(id) {
 export function setPref(key, val) {
   if (!(key in store.prefs)) return;
   store.prefs[key] = !!val;
-  try { localStorage.setItem('fm.p.' + key, val ? '1' : '0'); } catch (e) {}
+  try { StorageAdapter.setItem('fm.p.' + key, val ? '1' : '0'); } catch (e) {}
 }
 
 /* W40: preferencia de valor libre (estilo de emojis: system/noto/
@@ -718,7 +722,7 @@ export function setPref(key, val) {
 export function setPrefStr(key, val) {
   if (!(key in store.prefs)) return;
   store.prefs[key] = val;
-  try { localStorage.setItem('fm.p.' + key, val); } catch (e) {}
+  try { StorageAdapter.setItem('fm.p.' + key, val); } catch (e) {}
 }
 
 /* Tamaño de letra: data-font lo aplica el CSS (--fs); el pre-paint lo
@@ -727,7 +731,7 @@ export function setFont(size) {
   if (size !== 'small' && size !== 'normal' && size !== 'large') return;
   store.font = size;
   document.documentElement.setAttribute('data-font', size);
-  try { localStorage.setItem('fm.font', size); } catch (e) {}
+  try { StorageAdapter.setItem('fm.font', size); } catch (e) {}
 }
 
 /* ---------- W60: bloqueo de la sección Archivados ----------
@@ -787,7 +791,7 @@ export function hasArchiveLock() {
 export async function setArchiveLock(pw) {
   if (!pw || String(pw).length < 4) throw new Error('short');
   const hash = await archiveDigest(String(pw));
-  localStorage.setItem(ARCHIVE_LOCK_KEY, hash);
+  StorageAdapter.setItem(ARCHIVE_LOCK_KEY, hash);
   store.archiveHasLock = true;
   store.archiveUnlocked = true;
 }
@@ -800,7 +804,7 @@ export async function checkArchiveLock(pw) {
 }
 
 export function clearArchiveLock() {
-  try { localStorage.removeItem(ARCHIVE_LOCK_KEY); } catch (e) {}
+  try { StorageAdapter.removeItem(ARCHIVE_LOCK_KEY); } catch (e) {}
   store.archiveHasLock = false;
   store.archiveUnlocked = false;
   store.archiveLockPrompt = false;

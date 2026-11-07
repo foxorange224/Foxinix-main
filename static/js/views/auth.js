@@ -5,6 +5,7 @@ import { api, applyAuth, bootstrap, logout, uploadMedia, session, saveSession } 
 import { isAnimWebp } from '../actions.js';
 import { t } from '../i18n.js';
 import { AvatarEditor } from './avatar-editor.js';
+import { FileAdapter } from '../platform/files.js';
 
 const { ref, computed, onMounted, onUnmounted } = Vue;
 
@@ -242,43 +243,43 @@ export const ProfileView = {
       /* W66c: GIF o WebP animado → se sube tal cual; el editor (canvas)
          los dejaría quietos en el primer fotograma. */
       if (f.type === 'image/gif' || await isAnimWebp(f)) {
-        if (preview.value) URL.revokeObjectURL(preview.value);
-        if (edSrc.value) URL.revokeObjectURL(edSrc.value);
+        if (preview.value) FileAdapter.revokeObjectURL(preview.value);
+        if (edSrc.value) FileAdapter.revokeObjectURL(edSrc.value);
         file.value = f;
         rawFile.value = f;
         edSrc.value = '';
-        preview.value = URL.createObjectURL(f);
+        preview.value = FileAdapter.createObjectURL(f);
         return;
       }
       rawFile.value = f;
-      if (edSrc.value) URL.revokeObjectURL(edSrc.value);
+      if (edSrc.value) FileAdapter.revokeObjectURL(edSrc.value);
       edInitial.value = null;          // foto nueva: encuadre fresco
-      edSrc.value = URL.createObjectURL(f);
+      edSrc.value = FileAdapter.createObjectURL(f);
     }
     function startEdit() {
-      if (edSrc.value) URL.revokeObjectURL(edSrc.value);
+      if (edSrc.value) FileAdapter.revokeObjectURL(edSrc.value);
       edInitial.value = crop;
-      if (rawFile.value) edSrc.value = URL.createObjectURL(rawFile.value);
+      if (rawFile.value) edSrc.value = FileAdapter.createObjectURL(rawFile.value);
     }
     function onEdCancel() {
-      if (edSrc.value) { URL.revokeObjectURL(edSrc.value); edSrc.value = ''; }
+      if (edSrc.value) { FileAdapter.revokeObjectURL(edSrc.value); edSrc.value = ''; }
     }
     function onEdConfirm(blob, st) {
       onEdCancel();
-      if (preview.value) URL.revokeObjectURL(preview.value);
+      if (preview.value) FileAdapter.revokeObjectURL(preview.value);
       if (st) crop = st;
       file.value = new File([blob], 'avatar.png', { type: 'image/png' });
-      preview.value = URL.createObjectURL(file.value);
+      preview.value = FileAdapter.createObjectURL(file.value);
     }
     function clearAvatar() {
-      if (preview.value) URL.revokeObjectURL(preview.value);
+      if (preview.value) FileAdapter.revokeObjectURL(preview.value);
       file.value = null;
       rawFile.value = null;
       preview.value = '';
     }
     onUnmounted(() => {
-      if (preview.value) URL.revokeObjectURL(preview.value);
-      if (edSrc.value) URL.revokeObjectURL(edSrc.value);
+      if (preview.value) FileAdapter.revokeObjectURL(preview.value);
+      if (edSrc.value) FileAdapter.revokeObjectURL(edSrc.value);
     });
 
     async function next() {

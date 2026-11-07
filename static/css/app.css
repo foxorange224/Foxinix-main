@@ -165,6 +165,9 @@ button, a, input, textarea, select, label, [role="button"] {
 [v-cloak] { display: none !important; }
 
 button, input, textarea { font: inherit; color: inherit; }
+/* W79: iOS hace zoom automático al enfocar un input con font-size < 16px.
+   Forzamos 16px en todos los inputs/select/textarea para evitarlo. */
+input, select, textarea { font-size: 16px; }
 button { cursor: pointer; }
 a { color: var(--accent); }
 
@@ -310,7 +313,7 @@ textarea.input { resize: vertical; min-height: 74px; }
 
 /* ---------- pantalla de carga (boot) ---------- */
 .boot {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex; align-items: center; justify-content: center;
   color: var(--t2);
 }
@@ -369,7 +372,7 @@ textarea.input { resize: vertical; min-height: 74px; }
 
 /* ---------- auth ---------- */
 .auth-wrap {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex; align-items: center; justify-content: center;
   padding: 24px 16px;
 }
@@ -609,7 +612,7 @@ html.no-anim *::after {
 
 .app-shell {
   display: flex;
-  height: 100%;              /* W51: 100vh se metía bajo la barra del móvil */
+  height: 100%;              /* W51: 100dvh se metía bajo la barra del móvil */
   min-height: 0;
   overflow: hidden;
   background: var(--bg);
@@ -2954,7 +2957,7 @@ html.wallimg .chat-pane.people-pane::after { content: none; }
    pasar de pestaña; para eso existe el scroll del cuerpo y de la nav. */
 .modal.settings {
   width: min(640px, 100%);
-  height: min(660px, calc(100vh - 40px));
+  height: min(660px, calc(100dvh - 40px));
 }
 .modal.meprof { width: min(430px, 100%); }
 .modal.confirm { width: min(400px, 100%); }
@@ -3003,7 +3006,7 @@ html.wallimg .chat-pane.people-pane::after { content: none; }
 .modal.meprof,
 .modal.confirm,
 .modal.req-sent {
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
 }
@@ -3147,7 +3150,7 @@ html.wallimg .chat-pane.people-pane::after { content: none; }
 .st-col span { font-size: 0.8125rem; line-height: 1.45; color: var(--t2); }
 /* W63: tonos de mensaje y llamada. Sin gap (FF78): márgenes. */
 .tone-pick { display: flex; align-items: center; flex: 1; min-width: 0; }
-.tone-pick .tone-select { flex: 1; min-width: 110px; margin-right: 8px; font-size: 0.8125rem; padding: 5px 8px; }
+.tone-pick .tone-select { flex: 1; min-width: 110px; margin-right: 8px; font-size: 16px; padding: 5px 8px; }
 .tone-play { padding: 4px 10px; font-size: 0.75rem; flex: none; white-space: nowrap; }
 .tone-upload { display: flex; align-items: center; }
 .tone-upload > * + * { margin-left: 8px; }
@@ -3248,7 +3251,7 @@ html.wallimg .chat-pane.people-pane::after { content: none; }
 }
 .perm-card {
   width: min(450px, 100%);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   overflow-y: auto;
   padding: 28px 26px 22px;
   border: 1px solid var(--border);
@@ -3698,7 +3701,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
   box-shadow: var(--shadow);
   /* W45: si la lista no cabe en una pantalla baja, se desplaza en vez
      de quedar cortada; también cubre el menú de escritorio a 360 px. */
-  max-height: calc(100vh - 8px);
+  max-height: calc(100dvh - 8px);
   overflow-y: auto;
   animation: modal-in .15s ease-out;
 }
@@ -3758,7 +3761,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
   padding: 6px 6px calc(6px + var(--sab, 0px));
   /* W45: en un teléfono horizontal (poca altura) la hoja se salía de la
      pantalla y no se podía llegar a las últimas opciones. */
-  max-height: calc(100vh - env(safe-area-inset-top, 0px) - 8px);
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 8px);
   overflow-y: auto;
   animation: sheet-up .2s ease-out;
 }
@@ -3898,7 +3901,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
   max-width: 96vw;
   /* W54c: deja libres los botones de arriba y la pista de abajo
      también en escritorio; antes una foto alta se metía debajo. */
-  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   user-select: none;
   -moz-user-select: none;
   touch-action: none;
@@ -4409,7 +4412,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
      no padding: la píldora es de 40px con box-sizing border-box */
   margin-top: 18px;
 }
-.search-pill.ppl-find input { font-size: 0.9375rem; }
+.search-pill.ppl-find input { font-size: 16px; }
 
 /* ---- W27b: CTA "Buscar personas" en Solicitudes (abre el mismo
    modal que el ＋ del sidebar) ---- */
@@ -5007,11 +5010,11 @@ body { font-size: calc(0.9375rem * var(--fs)); }
 }
 .callbox.incoming {
   top: auto; bottom: 24px; height: 560px;
-  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
 }
 .callbox.calling {
   top: auto; bottom: 24px; height: 500px;
-  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
 }
 /* W62: grupo y ventana de llamada ampliada. */
 .callbox.full {
@@ -5522,7 +5525,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
   top: 0;
   left: 0;
   width: 100vw !important;
-  height: 100vh !important;
+  height: 100dvh !important;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -6042,14 +6045,14 @@ body { font-size: calc(0.9375rem * var(--fs)); }
 
   /* ---------- login/registro a pantalla completa ---------- */
   .auth-wrap {
-    min-height: 100vh;
+    min-height: 100dvh;
     align-items: stretch;
     padding: 0;
   }
   .auth-card {
     width: 100%;
     max-width: none;
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -6081,7 +6084,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
      inferior. La imagen se ajusta entre ambas, sin meterse debajo. */
   .lightbox .lb-img {
     max-width: calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
-    max-height: calc(100vh - 128px - env(safe-area-inset-top, 0px) - var(--sab, 0px));
+    max-height: calc(100dvh - 128px - env(safe-area-inset-top, 0px) - var(--sab, 0px));
   }
   .lb-close {
     top: calc(10px + env(safe-area-inset-top, 0px));
@@ -6151,7 +6154,7 @@ body { font-size: calc(0.9375rem * var(--fs)); }
   .pf-banner-art { width: 104px; height: 104px; }
   .pf-edit-banner-img { height: 86px; }
   .perm-gate { padding: 12px 12px calc(12px + var(--sab, 0px)); }
-  .perm-card { padding: 22px 18px 18px; max-height: calc(100vh - 24px); }
+  .perm-card { padding: 22px 18px 18px; max-height: calc(100dvh - 24px); }
   .perm-icon { width: 78px; height: 78px; margin-bottom: 13px; }
   .perm-icon .ic { width: 38px; height: 38px; }
   .perm-actions .btn { min-height: 44px; }
@@ -6388,7 +6391,7 @@ button.dl-group .dl-group-head { pointer-events: none; }
 .dl-gchev { transform: rotate(180deg); }
 .dl-cat-modal {
   width: min(560px, 100%);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
 }
@@ -6414,7 +6417,7 @@ button.dl-group .dl-group-head { pointer-events: none; }
 }
 .dl-viewer {
   width: min(920px, 100%);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -6459,7 +6462,7 @@ button.dl-group .dl-group-head { pointer-events: none; }
 .dlv-body video {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   object-fit: contain;
 }
 .dlv-body audio {
@@ -6468,7 +6471,7 @@ button.dl-group .dl-group-head { pointer-events: none; }
 }
 .dlv-body iframe {
   width: 100%;
-  height: calc(100vh - 140px);
+  height: calc(100dvh - 140px);
   border: 0;
   background: #fff;
 }
@@ -6499,7 +6502,7 @@ button.dl-group .dl-group-head { pointer-events: none; }
   position: relative;
   top: auto; right: auto;
   width: min(340px, 100%);
-  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   overflow-y: auto;
 }
 .pf-menu-title {
@@ -6609,8 +6612,8 @@ button.dl-group .dl-group-head { pointer-events: none; }
   .dlv-size { display: none; }
   .dlv-save span { display: none; }
   .dlv-body img,
-  .dlv-body video { max-height: calc(100vh - 56px); }
-  .dlv-body iframe { height: calc(100vh - 56px); }
+  .dlv-body video { max-height: calc(100dvh - 56px); }
+  .dlv-body iframe { height: calc(100dvh - 56px); }
   .dl-cat-modal {
     width: 100%;
     height: 100%;

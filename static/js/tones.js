@@ -7,6 +7,7 @@
    Un tono subido por el usuario se guarda como data-URL en
    localStorage (fm.p.customTone.<kind>) y se añade al final del catálogo. */
 import { store } from './store.js';
+import { StorageAdapter } from './platform/storage.js';
 
 export const MESSAGE_TONES = [
   { id: 'default', name: 'Predeterminado', file: null },
@@ -34,7 +35,7 @@ export const CALL_TONES = [
 
 export function customTone(kind) {
   try {
-    const raw = localStorage.getItem('fm.p.customTone.' + kind);
+    const raw = StorageAdapter.getItem('fm.p.customTone.' + kind);
     const obj = raw ? JSON.parse(raw) : null;
     if (!obj || !obj.file) return null;
     return {

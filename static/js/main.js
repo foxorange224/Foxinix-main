@@ -4,6 +4,9 @@ import { store, syncPath, go as goRef, goReplace as goReplaceRef,
   setTheme, toggleTheme } from './store.js';
 import { bootstrap, loadSession, API_BASE } from './api.js';
 import { t, sysText } from './i18n.js';
+import { StorageAdapter } from './platform/storage.js';
+import { FileAdapter } from './platform/files.js';
+import { DomAdapter } from './platform/dom.js';
 import {
   BootView, LoginView, RegisterView, ProfileView,
   VerifyView, ForgotView, ResetView,
@@ -97,12 +100,12 @@ const Root = {
              si fm.apkVersion vacío, siembra sin ofrecer nada).
              Solo un usuario CON versión guardada distinta a la del
              servidor ve la barra (o la recarga si está en background). */
-          const localWeb = localStorage.getItem('fm.appVersion');
+          const localWeb = StorageAdapter.getItem('fm.appVersion');
           if (srvWeb && !localWeb) {
-            localStorage.setItem('fm.appVersion', srvWeb);      // nueva instalación: silencio
+            StorageAdapter.setItem('fm.appVersion', srvWeb);      // nueva instalación: silencio
           } else if (srvWeb && localWeb !== srvWeb) {
-            if (document.hidden) {
-              localStorage.setItem('fm.appVersion', srvWeb);
+            if (DomAdapter.getHidden()) {
+              StorageAdapter.setItem('fm.appVersion', srvWeb);
               window.location.reload();
             } else {
               store.webUpdate = srvWeb;
@@ -116,15 +119,15 @@ const Root = {
                cargan), así que se siembra con la versión del servidor y no
                se ofrece una "actualización" contra sí misma. Con valor
                previo (descarga hecha o versión real) se compara normal. */
-            const storedApk = localStorage.getItem('fm.apkVersion');
+            const storedApk = StorageAdapter.getItem('fm.apkVersion');
             if (!storedApk) {
-              localStorage.setItem('fm.apkVersion', srvApk);
+              StorageAdapter.setItem('fm.apkVersion', srvApk);
             } else if (storedApk !== srvApk) {
               /* W94: "Recordar más tarde" persiste por versión
                  (fm.apkSeen): con la MISMA APK el modal no vuelve a
                  salir en cada entrada; al publicar una nueva —una
                  actualización real— vuelve a avisar. */
-              if ((localStorage.getItem('fm.apkSeen') || '') !== srvApk) {
+              if ((StorageAdapter.getItem('fm.apkSeen') || '') !== srvApk) {
                 store.versionInfo = v;
                 store.versionUpdate = true;
               }
@@ -157,8 +160,8 @@ const Root = {
       store.versionDownloading = true;
       store.versionProgress = 0;
       store.versionError = false;
-      window.__foxinixApkProgress = (p) => { store.versionProgress = p; if (p >= 100) { store.versionDownloading = false; store.versionUpdate = false; localStorage.setItem('fm.apkVersion', v.apk_version); } };
-      window.__foxinixApkDone = (ok) => { store.versionDownloading = false; if (!ok) { store.versionError = true; } else { store.versionUpdate = false; localStorage.setItem('fm.apkVersion', v.apk_version); } };
+      window.__foxinixApkProgress = (p) => { store.versionProgress = p; if (p >= 100) { store.versionDownloading = false; store.versionUpdate = false; StorageAdapter.setItem('fm.apkVersion', v.apk_version); } };
+      window.__foxinixApkDone = (ok) => { store.versionDownloading = false; if (!ok) { store.versionError = true; } else { store.versionUpdate = false; StorageAdapter.setItem('fm.apkVersion', v.apk_version); } };
       if (window.FoxinixAndroid && window.FoxinixAndroid.downloadApk) {
         window.FoxinixAndroid.downloadApk(apkUrl);
         return;
@@ -177,14 +180,14 @@ const Root = {
           if (total) store.versionProgress = Math.round((received/total)*100);
         }
         const blob = new Blob(chunks);
-        const url = URL.createObjectURL(blob);
+        const url = FileAdapter.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'Foxinix.apk';
         a.click();
-        URL.revokeObjectURL(url);
+        FileAdapter.revokeObjectURL(url);
         store.versionUpdate = false;
-        localStorage.setItem('fm.apkVersion', v.apk_version);
+        StorageAdapter.setItem('fm.apkVersion', v.apk_version);
       } catch(e) {
         store.versionDownloading = false;
         store.toasts.push({id: Date.now(), kind: 'err', msg: 'Error al descargar actualización' });
@@ -192,13 +195,13 @@ const Root = {
     };
     /* W94: recarga de versión web bajo el control del usuario. */
     const applyWebUpdate = function () {
-      if (store.webUpdate) localStorage.setItem('fm.appVersion', store.webUpdate);
+      if (store.webUpdate) StorageAdapter.setItem('fm.appVersion', store.webUpdate);
       window.location.reload();
     };
     /* W94: snooze persistente del modal APK (una vez por versión). */
     const snoozeApk = function () {
       if (store.versionInfo && store.versionInfo.apk_version) {
-        localStorage.setItem('fm.apkSeen', store.versionInfo.apk_version);
+        StorageAdapter.setItem('fm.apkSeen', store.versionInfo.apk_version);
       }
       store.versionUpdate = null;
       store.versionError = false;

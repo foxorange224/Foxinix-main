@@ -7,6 +7,7 @@
 import { CATS, CODES, DESC, EMO_FILE } from './emoji-data.js';
 import { EMO_FILE_NOTO } from './emoji-noto-data.js';
 import { store } from './store.js';
+import { StorageAdapter } from './platform/storage.js';
 
 /* Nombres de búsqueda (español). No hace falta nombrar todo: los emojis
    sin nombre se encuentran pegando el emoji mismo en el buscador. */
@@ -354,7 +355,7 @@ export function emojiCat(id) {
 
 export function emojiRecent() {
   try {
-    const raw = localStorage.getItem(RECents_KEY) || '';
+    const raw = StorageAdapter.getItem(RECents_KEY) || '';
     return raw ? raw.split(',') : [];
   } catch (e) {
     return [];
@@ -365,7 +366,7 @@ export function emojiPush(ch) {
   try {
     const arr = emojiRecent().filter(function (x) { return x !== ch; });
     arr.unshift(ch);
-    localStorage.setItem(RECents_KEY, arr.slice(0, 32).join(','));
+    StorageAdapter.setItem(RECents_KEY, arr.slice(0, 32).join(','));
   } catch (e) {}
 }
 
@@ -405,7 +406,7 @@ const RACT_BASE = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '�
 
 let ractCounts = {};
 try {
-  ractCounts = JSON.parse(localStorage.getItem(RACT_KEY) || '{}') || {};
+  ractCounts = JSON.parse(StorageAdapter.getItem(RACT_KEY) || '{}') || {};
 } catch (e) { ractCounts = {}; }
 
 /* Vue existe como global (vendor). El objeto reaccional hace que al
@@ -417,7 +418,7 @@ export function reactBump(ch) {
   if (!ch) return;
   ractCounts[ch] = (ractCounts[ch] || 0) + 1;
   try {
-    localStorage.setItem(RACT_KEY, JSON.stringify(ractCounts));
+    StorageAdapter.setItem(RACT_KEY, JSON.stringify(ractCounts));
   } catch (e) {}
   ractVer.n++;
 }

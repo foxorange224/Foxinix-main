@@ -20,6 +20,7 @@ export function charCount(txt) {
    de cuenta (W11); a las viejas /media/{id} les seguimos pegando
    ?token= por compatibilidad. */
 import { cachedUrl } from './mediadl.js';
+import { FileAdapter } from './platform/files.js';
 import {
   autoDownload, dlCategory, listDownloads, hooks as dlHooks,
 } from './downloads.js';
@@ -1068,7 +1069,7 @@ export function cancelUpload(chatId, cid) {
   u.aborted = true;
   if (u.ctl && u.ctl.abort) u.ctl.abort();
   delete _uploads[cid];
-  if (u.localUrl) { try { URL.revokeObjectURL(u.localUrl); } catch (e) {} }
+  if (u.localUrl) { try { FileAdapter.revokeObjectURL(u.localUrl); } catch (e) {} }
   removePending(chatId, cid);
 }
 
@@ -1108,7 +1109,7 @@ function runUpload(chatId, cid) {
   }
   chain.then(send).then(function (r) {
     delete _uploads[cid];
-    if (u.localUrl) { try { URL.revokeObjectURL(u.localUrl); } catch (e) {} }
+    if (u.localUrl) { try { FileAdapter.revokeObjectURL(u.localUrl); } catch (e) {} }
     upsertMessage(r.message);
     bumpPreview(chatId, r.message);
   }).catch(function (e) {
@@ -1170,8 +1171,8 @@ export async function sendMedia(chatId, file, kind, srcMsg, caption, peaks, dur,
     fname: file.name || '',
     fsize: file.size || 0,
   };
-  if (kind === 'image' && window.URL && URL.createObjectURL) {
-    tmp.localUrl = URL.createObjectURL(file);   // preview local mientras sube
+  if (kind === 'image' && typeof FileAdapter.createObjectURL === 'function') {
+    tmp.localUrl = FileAdapter.createObjectURL(file);   // preview local mientras sube
     /* W22: la resolución local reserva el cuadro (con el círculo de
        subida dentro) sin esperar a que el server responda. */
     probeImg(tmp.localUrl, function (w, h) {
@@ -1255,13 +1256,20 @@ export async function editMessage(chatId, msgId, text) {
 /* Elimina un mensaje propio con confirmación (server: DELETE + WS). */
 export function askDeleteMessage(chatId, msg) {
   store.confirmBox = {
-    title: 'Eliminar mensaje',
-    text: 'Se borra el mensaje para ti y para todos los del chat.\nEsta acción no se puede deshacer.',
+    title: t('Eliminar mensaje'),
+    text: t('Se borra el mensaje para ti y para todos los del chat.\nEsta acción no se puede deshacer.'),
     danger: true,
-    okLabel: 'Eliminar',
+    okLabel: t('Eliminar'),
     onOk: async function () {
-      await api('DELETE', '/chats/' + chatId + '/messages/' + msg.id,
-        undefined, { retry401: true });
+      try {
+        await api('DELETE', '/chats/' + chatId + '/messages/' + msg.id,
+          undefined, { retry401: true });
+      } catch (e) {
+        toast((e && t(e.detail)) || t('No se pudo eliminar el mensaje'), 'err');
+        return;
+      } finally {
+        store.confirmBox = null;
+      }
       const arr = store.msgs[chatId];
       if (arr) {
         for (let i = arr.length - 1; i >= 0; i--) {

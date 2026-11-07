@@ -16,6 +16,8 @@
 import { t } from './i18n.js';
 import { toast } from './store.js';
 import { CDN_BASE } from './api.js';
+import { StorageAdapter } from './platform/storage.js';
+import { FileAdapter } from './platform/files.js';
 import {
   getDownloadBlob, saveDownload, requestPersistence,
   fetchBlob, saveBlobToDevice, saveBlobToDisk, androidBridge,
@@ -49,7 +51,7 @@ function baseMime(mime) {
 }
 
 function compatFlag(mime) {
-  try { return localStorage.getItem(COMPAT_KEY + baseMime(mime)) === '1'; }
+  try { return StorageAdapter.getItem(COMPAT_KEY + baseMime(mime)) === '1'; }
   catch (e) { return false; }
 }
 
@@ -57,13 +59,13 @@ function compatFlag(mime) {
    que el respaldo sí funciona. Se usa en las siguientes aperturas para
    pedir directamente MP4/Ogg/WAV, sin repetir el error visible. */
 export function markMediaCompat(mime) {
-  try { localStorage.setItem(COMPAT_KEY + baseMime(mime), '1'); } catch (e) {}
+  try { StorageAdapter.setItem(COMPAT_KEY + baseMime(mime), '1'); } catch (e) {}
 }
 
 /* W53: el Ogg/Vorbis de respaldo tampoco se pudo decodificar. La próxima
    vez pedimos WAV PCM directamente (decodificador interno de Firefox). */
 export function markOggBroken() {
-  try { localStorage.setItem(COMPAT_KEY + OGG_FAIL_KEY, '1'); } catch (e) {}
+  try { StorageAdapter.setItem(COMPAT_KEY + OGG_FAIL_KEY, '1'); } catch (e) {}
 }
 
 export function forgetCached(url) {
@@ -72,7 +74,7 @@ export function forgetCached(url) {
   blobs.delete(k);
   if (obj) {
     rawBlobs.delete(obj);
-    try { URL.revokeObjectURL(obj); } catch (e) {}
+    try { FileAdapter.revokeObjectURL(obj); } catch (e) {}
   }
 }
 
@@ -89,7 +91,7 @@ export function clearMediaBlobs() {
     try { xhr.abort(); } catch (e) {}
   }
   blobs.forEach(function (obj) {
-    try { URL.revokeObjectURL(obj); } catch (e) {}
+    try { FileAdapter.revokeObjectURL(obj); } catch (e) {}
   });
   blobs.clear();
   rawBlobs.clear();
@@ -195,7 +197,7 @@ function storeBlob(url, obj, raw) {
     blobs.delete(first);
     if (o) {
       rawBlobs.delete(o);
-      try { URL.revokeObjectURL(o); } catch (e) {}
+      try { FileAdapter.revokeObjectURL(o); } catch (e) {}
     }
   }
 }
@@ -364,7 +366,7 @@ function runDl(url, frame, onDone, explicit) {
     if (state.dead) return;
     if (xhr.status < 200 || xhr.status >= 300) return paintErr(frame, state);
     const raw = xhr.response;
-    const obj = URL.createObjectURL(raw);
+    const obj = FileAdapter.createObjectURL(raw);
     storeBlob(url, obj, raw);
     setDlCls(frame, 'dl-done');
     onDone(obj, raw);
@@ -442,7 +444,7 @@ export function cacheMedia(url) {
   xhr.onload = function () {
     done();
     if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
-      const obj = URL.createObjectURL(xhr.response);
+      const obj = FileAdapter.createObjectURL(xhr.response);
       storeBlob(url, obj, xhr.response);
     }
   };

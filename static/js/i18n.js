@@ -7,6 +7,8 @@
    t() lee store.lang durante el render de Vue, así que al cambiar de
    idioma toda la interfaz se repinta sola. */
 import { store } from './store.js';
+import { StorageAdapter } from './platform/storage.js';
+import { DomAdapter } from './platform/dom.js';
 
 const EN = {
   /* ---------- carga / genéricos ---------- */
@@ -1151,8 +1153,8 @@ export function sysText(body) {
 export function setLang(lang) {
   const l = lang === 'en' ? 'en' : 'es';
   store.lang = l;
-  document.documentElement.setAttribute('lang', l);
-  try { localStorage.setItem('fm.lang', l); } catch (e) {}
+  DomAdapter.setRootAttribute('lang', l);
+  try { StorageAdapter.setItem('fm.lang', l); } catch (e) {}
 }
 
 /** Lista de idiomas para el selector de Ajustes → Idioma de la interfaz. */

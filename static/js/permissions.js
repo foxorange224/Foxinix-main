@@ -16,6 +16,7 @@
 import { store } from './store.js';
 import { t } from './i18n.js';
 import { hooks as dlHooks } from './downloads.js';
+import { StorageAdapter } from './platform/storage.js';
 
 export const PERMISSIONS = [
   { id: 'mic', icon: 'i-mic', label: 'Micrófono' },
@@ -296,7 +297,7 @@ export async function bootPermissions() {
     return;
   }
   // W63: sólo pedir permisos en el primer arranque / instalación
-  if (localStorage.getItem('fm.perm.booted') === '1') {
+  if (StorageAdapter.getItem('fm.perm.booted') === '1') {
     refreshPermissionStates();
     return;
   }
@@ -316,7 +317,7 @@ export async function bootPermissions() {
     if (st === 'granted' || st === 'unavailable') continue;
     await askPermission(id, { boot: true, index: i + 1, total: missing.length });
   }
-  localStorage.setItem('fm.perm.booted', '1');
+  StorageAdapter.setItem('fm.perm.booted', '1');
 }
 
 /* Revisión manual desde Ajustes: vuelve a mostrar las que falten. */

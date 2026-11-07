@@ -3,6 +3,8 @@
 import { store, go, goReplace, authFallback, toast } from './store.js';
 import { t } from './i18n.js';
 import { resetDownloadStore } from './downloads.js';
+import { HttpClient } from './platform/net.js';
+import { StorageAdapter } from './platform/storage.js';
 
 const SKEY = 'fm.session';
 
@@ -68,7 +70,7 @@ export function humanError(e) {
    tokens tal cual para no romperlas. */
 export function loadSession() {
   try {
-    const raw = JSON.parse(localStorage.getItem(SKEY) || 'null');
+    const raw = JSON.parse(StorageAdapter.getItem(SKEY) || 'null');
     if (raw && (raw.access || raw.refresh || raw.user || raw.pendingEmail)) {
       session.access = raw.access || '';
       session.refresh = raw.refresh || '';
@@ -92,7 +94,7 @@ export function saveSession() {
   try {
     const out = { user: session.user, pendingEmail: session.pendingEmail };
     if (session.legacy) { out.access = session.access; out.refresh = session.refresh; }
-    localStorage.setItem(SKEY, JSON.stringify(out));
+    StorageAdapter.setItem(SKEY, JSON.stringify(out));
   } catch (e) {}
 }
 
@@ -100,7 +102,7 @@ export function clearSession() {
   if (sessionHooks.onLogout) {
     try { sessionHooks.onLogout(); } catch (e) {}
   }
-  try { localStorage.removeItem(SKEY); } catch (e) {}
+  try { StorageAdapter.removeItem(SKEY); } catch (e) {}
   session.access = session.refresh = '';
   session.user = null;
   session.pendingEmail = '';
@@ -258,7 +260,7 @@ export function refreshTokens() {
       try {
         /* W30e: si hay refresh legado en memoria va en el body; si no,
            el server usa su cookie HttpOnly (credentials lo incluye). */
-        res = await fetch(API_BASE + '/auth/refresh', {
+        res = await HttpClient.fetch(API_BASE + '/auth/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -369,19 +371,12 @@ export async function api(method, path, body, opts = {}) {
   };
   if (body !== undefined) http.body = JSON.stringify(body);
 
-  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  if (ctl) {
-    http.signal = ctl.signal;
-    http._t = setTimeout(() => ctl.abort(), 20000);
-  }
   let res;
   try {
-    res = await fetch(API_BASE + path, http);
+    res = await HttpClient.fetch(API_BASE + path, http);
   } catch (e) {
-    if (ctl) clearTimeout(http._t);
     throw new ApiError(0, 'Sin conexión con el servidor');
   }
-  if (ctl) clearTimeout(http._t);
 
   /* W30e: el refresh puede venir de la cookie HttpOnly aunque en memoria
      no quede session.refresh; por eso ya no se exige ese guard. */
@@ -414,7 +409,7 @@ export async function uploadChatAvatar(chatId, file, _retried) {
   fd.append('file', file);
   let res;
   try {
-    res = await fetch(API_BASE + '/chats/' + chatId + '/avatar', {
+    res = await HttpClient.fetch(API_BASE + '/chats/' + chatId + '/avatar', {
       method: 'POST',
       headers: authHeaders(),
       body: fd,
@@ -589,7 +584,7 @@ export function logout() {
      el body porque sin cookie no hay otra forma de identificarlo.
      Fire-and-forget: si no hay red el cierre local igual procede. */
   try {
-    fetch(API_BASE + '/auth/logout', {
+    HttpClient.fetch(API_BASE + '/auth/logout', {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: session.refresh || '' }),

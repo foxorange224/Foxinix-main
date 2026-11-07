@@ -134,10 +134,12 @@ self.addEventListener('install', function (e) {
   e.waitUntil(
     caches.open(SHELL_CACHE)
       /* W50: `reload` evita que el HTTP cache del navegador meta JS/CSS
-         viejos en el shell nuevo justo después de un despliegue. */
+         viejos en el shell nuevo justo después de un despliegue.
+         addAll falla si UN recurso falla; usamos Promise.all con catch
+         individual para que un 404 o caída de red no bloquee el SW nuevo. */
       .then(function (c) {
-        return c.addAll(SHELL.map(function (u) {
-          return new Request(u, { cache: 'reload' });
+        return Promise.all(SHELL.map(function (u) {
+          return c.add(new Request(u, { cache: 'reload' })).catch(function () {});
         }));
       })
       .then(function () { return self.skipWaiting(); })
