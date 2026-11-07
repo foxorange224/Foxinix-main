@@ -1082,6 +1082,24 @@ const EN = {
   'Todos los stickers': 'All stickers',
   'Ver {n} mensajes anteriores': 'View {n} earlier messages',
   'Volver a la llamada': 'Back to call',
+  /* W99: cola de notas de voz (Ajustes → Accesibilidad) */
+  'Notas de voz': 'Voice notes',
+  'Reproducir la siguiente nota de voz automáticamente': 'Play the next voice note automatically',
+  'Al terminar una nota de voz, si el siguiente mensaje es otra nota de voz se reproduce sola hasta acabar la racha; si hay cualquier otro mensaje, la reproducción se detiene.':
+    'When a voice note ends, if the next message is another voice note it plays on its own until the chain finishes; if there is any other message, playback stops.',
+  /* W99: NOTA del panel de atajos (Shortcuts) */
+  'NOTA: Estos atajos solamente funcionan en teclado físico.':
+    'NOTE: These shortcuts only work with a physical keyboard.',
+  /* W99: mensajes de sistema (guardados en BD en español; sysText los
+     traduce con estas claves cuando el idioma activo es inglés) */
+  '{a} added {b}': '{a} added {b}',
+  '{a} made {b} an admin': '{a} made {b} an admin',
+  '{a} removed {b} as an admin': '{a} removed {b} as an admin',
+  '{a} removed {b} from the group': '{a} removed {b} from the group',
+  'The account of {n} was deleted': 'The account of {n} was deleted',
+  '{a} joined the group': '{a} joined the group',
+  '{a} transferred the group ownership': '{a} transferred the group ownership',
+  '{a} left the group': '{a} left the group',
 };
 
 /**
@@ -1094,6 +1112,39 @@ export function t(str, vars) {
     for (const k in vars) s = s.split('{' + k + '}').join(String(vars[k]));
   }
   return s;
+}
+
+/* W99: los mensajes de sistema se guardan en la BD en español (f-strings
+   del backend, inmutables). Este traductor reconoce los8 patrones y los
+   traduce al pasar por t() — solo cuando el idioma activo es inglés y SOLO
+   se invoca sobre mensajes kind === 'system' (un texto normal que coincida
+   con un patrón no debe tocarse). Devuelve el cuerpo tal cual si algo no
+   matchea (p. ej. un patrón nuevo del backend). */
+const SYS_RULES = [
+  [/^(.+?) agregó a (.+)$/, '{a} added {b}'],
+  [/^(.+?) hizo admin a (.+)$/, '{a} made {b} an admin'],
+  [/^(.+?) quitó el rol de admin a (.+)$/, '{a} removed {b} as an admin'],
+  [/^(.+?) eliminó a (.+?) del grupo$/, '{a} removed {b} from the group'],
+  [/^La cuenta de (.+) fue eliminada$/, 'The account of {n} was deleted'],
+  [/^(.+?) se unió al grupo$/, '{a} joined the group'],
+  [/^(.+?) transfirió la propiedad del grupo$/, '{a} transferred the group ownership'],
+  [/^(.+?) salió del grupo$/, '{a} left the group'],
+];
+
+/** Traduce un cuerpo de mensaje de sistema (español de la BD) al idioma
+    activo; en español o sin match devuelve el cuerpo original. */
+export function sysText(body) {
+  if (store.lang !== 'en' || !body) return body;
+  for (let i = 0; i < SYS_RULES.length; i++) {
+    const m = body.match(SYS_RULES[i][0]);
+    if (m) {
+      const vars = {};
+      if (m.length > 1 && SYS_RULES[i][1].indexOf('{n}') !== -1) vars.n = m[1];
+      else { vars.a = m[1]; vars.b = m[2] || ''; }
+      return t(SYS_RULES[i][1], vars);
+    }
+  }
+  return body;
 }
 
 /** Cambia y persiste el idioma de la interfaz (es | en). */

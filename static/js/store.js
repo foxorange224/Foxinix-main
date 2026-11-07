@@ -194,6 +194,10 @@ export const store = reactive({
        o crisis de fotosensibilidad (TDAH, autismo, epilepsia).
        Persiste como fm.p.reduceStimuli. */
     reduceStimuli: readLs('fm.p.reduceStimuli') === '1',
+    /* W99: cola de reproducción de notas de voz — al terminar una sigue
+       con la siguiente si es voz; si el siguiente mensaje es de otro
+       tipo, para. Default encendido; Ajustes → Accesibilidad. */
+    voiceQueue: readLs('fm.p.voiceQueue') !== '0',
   },
   drafts: {},             // chatId → borrador de entrada
   /* W17: el selector de emojis del composer vive aquí para que solo

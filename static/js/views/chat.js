@@ -15,7 +15,7 @@ import {
 } from '../store.js';
 import { logout, api, session, saveSession, uploadMedia,
   uploadChatAvatar, ensurePreview, humanError } from '../api.js';
-import { t, setLang, LANGS } from '../i18n.js';
+import { t, setLang, LANGS, sysText } from '../i18n.js';
 /* W78: utilidades de accesibilidad para lectores de pantalla. */
 import { formatEmojisForA11y } from '../a11y.js';
 /* W63: catálogo y reproducción de tonos de mensaje/llamada. */
@@ -1152,6 +1152,27 @@ const EmojiPicker = {
 /* W8: sólo un audio suena a la vez en toda la app. */
 let currentAudioEl = null;
 
+/* W99: reproductores de nota de voz por id de mensaje — la cola de
+   reproducción (Ajustes → Accesibilidad) salta a la siguiente nota
+   cuando la actual termina. */
+const voicePlayers = {};
+
+/* W99: siguiente paso de la cola. Si el mensaje posterior es otra nota
+   de voz con media, se reproduce; si es cualquier otro mensaje (texto,
+   imagen, sistema…), la cadena se detiene. Solo con la pref voiceQueue
+   activada (default ON). */
+function queueNextVoice(msg) {
+  if (!store.prefs.voiceQueue) return;
+  const list = store.msgs[store.activeChatId] || [];
+  let next = null;
+  for (let i = 0; i < list.length - 1; i++) {
+    if (list[i].id === msg.id) { next = list[i + 1]; break; }
+  }
+  if (!next || next.kind !== 'voice' || !next.media) return; // mensaje normal → parar
+  const play = voicePlayers[next.id];
+  if (play) setTimeout(play, 120);
+}
+
 const MessageRow = {
   components: { EmojiPicker },
   props: { row: { type: Object, required: true } },
@@ -1617,8 +1638,20 @@ const MessageRow = {
       if (!aDur.value && aCur.value) aDur.value = aCur.value;
       aCur.value = 0;
       try { aEl.value.currentTime = 0; } catch (e) {}
+      /* W99: si la cola está activa, sigue con la siguiente nota. */
+      queueNextVoice(props.row.ref);
     };
     Vue.onUnmounted(aRafStop);
+
+    /* W99: esta fila expone su reproductor a la cola (solo notas de
+       voz con media; se da de baja al desmontar la fila). */
+    if (props.row.ref.kind === 'voice') {
+      voicePlayers[props.row.ref.id] = function () {
+        const el = aEl.value;
+        if (el && el.paused) togglePlay();
+      };
+      Vue.onUnmounted(function () { delete voicePlayers[props.row.ref.id]; });
+    }
 
     /* ---- W36c: reproductor PROPIO de video (controles dentro del
        video): play/pausa al centro, barra + hora + silencio + pantalla
@@ -2294,7 +2327,7 @@ const MessageRow = {
     };
   },
   template:
-    '<div class="msg" role="message" :data-msg-id="row.ref.id" :aria-label="formatEmojisForA11y(row.ref.body || \'\')" :class="{ mine: row.mine, tight: row.tight, system: row.ref.kind === \'system\', reacts: !!(row.ref.reactions && row.ref.reactions.length), anim: !!row.ref._in, \'has-av\': row.avCol && (row.mine ? row.showTime : (row.showTime || row.showSender)) }" @animationend="animEnd">' +
+    '<div class="msg" role="message" :data-msg-id="row.ref.id" :aria-label="formatEmojisForA11y(row.ref.kind === \'system\' ? sysText(row.ref.body || \'\') : (row.ref.body || \'\'))" :class="{ mine: row.mine, tight: row.tight, system: row.ref.kind === \'system\', reacts: !!(row.ref.reactions && row.ref.reactions.length), anim: !!row.ref._in, \'has-av\': row.avCol && (row.mine ? row.showTime : (row.showTime || row.showSender)) }" @animationend="animEnd">' +
       /* W66: avatar del remitente junto a cada mensaje (propios y ajenos,
          grupos y MDs). En los entrantes aparece cuando hay nombre (primero
          de la tanda) u hora —nunca un nombre sin cara—; en los propios,
@@ -2305,7 +2338,7 @@ const MessageRow = {
         '<img v-if="row.avatar && row.avatar.url && !avErr" :src="mediaUrl(row.avatar.url)" alt="" loading="lazy" decoding="async" crossorigin="anonymous" @error="onAvatarError()">' +
         '<i v-else-if="row.avatar">{{ row.avatar.ini }}</i>' +
       '</span>' +
-      '<div v-if="row.ref.kind === \'system\'" class="sys-msg">{{ row.ref.body }}</div>' +
+      '<div v-if="row.ref.kind === \'system\'" class="sys-msg">{{ sysText(row.ref.body) }}</div>' +
       '<div v-else class="bubble" :class="{ picking: pickerOpen(row), sticker: row.ref.kind === \'sticker\', \'emo-big\': emoBig(), \'is-spoiled\': spoiled, gif: !!(row.ref.kind === \'image\' && row.ref.media && isGifMedia(row.ref.media)), vid: !!(row.ref.kind === \'file\' && row.ref.media && isVideo(row.ref.media) && vidOk) }">' +
         /* W29d: capa de spoiler — tapa TODO lo de adentro (texto,
            medios y acciones) hasta que se toque; al tocar se muestra
@@ -4160,7 +4193,7 @@ const SettingsModal = {
             <div class="st-title">{{ t('Atajos') }}</div>
             <div class="st-sec">
               <div class="st-h">{{ t('Atajos de teclado') }}</div>
-              <p style="margin-bottom:10px;color:var(--txt-2);font-size:.85em;">NOTA: Estos atajos solamente funcionan en teclado físico.</p>
+              <p style="margin-bottom:10px;color:var(--txt-2);font-size:.85em;">{{ t('NOTA: Estos atajos solamente funcionan en teclado físico.') }}</p>
               <div class="kbd-row"><span class="kbd">Enter</span><span>{{ t('Enviar mensaje') }}</span></div>
               <div class="kbd-row"><span class="kbd">Shift + Enter</span><span>{{ t('Salto de línea') }}</span></div>
               <div class="kbd-row"><span class="kbd">Ctrl + Enter</span><span>{{ t('Enviar con “Enter para enviar” apagado') }}</span></div>
@@ -4183,6 +4216,14 @@ const SettingsModal = {
               <div class="st-row">
                 <div class="st-col"><b>{{ t('Reducir estímulos visuales') }}</b><span>{{ t('Desactiva la reproducción automática de GIFs, stickers animados y efectos de pantalla completa para evitar distracciones o crisis de fotosensibilidad (TDAH, autismo, epilepsia).') }}</span></div>
                 <label class="tgl"><input type="checkbox" :checked="store.prefs.reduceStimuli" @change="toggle('reduceStimuli')"><span class="tgl-track"><span class="tgl-knob"></span></span></label>
+              </div>
+            </div>
+
+            <div class="st-sec">
+              <div class="st-h">{{ t('Notas de voz') }}</div>
+              <div class="st-row">
+                <div class="st-col"><b>{{ t('Reproducir la siguiente nota de voz automáticamente') }}</b><span>{{ t('Al terminar una nota de voz, si el siguiente mensaje es otra nota de voz se reproduce sola hasta acabar la racha; si hay cualquier otro mensaje, la reproducción se detiene.') }}</span></div>
+                <label class="tgl"><input type="checkbox" :checked="store.prefs.voiceQueue" @change="toggle('voiceQueue')"><span class="tgl-track"><span class="tgl-knob"></span></span></label>
               </div>
             </div>
           </template>
@@ -7691,7 +7732,7 @@ export const ChatShell = {
       let who = '';
       if (mine) who = t('Tú: ');
       else if (c.type === 'group' && lm.sender) who = (lm.sender.display_name || lm.sender.username) + ': ';
-      if (lm.kind === 'system') return lm.body || '';
+      if (lm.kind === 'system') return sysText(lm.body || '');
       /* W45: el preview de la lista no debe destapar un spoiler. */
       if (lm.spoiler) return who + t('Spoiler');
       if (lm.kind === 'image') return who + t('Imagen');

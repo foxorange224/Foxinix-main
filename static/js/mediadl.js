@@ -387,6 +387,13 @@ function applySrc(el, objUrl) {
        play: el primer clic parpadeaba y el segundo ya sonaba. Asignar
        sólo si cambia de verdad elimina esa recarga. */
     if ((el.currentSrc || el.src) === objUrl) return;
+    /* W99: TAMPOCO se cambia el src mientras el medio está sonando —
+       reasignarlo (aunque sea el mismo archivo ya bajado) reinicia la
+       reproducción a0 s: en las notas de voz el 'ended' nunca llegaba
+       y la cola de reproducción no avanzaba. Si la descarga termina
+       durante la reproducción, el streaming con la URL firmada sigue
+       sonando y el blob queda cacheado para la próxima. */
+    if (!el.paused || el.currentTime > 0) return;
     el.src = objUrl;                 // video/audio: listos para reproducir
     el.classList.remove('dl-blur');
   }
