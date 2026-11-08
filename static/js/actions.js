@@ -718,6 +718,16 @@ export async function searchUsers(q) {
   return r.results || [];
 }
 
+/* Perfil público de un usuario por su id interno, con la relación actual
+   ('me' | 'friend' | 'sent' | 'received' | 'blocked' | 'none'). Lo usan
+   el panel de perfiles de la web y la vista de perfil de la app nativa:
+   así la app no tiene que adivinar si puede escribirle o hay que pedir
+   amistad primero. */
+export async function loadProfile(userId) {
+  const r = await api('GET', '/users/id/' + userId, undefined, { retry401: true });
+  return { user: r.user || null, relation: r.relation || 'none' };
+}
+
 /* ------------------------------------------------- W27: personas */
 
 /* Amigos conectados + solicitudes enviadas/recibidas (panel Personas). */
