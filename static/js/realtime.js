@@ -444,6 +444,12 @@ function browserNotify(m) {
       body: previewBody(m),
       icon: icon,
       tag: 'foxmsg-' + m.chat_id,
+      /* W100: el id del chat y del mensaje viajan con el aviso: en la app
+         nativa el aviso es una notificación del sistema y, al tocarla,
+         se abre el chat (también si la app estaba cerrada y arranca con
+         el toque). La web los ignora. */
+      chatId: m.chat_id,
+      msgId: m.id,
       onClick: function () {
         DomAdapter.focusWindow();
         openNotificationTarget(m.chat_id, m.id);

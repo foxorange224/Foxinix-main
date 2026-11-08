@@ -45,6 +45,7 @@
 | W58 | **Descargas en la app, permisos al entrar y perfil con estado en vivo**: descargas automáticas a los datos de la app en Android/PC (web o nativa), con copia pública en `Downloads/Foxinix` solo al pulsar “Guardar en el dispositivo”; Ajustes → Descargas agrupadas por categoría con conteo, tamaño, Abrir y Eliminar, y “Descargar · tamaño”/“Descargado · tamaño” siempre visible (ya no se abre una pestaña al descargar); onboarding de micrófono/cámara/notificaciones/almacenamiento con “Conceder”/“Saltar por ahora” y revisión posterior en Ajustes; perfil con portada, avatar solapado, estado en burbuja citada y menú tipo Discord (presets + mensaje propio, solo en tu perfil); luna amarilla sobre relleno del tema en todos los badges y desconectado del mismo tamaño que en línea; el estado se propaga en vivo a lista, miembros, Personas y perfiles abiertos | ✅ E2E local (`tests/w58_test.py` + `chat_ui_test.py`, `w6_ui_test.py`, `w27_ui_test.py`, `w36_test.py`, `mobile_ui_test.py`) + APK v0.1.8 |
 | W59 | **Descargas de verdad, perfil y @usuario**: un solo control por adjunto (“Descargar · tamaño” ↔ “Descargado · tamaño”) que guarda solo en los datos de la app y nunca abre pestañas; “Guardar en el dispositivo” sigue siendo la única exportación a `Downloads/Foxinix`; automáticas por Wi-Fi (activadas por defecto) y datos móviles (apagadas por defecto), con migración de las preferencias W58; avatar montado sobre la portada (también en el editor) y PNG transparentes sin relleno; botón de bajar anclado al compositor, avisos/llamada y barras fuera del área de navegación de Android; iconos de barra de estado/navegación oscuros en tema claro y claros en oscuro; cambio de @usuario con contraseña actual, aviso explícito y espera de 12 h aplicada en el servidor | ✅ E2E local (`tests/w59_test.py`, `tests/w58_test.py`) + APK v0.1.9 |
 | W67 | **Retirada completa del cifrado de extremo a extremo**: la app dejó de cifrar y se quitó toda su UI (aviso del panel de info, "cifrado pendiente" del composer, modal del código de verificación y sello del arranque/landing). Desaparecieron `js/e2e.js` y todo su rastro: endpoints `PUT /api/users/me/e2e-key`, `GET /api/users/{u}/e2e-key` y `POST /api/chats/{id}/e2e-demigrate`, bucket `DEMIGRATE`, campo `e2e` en `message_out` / `SendIn` / `EditIn`, columnas `e2e_iv`/`e2e_ct` y tabla `e2e_keys` (la migración de `db.py` las elimina también en bases existentes vía `_drop_column`). El texto viaja siempre en claro | ✅ `scripts/check-js.mjs` + suites `w29`, `w37`, `w61`, `w6` |
+| W100 | **Avisos del sistema en la app nativa (NativeScript)**: la app nativa (NativeScript 9 + Vue 3, con el mismo núcleo de lógica que la web) muestra los mensajes nuevos como **notificaciones del sistema** con `@nativescript/local-notifications`: canal "Foxinix", icono de la marca, sonido si el usuario lo tiene activado, permiso `POST_NOTIFICATIONS` de Android 13+ pedido una sola vez al arrancar (revisable en Ajustes, con botón para abrir los ajustes del sistema) y, al tocar el aviso, se abre el chat y el mensaje exactos (también con la app cerrada). El núcleo distingue "app en segundo plano" (`Application.suspendEvent`) para no avisar con la pantalla a la vista | ✅ test nativo contra la API real (76 PASS / 0 FAIL) + APK debug construido |
 
 ## Estructura
 
@@ -69,6 +70,10 @@ chat/
 │   └── requirements.txt
 ├── client/                # PySide6 + QML — CONGELADO (superseded por server/web)
 ├── desktop/               # Tauri 2: instalador de escritorio que carga la misma web
+├── native/                # app NATIVA (NativeScript 9 + Vue 3): mismo núcleo que la web
+│   ├── app/               #   vistas nativas + pegamento (fox.ts, notifier.ts, files.ts)
+│   ├── tools/             #   sync-core.mjs (copia el núcleo), test-core.mjs, stubs de NS
+│   └── App_Resources/     #   iconos, splash y recursos nativos
 ├── tests/                 # web_e2e.py (E2E de la UI vía Firefox headless + BiDi)
 ├── docs/                  # API.md (contrato)
 └── scripts/               # install-server.sh, remote-setup.sh, shot.py, check-js.mjs
@@ -112,6 +117,34 @@ Carga `https://foxinix.qzz.io/` en una ventana nativa (se puede cambiar con `FOX
 - **Android 7+:** APKs arm64 y armv7 (32 bits) firmados, probados en emulador Android 15.
 
 El icono SVG fuente y los detalles de compilación están en `desktop/README.md`.
+
+## App nativa (NativeScript + Vue)
+
+```bash
+cd native
+npm install
+npm run sync:check      # ¿app/core/ está al día?
+npm run build:android   # sincroniza el núcleo y compila el APK (debug)
+```
+
+La app nativa **no** es la web dentro de un WebView: son vistas nativas
+(Android/iOS) que comparten el **mismo núcleo de lógica** que la web
+(`api`, `store`, `i18n`, tiempo real…). Para que eso no se desincronice:
+
+- `landing/static/js` es la fuente de verdad del núcleo; `tools/sync-core.mjs`
+  lo copia a `native/app/core/` (lo generado **no** se edita a mano y
+  `npm run sync:check` avisa si quedó viejo).
+- Lo que cambia es la **capa de plataforma** (`platform/`): red, archivos,
+  DOM, sockets y avisos tienen su implementación para NativeScript. Ningún
+  módulo del núcleo toca `document`, `window`, `location` ni `history`.
+- El selector de archivos es nativo por plataforma (SAF de Android /
+  `UIDocumentPickerViewController` de iOS) y el multipart lo arma la capa
+  de plataforma (bytes a mano en NS).
+- Los **avisos del sistema** (W100) usan `@nativescript/local-notifications`:
+  permiso de Android 13+, canal "Foxinix", icono de la marca y, al tocar el
+  aviso, se abre el chat y el mensaje exactos.
+
+Detalle completo en `native/README.md`.
 
 ## Servidor
 

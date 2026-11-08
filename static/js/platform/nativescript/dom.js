@@ -13,6 +13,16 @@ import {
   getString, setString, remove, clear, hasKey,
 } from '@nativescript/core/application-settings';
 import { Screen } from '@nativescript/core';
+import { Application } from '@nativescript/core/application';
+
+/* ¿La app está en segundo plano? En NS no hay "pestaña oculta", pero sí
+   hay "app suspendida": los avisos de mensajes nuevos sólo deben salir
+   cuando el usuario no está mirando la pantalla. */
+let appHidden = false;
+try {
+  Application.on(Application.suspendEvent, () => { appHidden = true; });
+  Application.on(Application.resumeEvent, () => { appHidden = false; });
+} catch (e) { /* si no hay runtime de app, se asume visible */ }
 
 export const DomAdapter = {
   /* storage (delegado a StorageAdapter para consistencia) */
@@ -94,8 +104,8 @@ export const DomAdapter = {
   getInnerHeight() {
     try { return Screen.mainScreen.heightDIPs || Screen.mainScreen.heightDIPs || 0; } catch (e) { return 0; }
   },
-  getHidden() { return false; }, /* NS no tiene pestañas ocultas del navegador */
-  getVisibilityState() { return 'visible'; },
+  getHidden() { return appHidden; },
+  getVisibilityState() { return appHidden ? 'hidden' : 'visible'; },
   getNavigator() { return null; },
   getUserAgent() { return 'NativeScript'; },
   getUserAgentData() { return null; },
