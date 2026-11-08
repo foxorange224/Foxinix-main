@@ -359,7 +359,7 @@ function dndSilences(m) {
    en ese caso se usa el icono de la app. */
 function absoluteAvatar(url) {
   if (!url || url.indexOf('blob:') === 0 || url.indexOf('data:') === 0) return '';
-  try { return new URL(url, location.href).href; } catch (e) { return ''; }
+  try { return new URL(url, DomAdapter.getLocationHref()).href; } catch (e) { return ''; }
 }
 
 /* Para el APK no sirve mediaUrl() si el avatar ya está cacheado como

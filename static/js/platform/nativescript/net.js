@@ -1,54 +1,86 @@
 /* platform/nativescript/net.js — capa de red para NativeScript.
-   Usa httpModule de @nativescript/core (o fetch nativo de NS si está disponible).
-   Interfaz idéntica a platform/net.js para que el resto de la app no cambie. */
+   Usa httpModule de @nativescript/core.
+   Interfaz idéntica a platform/net.js para que el resto de la app no cambie.
 
-import http from '@nativescript/core/http';
-import { knownFolders } from '@nativescript/core/file-system';
+   Diferencias con la web que ya están resueltas aquí:
+   - No hay cookie jar: el refresh token lo manda api.js en el body
+     (modo "legado", ver platform/cookies.js).
+   - No hay `Response` nativo: se simula con la misma forma que usa el
+     código (status, ok, json(), text(), blob(), clone(), headers.get). */
+
+/* NS 9: `http` ya no tiene export default. */
+import { request, getFile } from '@nativescript/core/http';
+
+function headersShim(headers) {
+  const h = headers || {};
+  return {
+    get: function (name) {
+      const key = String(name || '').toLowerCase();
+      for (const k in h) {
+        if (!Object.prototype.hasOwnProperty.call(h, k)) continue;
+        if (k.toLowerCase() === key) return h[k];
+      }
+      return null;
+    },
+    has: function (name) { return this.get(name) !== null; },
+    raw: h,
+  };
+}
+
+function makeResponse(statusCode, content, headers) {
+  const text = content === null || content === undefined
+    ? '' : content.toString();
+  const res = {
+    status: statusCode,
+    ok: statusCode >= 200 && statusCode < 300,
+    headers: headersShim(headers),
+    async json() {
+      if (!text) return null;
+      return JSON.parse(text);
+    },
+    async text() {
+      return text;
+    },
+    async blob() {
+      /* En NS el "blob" es un ArrayBuffer con su tipo MIME. */
+      const buf = content && content.buffer ? content.buffer : new ArrayBuffer(0);
+      return buf;
+    },
+    async arrayBuffer() {
+      const buf = content && content.buffer ? content.buffer : new ArrayBuffer(0);
+      return buf;
+    },
+    clone() {
+      return makeResponse(statusCode, content, headers);
+    },
+  };
+  return res;
+}
 
 export const HttpClient = {
   async fetch(url, opts = {}) {
     const method = (opts.method || 'GET').toUpperCase();
-    const headers = Object.assign({}, opts.headers);
-    const contentType = headers['Content-Type'] || 'application/json';
-    const useSession = opts.credentials === 'include';
+    const headers = Object.assign({}, opts.headers || {});
+    /* NS http.request lleva el Content-Type aparte. */
+    let contentType = headers['Content-Type'] || headers['content-type'] || '';
+    delete headers['Content-Type'];
+    delete headers['content-type'];
+    if (!contentType && method !== 'GET') contentType = 'application/json';
 
-    /* En NativeScript no hay cookies HttpOnly automáticas; el token de
-       acceso viaja en el header Authorization. El refresh token se guarda
-       en ApplicationSettings y se envía en el body cuando el endpoint lo
-       requiere (comportamiento legacy). */
-    const session = await import('../storage.js').then(m => m.StorageAdapter);
-    const accessKey = 'fm.session.access'; /* clave simplificada para NS */
-    const raw = session.getItem(accessKey);
-    if (raw && !headers.Authorization) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed.access) headers.Authorization = 'Bearer ' + parsed.access;
-      } catch (e) {}
-    }
+    const body = opts.body !== undefined
+      ? (typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body))
+      : null;
 
-    const body = opts.body !== undefined ? (typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body)) : null;
-
-    const response = await http.request({
-      url,
-      method,
-      headers,
-      contentType,
-      body,
+    const response = await request({
+      url: String(url),
+      method: method,
+      headers: headers,
+      contentType: contentType,
+      body: body,
+      timeout: opts.timeout || 30000,
     });
 
-    /* Simular objeto Response de fetch para el resto de la app */
-    return {
-      status: response.statusCode,
-      ok: response.statusCode >= 200 && response.statusCode < 300,
-      async json() {
-        const content = response.content.toString();
-        return content ? JSON.parse(content) : null;
-      },
-      async text() {
-        return response.content.toString();
-      },
-      headers: response.headers || {},
-    };
+    return makeResponse(response.statusCode, response.content, response.headers);
   },
 
   async fetchJSON(url, opts = {}) {
@@ -59,24 +91,37 @@ export const HttpClient = {
 
   upload(file, url, onProgress, ctl) {
     return new Promise((resolve, reject) => {
-      /* NativeScript no tiene XHR con onprogress nativo simple; se usa
-         http.request con el archivo como cuerpo. El progreso fino requiere
-         un módulo nativo adicional o se deja sin progreso en la v1. */
+      /* En NS no hay XHR con onprogress: se usa http.request con el
+         archivo como cuerpo. El progreso fino requiere un módulo nativo
+         adicional; en la v1 se informa 0 → 100 al terminar. */
+      if (ctl && ctl.abort) {
+        ctl.abort = function () {
+          const err = new Error('Subida cancelada');
+          err.canceled = true;
+          reject(err);
+        };
+      }
       const formData = new FormData();
       formData.append('file', file);
-
-      http.request({
-        url,
+      request({
+        url: String(url),
         method: 'POST',
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {},
+        contentType: 'multipart/form-data',
         body: formData,
+        timeout: 300000,
       }).then(response => {
+        const text = response.content ? response.content.toString() : '';
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          try { resolve(JSON.parse(response.content.toString())); }
+          try { resolve(JSON.parse(text)); }
           catch (e) { reject(new Error('Respuesta inválida del servidor')); }
         } else {
           let detail = 'Error ' + response.statusCode;
-          try { detail = JSON.parse(response.content.toString()).detail || detail; } catch (e) {}
+          try {
+            const d = JSON.parse(text).detail;
+            if (typeof d === 'string') detail = d;
+            else if (d && d.message) detail = d.message;
+          } catch (e) {}
           reject(new Error(detail));
         }
       }).catch(err => reject(new Error('Sin conexión con el servidor')));
@@ -85,8 +130,7 @@ export const HttpClient = {
 
   downloadBlob(url, timeout = 120000) {
     return new Promise((resolve, reject) => {
-      http.getFile(url, `${knownFolders.temp().path}/foxinix_dl`).then(file => {
-        /* Leer el archivo como Blob/ArrayBuffer */
+      getFile(String(url), null).then(file => {
         resolve(file);
       }).catch(err => reject(new Error('red')));
     });

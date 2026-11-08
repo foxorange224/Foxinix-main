@@ -6,6 +6,7 @@ import { resetDownloadStore } from './downloads.js';
 import { HttpClient } from './platform/net.js';
 import { StorageAdapter } from './platform/storage.js';
 import { DomAdapter } from './platform/dom.js';
+import { CookieAdapter } from './platform/cookies.js';
 
 const SKEY = 'fm.session';
 
@@ -185,8 +186,13 @@ export function clearSession() {
     W30e: en un login real el refresh viaja en la cookie HttpOnly que el
     server setea; en memoria queda SOLO el access. */
 export function applyAuth(res) {
-  session.legacy = false;
-  session.refresh = '';
+  /* En la web el refresh viaja en una cookie HttpOnly (`fm_rt`) y el
+     access solo vive en memoria. NativeScript NO tiene cookie jar, así
+     que ahí se guarda el refresh en el almacenamiento local (modo
+     "legado") y se manda en el body del POST /auth/refresh. */
+  session.legacy = !CookieAdapter.supportsCookies();
+  session.refresh = (session.legacy && res.tokens && res.tokens.refresh)
+    ? res.tokens.refresh : '';
   if (res.tokens) {
     session.access = res.tokens.access;
   }

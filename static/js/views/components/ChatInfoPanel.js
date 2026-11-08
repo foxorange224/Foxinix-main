@@ -18,6 +18,7 @@ import {
   chatInfoMenu, copyText, openCtx, pickGroupPhoto, saveCropState,
 } from '../../views/ui-actions.js';
 import Vue from '../../vue.js';
+import { DomAdapter } from '../../platform/dom.js';
 import { BioText } from './BioText.js';
 
 export const ChatInfoPanel = {
@@ -200,7 +201,7 @@ export const ChatInfoPanel = {
     const inviteLink = Vue.computed(function () {
       const c = chat.value;
       const id = c && (c.pub_id || '');
-      return id ? location.origin + '/app/group/' + id : '';
+      return id ? DomAdapter.getLocationOrigin() + '/app/group/' + id : '';
     });
     const toggleInvites = function (e) {
       const c = chat.value;

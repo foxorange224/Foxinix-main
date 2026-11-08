@@ -1,5 +1,6 @@
 /* Estado global + router W22 (History API: rutas reales, sin #).
    No importa api.js (sin ciclos). */
+import Vue from './vue.js';
 const { reactive, watch } = Vue;
 import { StorageAdapter } from './platform/storage.js';
 import { DomAdapter } from './platform/dom.js';
@@ -290,7 +291,9 @@ export function settingsSlug(tab) {
 
 let nav = null;   // espejo de las entradas que empuja la app (atrás/cierre)
 
-function locPath() { return location.pathname + location.search; }
+function locPath() {
+  return DomAdapter.getLocationPathname() + DomAdapter.getLocationSearch();
+}
 
 function chatById(id) {
   if (!id) return null;
@@ -348,10 +351,10 @@ function writeUrl(path, mode) {
   if (locPath() === path) return;   // ya está ahí: nada que tocar
   if (mode === 'push') {
     nav.push(path);
-    history.pushState({ fm: 1, nav: nav.length - 1 }, '', path);
+    DomAdapter.pushState({ fm: 1, nav: nav.length - 1 }, '', path);
   } else {
     nav[nav.length - 1] = path;
-    history.replaceState({ fm: 1, nav: nav.length - 1 }, '', path);
+    DomAdapter.replaceState({ fm: 1, nav: nav.length - 1 }, '', path);
   }
 }
 
@@ -359,7 +362,7 @@ function closeUrl(want) {
    /* Cerrar desde la UI: si la entrada inferior ya es el destino, atrás
       (el historial queda limpio); si no (deep link), reemplazar. */
   if (nav && nav.length >= 2 && nav[nav.length - 2] === want) {
-    history.back();               // el popstate recorta nav (estado ya aplicado)
+    DomAdapter.historyBack();       // el popstate recorta nav (estado ya aplicado)
   } else {
     writeUrl(want, 'replace');
   }
@@ -482,10 +485,11 @@ function applyState(p) {
 /** Lee la URL actual y aplica guardas. Se llama al arrancar; además
     convierte enlaces viejos #/ruta a la ruta real equivalente. */
 export function syncPath() {
-  if (location.hash && location.hash !== '#/') {
-    const legacy = location.hash.replace(/^#\/?/, '').split('?')[0];
+  const hash = DomAdapter.getLocationHash();
+  if (hash && hash !== '#/') {
+    const legacy = hash.replace(/^#\/?/, '').split('?')[0];
     const target = KNOWN_ROUTES.indexOf(legacy) >= 0 ? ROUTE_PATHS[legacy] : '/';
-    history.replaceState(null, '', target);
+    DomAdapter.replaceState(null, '', target);
   }
   nav = [locPath()];
   applyState(locPath());
@@ -494,7 +498,7 @@ export function syncPath() {
 DomAdapter.addWindowEventListener('popstate', function () {
   const p = locPath();
   if (nav) {
-    const st = history.state;
+    const st = DomAdapter.getHistoryState();
     if (st && typeof st.nav === 'number' && st.nav < nav.length && nav[st.nav] === p) {
       nav = nav.slice(0, st.nav + 1);
     } else {

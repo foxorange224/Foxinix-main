@@ -157,6 +157,21 @@ export const DomAdapter = {
     const nav = this.getNavigator();
     return nav ? (nav.onLine !== false) : true;
   },
+  /* Tipo de red actual: 'wifi' | 'mobile' | '' (desconocido). */
+  getNetworkType() {
+    const conn = this.getConnection();
+    if (!conn) return '';
+    try {
+      const type = String(conn.type || '').toLowerCase();
+      if (type === 'wifi' || type === 'ethernet' || type === 'bluetooth') return 'wifi';
+      if (type === 'cellular' || type === '4g' || type === '3g' || type === '2g') return 'mobile';
+      if (conn.effectiveType) {
+        if (/^(slow-2g|2g|3g)$/.test(conn.effectiveType)) return 'mobile';
+        if (/^(4g)$/.test(conn.effectiveType)) return 'mobile';
+      }
+    } catch (e) {}
+    return '';
+  },
   /* Datos de la conexión (tipo, ahorro de datos). */
   getConnection() {
     const nav = this.getNavigator();
@@ -382,10 +397,27 @@ export const DomAdapter = {
   getLocationSearch() {
     return typeof location !== 'undefined' ? location.search : '';
   },
+  getLocationHref() {
+    if (typeof location !== 'undefined' && location.href) return location.href;
+    if (typeof window !== 'undefined' && window.location) return window.location.href || '';
+    return '';
+  },
+  getLocationHash() {
+    return typeof location !== 'undefined' ? (location.hash || '') : '';
+  },
   getLocationOrigin() {
     if (typeof location !== 'undefined' && location.origin) return location.origin;
     if (typeof window !== 'undefined' && window.location) return window.location.origin || '';
     return '';
+  },
+  getHistoryState() {
+    if (typeof history === 'undefined') return null;
+    try { return history.state; } catch (e) { return null; }
+  },
+  /* Atrás en el historial (el popstate recorta la pila interna). */
+  historyBack() {
+    if (typeof history === 'undefined') return;
+    try { history.back(); } catch (e) {}
   },
   /* Trae la ventana al frente (p.ej. al recibir un mensaje). */
   focusWindow() {

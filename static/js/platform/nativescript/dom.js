@@ -9,15 +9,16 @@
    así que se devuelve un rectángulo cero salvo que el elemento lo
    exponga (los wrappers de NS sí pueden hacerlo). */
 
-import { ApplicationSettings } from '@nativescript/core/application-settings';
-import { device } from '@nativescript/core/platform';
+import {
+  getString, setString, remove, clear, hasKey,
+} from '@nativescript/core/application-settings';
 import { Screen } from '@nativescript/core';
 
 export const DomAdapter = {
   /* storage (delegado a StorageAdapter para consistencia) */
-  getItem(key) { return ApplicationSettings.getString(key, null); },
-  setItem(key, value) { try { ApplicationSettings.setString(key, String(value)); return true; } catch (e) { return false; } },
-  removeItem(key) { try { ApplicationSettings.remove(key); return true; } catch (e) { return false; } },
+  getItem(key) { return getString(key, null); },
+  setItem(key, value) { try { setString(key, String(value)); return true; } catch (e) { return false; } },
+  removeItem(key) { try { remove(key); return true; } catch (e) { return false; } },
 
   /* document — NS no tiene document. Estas operaciones son no-ops o devuelven null. */
   getDocumentElement() { return null; },
@@ -54,11 +55,11 @@ export const DomAdapter = {
   getViewportSize() {
     try {
       return {
-        width: Screen.mainScreen.widthDIPs || device.screenWidth || 0,
-        height: Screen.mainScreen.heightDIPs || device.screenHeight || 0,
+        width: Screen.mainScreen.widthDIPs || Screen.mainScreen.widthDIPs || 0,
+        height: Screen.mainScreen.heightDIPs || Screen.mainScreen.heightDIPs || 0,
       };
     } catch (e) {
-      return { width: device.screenWidth || 0, height: device.screenHeight || 0 };
+      return { width: Screen.mainScreen.widthDIPs || 0, height: Screen.mainScreen.heightDIPs || 0 };
     }
   },
   isNarrow(maxWidth) {
@@ -67,11 +68,20 @@ export const DomAdapter = {
   },
   isCoarsePointer() { return true; },   /* NS siempre es táctil */
   copyToClipboard(text) {
+    /* NS 9 no trae clipboard en el core. La app puede enganchar un
+       copiador (plugin nativo) con setClipboard(); sin él, la vista
+       muestra un campo de texto seleccionable y devuelve false. */
     try {
-      const clipboard = require('@nativescript/core/clipboard');
-      clipboard.setString(String(text == null ? '' : text));
-      return true;
-    } catch (e) { return false; }
+      if (this._clipboard && typeof this._clipboard.setString === 'function') {
+        this._clipboard.setString(String(text == null ? '' : text));
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  },
+  /* Engancha un copiador (p.ej. un plugin de portapapeles). */
+  setClipboard(clipboard) {
+    this._clipboard = clipboard || null;
   },
 
   /* window */
@@ -79,10 +89,10 @@ export const DomAdapter = {
   addWindowEventListener() {},
   removeWindowEventListener() {},
   getInnerWidth() {
-    try { return Screen.mainScreen.widthDIPs || device.screenWidth || 0; } catch (e) { return 0; }
+    try { return Screen.mainScreen.widthDIPs || Screen.mainScreen.widthDIPs || 0; } catch (e) { return 0; }
   },
   getInnerHeight() {
-    try { return Screen.mainScreen.heightDIPs || device.screenHeight || 0; } catch (e) { return 0; }
+    try { return Screen.mainScreen.heightDIPs || Screen.mainScreen.heightDIPs || 0; } catch (e) { return 0; }
   },
   getHidden() { return false; }, /* NS no tiene pestañas ocultas del navegador */
   getVisibilityState() { return 'visible'; },
@@ -95,6 +105,17 @@ export const DomAdapter = {
       const connectivity = require('@nativescript/core/connectivity');
       return connectivity.getConnectionType() !== connectivity.connectionType.none;
     } catch (e) { return true; }
+  },
+  /* Tipo de red actual: 'wifi' | 'mobile' | '' (desconocido). */
+  getNetworkType() {
+    try {
+      const connectivity = require('@nativescript/core/connectivity');
+      const ct = connectivity.getConnectionType();
+      if (ct === connectivity.connectionType.wifi) return 'wifi';
+      if (ct === connectivity.connectionType.mobile) return 'mobile';
+      if (ct === connectivity.connectionType.ethernet) return 'wifi';
+      return '';
+    } catch (e) { return ''; }
   },
   isMobileUserAgent() { return true; },
   isSaveDataEnabled() { return false; },
@@ -121,7 +142,12 @@ export const DomAdapter = {
     try {
       const dialogs = require('@nativescript/core/ui/dialogs');
       if (dialogs && dialogs.confirm) {
-        return dialogs.confirm({ title: '', message: String(message || ''), okButtonText: 'Sí', cancelButtonText: 'No' });
+        return dialogs.confirm({
+          title: 'Foxinix',
+          message: String(message || ''),
+          okButtonText: 'Sí',
+          cancelButtonText: 'No',
+        });
       }
     } catch (e) {}
     return false;
@@ -130,7 +156,7 @@ export const DomAdapter = {
     try {
       const dialogs = require('@nativescript/core/ui/dialogs');
       if (dialogs && dialogs.alert) {
-        dialogs.alert({ title: '', message: String(message || ''), okButtonText: 'OK' });
+        dialogs.alert({ title: 'Foxinix', message: String(message || ''), okButtonText: 'OK' });
         return;
       }
     } catch (e) {}
@@ -149,13 +175,13 @@ export const DomAdapter = {
   getRootStyle() {
     return {
       setProperty: function (prop, value) {
-        try { ApplicationSettings.setString('fox_css_' + prop, String(value)); } catch (e) {}
+        try { setString('fox_css_' + prop, String(value)); } catch (e) {}
       },
       removeProperty: function (prop) {
-        try { ApplicationSettings.remove('fox_css_' + prop); } catch (e) {}
+        try { remove('fox_css_' + prop); } catch (e) {}
       },
       getPropertyValue: function (prop) {
-        try { return ApplicationSettings.getString('fox_css_' + prop, ''); } catch (e) { return ''; }
+        try { return getString('fox_css_' + prop, ''); } catch (e) { return ''; }
       },
     };
   },
@@ -163,33 +189,33 @@ export const DomAdapter = {
   setMetaThemeColor() {},
   digestSha256() { return Promise.resolve(null); },
   setRootStyle(prop, value) {
-    try { ApplicationSettings.setString('fox_css_' + prop, String(value)); } catch (e) {}
+    try { setString('fox_css_' + prop, String(value)); } catch (e) {}
   },
   removeRootStyle(prop) {
-    try { ApplicationSettings.remove('fox_css_' + prop); } catch (e) {}
+    try { remove('fox_css_' + prop); } catch (e) {}
   },
   setRootAttribute(name, value) {
-    try { ApplicationSettings.setString('fox_attr_' + name, String(value)); } catch (e) {}
+    try { setString('fox_attr_' + name, String(value)); } catch (e) {}
   },
   removeRootAttribute(name) {
-    try { ApplicationSettings.remove('fox_attr_' + name); } catch (e) {}
+    try { remove('fox_attr_' + name); } catch (e) {}
   },
   getRootAttribute(name) {
-    try { return ApplicationSettings.getString('fox_attr_' + name, null); } catch (e) { return null; }
+    try { return getString('fox_attr_' + name, null); } catch (e) { return null; }
   },
   addRootClass(cls) {
     try {
-      const classes = ApplicationSettings.getString('fox_root_classes', '');
+      const classes = getString('fox_root_classes', '');
       const arr = classes ? classes.split(',') : [];
-      if (!arr.includes(cls)) { arr.push(cls); ApplicationSettings.setString('fox_root_classes', arr.join(',')); }
+      if (!arr.includes(cls)) { arr.push(cls); setString('fox_root_classes', arr.join(',')); }
     } catch (e) {}
   },
   removeRootClass(cls) {
     try {
-      const classes = ApplicationSettings.getString('fox_root_classes', '');
+      const classes = getString('fox_root_classes', '');
       const arr = classes ? classes.split(',') : [];
       const idx = arr.indexOf(cls);
-      if (idx >= 0) { arr.splice(idx, 1); ApplicationSettings.setString('fox_root_classes', arr.join(',')); }
+      if (idx >= 0) { arr.splice(idx, 1); setString('fox_root_classes', arr.join(',')); }
     } catch (e) {}
   },
   getComputedStyleProp() { return ''; },
@@ -197,7 +223,11 @@ export const DomAdapter = {
   /* location / history — NS usa Frame/navigate, no history.pushState. */
   getLocationPathname() { return ''; },
   getLocationSearch() { return ''; },
+  getLocationHref() { return ''; },
+  getLocationHash() { return ''; },
   getLocationOrigin() { return ''; },
+  getHistoryState() { return null; },
+  historyBack() {},
   focusWindow() {},
   requestPersistentStorage() { return Promise.resolve(true); },
   pushState() {},

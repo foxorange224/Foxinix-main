@@ -4,14 +4,13 @@
    mientras no esté, la app avisa al usuario en vez de romperse.
    Interfaz idéntica a platform/media.js. */
 
-import { ApplicationSettings } from '@nativescript/core/application-settings';
+import { getString } from '@nativescript/core/application-settings';
 
 export const MediaAdapter = {
   canRecordAudio() {
     /* Si hay un plugin de grabación registrado, se puede. */
     try {
-      return !!ApplicationSettings.getString('fox_recorder_available', 'false') === true
-        || ApplicationSettings.getString('fox_recorder_available', 'false') === 'true';
+      return getString('fox_recorder_available', 'false') === 'true';
     } catch (e) { return false; }
   },
   canUseMedia() { return false; },

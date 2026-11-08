@@ -958,7 +958,7 @@ export const MessageRow = {
         avRetried.value = true;
         // Reintenta con parámetro de cache-busting
         try {
-          const url = new URL(props.row.avatar.url, location.href);
+          const url = new URL(props.row.avatar.url, DomAdapter.getLocationHref());
           url.searchParams.set('retry', Date.now().toString());
           // Actualiza la URL en el objeto avatar para que Vue la relea
           props.row.avatar.url = url.href;

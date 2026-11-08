@@ -1948,7 +1948,7 @@ export const ChatShell = {
       } else {
         path = '/app/group/' + chat.id;
       }
-      return location.origin + path + '?m=' + m.id;
+      return DomAdapter.getLocationOrigin() + path + '?m=' + m.id;
     };
 
     /* W28a: doble clic en un mensaje = reacciona con tu emoji reciente

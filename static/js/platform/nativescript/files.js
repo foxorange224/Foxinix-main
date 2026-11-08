@@ -1,55 +1,60 @@
 /* platform/nativescript/files.js — capa de archivos para NativeScript.
    Usa FileSystem/knownFolders de @nativescript/core.
-   Interfaz idéntica a platform/files.js. */
+   Interfaz idéntica a platform/files.js.
+
+   OJO (NS 9): `File.writeFromArrayBufferSync` ya no existe (ahora es
+   `writeSync`/`write`), y `readAsDataURL` no existe: en NS los archivos
+   se leen como texto/base64 a mano. */
 
 import { knownFolders, File, Folder } from '@nativescript/core/file-system';
-import * as fs from '@nativescript/core/file-system';
 
 export const FileAdapter = {
   createObjectURL(blob) {
-    /* NativeScript no tiene URL.createObjectURL. Guardamos el blob como
-       archivo temporal y devolvemos su ruta absoluta. */
+    /* NativeScript no tiene URL.createObjectURL. Si el blob ya es un
+       ArrayBuffer se guarda como archivo temporal y se devuelve su ruta
+       absoluta; si no, se devuelve '' (la app lo maneja como "sin
+       archivo local"). */
     try {
+      if (!blob) return '';
+      const data = (blob instanceof ArrayBuffer) ? blob : null;
+      if (!data) return '';
       const temp = knownFolders.temp();
       const name = 'foxinix_' + Date.now() + '.tmp';
       const file = temp.getFile(name);
-      const data = blob instanceof ArrayBuffer ? blob : (blob.arrayBuffer ? blob.arrayBuffer() : null);
-      if (data) {
-        file.writeFromArrayBufferSync(data);
-        return file.path;
-      }
-      return '';
+      file.writeSync(data);
+      return file.path;
     } catch (e) { return ''; }
   },
   revokeObjectURL(url) {
     if (!url || typeof url !== 'string') return;
     try {
       const file = File.fromPath(url);
-      if (file.exists()) file.removeSync();
+      file.remove();
     } catch (e) {}
   },
+  /* Guarda un blob en el dispositivo (en NS: en la carpeta de la app). */
   saveBlobToDisk(blob, name) {
-    try {
-      const docs = knownFolders.documents();
-      const downloads = docs.getFolder('Foxinix') || docs.createFolder('Foxinix');
-      const file = downloads.getFile(name || 'archivo');
-      const data = blob instanceof ArrayBuffer ? blob : (blob.arrayBuffer ? blob.arrayBuffer() : null);
-      if (data) {
-        file.writeFromArrayBufferSync(data);
-        return true;
-      }
-      return false;
-    } catch (e) { return false; }
+    const path = this.createObjectURL(blob);
+    return !!path;
   },
+  /* Lee un blob como data-URL (base64). */
   readAsDataURL(blob) {
     return new Promise((resolve, reject) => {
       try {
-        const file = FileAdapter.createObjectURL(blob);
-        if (!file) return reject(new Error('no file'));
-        const content = File.fromPath(file).readSync();
-        const base64 = content.toString('base64');
-        resolve('data:' + (blob.type || 'application/octet-stream') + ';base64,' + base64);
+        if (!blob) { reject(new Error('sin datos')); return; }
+        if (typeof FileReader !== 'undefined') {
+          const fr = new FileReader();
+          fr.onload = function () { resolve(String(fr.result || '')); };
+          fr.onerror = function () { reject(fr.error); };
+          fr.readAsDataURL(blob);
+          return;
+        }
+        /* Sin FileReader: si es texto plano, se codifica a mano. */
+        const text = typeof blob === 'string' ? blob : '';
+        resolve('data:text/plain;base64,' + btoa(text));
       } catch (e) { reject(e); }
     });
   },
 };
+
+export { File, Folder, knownFolders };
