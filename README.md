@@ -47,6 +47,7 @@
 | W67 | **Retirada completa del cifrado de extremo a extremo**: la app dejó de cifrar y se quitó toda su UI (aviso del panel de info, "cifrado pendiente" del composer, modal del código de verificación y sello del arranque/landing). Desaparecieron `js/e2e.js` y todo su rastro: endpoints `PUT /api/users/me/e2e-key`, `GET /api/users/{u}/e2e-key` y `POST /api/chats/{id}/e2e-demigrate`, bucket `DEMIGRATE`, campo `e2e` en `message_out` / `SendIn` / `EditIn`, columnas `e2e_iv`/`e2e_ct` y tabla `e2e_keys` (la migración de `db.py` las elimina también en bases existentes vía `_drop_column`). El texto viaja siempre en claro | ✅ `scripts/check-js.mjs` + suites `w29`, `w37`, `w61`, `w6` |
 | W100 | **Avisos del sistema en la app nativa (NativeScript)**: la app nativa (NativeScript 9 + Vue 3, con el mismo núcleo de lógica que la web) muestra los mensajes nuevos como **notificaciones del sistema** con `@nativescript/local-notifications`: canal "Foxinix", icono de la marca, sonido si el usuario lo tiene activado, permiso `POST_NOTIFICATIONS` de Android 13+ pedido una sola vez al arrancar (revisable en Ajustes, con botón para abrir los ajustes del sistema) y, al tocar el aviso, se abre el chat y el mensaje exactos (también con la app cerrada). El núcleo distingue "app en segundo plano" (`Application.suspendEvent`) para no avisar con la pantalla a la vista | ✅ test nativo contra la API real (76 PASS / 0 FAIL) + APK debug construido |
 | W101 | **Servicio en primer plano en la app nativa (sin Firebase)**: el WebSocket de la app nativa vive en el runtime de JS, así que Android lo congelaba con la app en segundo plano y los avisos no llegaban. Ahora hay un servicio en primer plano propio (`FoxinixService.java`, `START_STICKY`) que se arranca al salir de la app y se para al volver; el aviso del servicio va en un canal de importancia baja (silencioso) y, en Android 14+, usa el tipo `specialUse` con su subtipo y los permisos `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_SPECIAL_USE` | ✅ test nativo contra la API real (80 PASS / 0 FAIL) + APK debug construido con el servicio en el manifest *merged* |
+| W102 | **La imagen se ve dentro de la burbuja (app nativa)**: en la app nativa las imágenes llegaban como texto ("🖼 Imagen"). Ahora la imagen se muestra **dentro de la burbuja**, con su pie de foto y su horario; la caja conserva la proporción real que manda el server (`media.width`/`media.height`, tope 220×300) y la burbuja pide la **miniatura** del servidor (`?thumb=1`, la firma HMAC cubre sólo el slug, así que sigue valiendo). Al tocarla se abre un **visor a pantalla completa** con el original y el pie de foto. Los cálculos viven en `native/app/img.ts` (testables en Node) y el visor es una vista nativa propia, enrutada en `App.vue` | ✅ test nativo contra la API real (91 PASS / 0 FAIL) + APK debug construido (bundle con la imagen en la burbuja y el visor) |
 
 ## Estructura
 
@@ -147,6 +148,9 @@ La app nativa **no** es la web dentro de un WebView: son vistas nativas
 - Para que el WebSocket siga vivo con la app en segundo plano (y los avisos
   lleguen) hay un **servicio en primer plano** propio (W101), sin Firebase:
   se arranca al salir de la app y se para al volver.
+- Las **imágenes se ven dentro de la burbuja** (W102): la app pide la
+  miniatura al servidor (`?thumb=1`), respeta la proporción real de la
+  imagen y, al tocarla, abre un visor a pantalla completa con el original.
 
 Detalle completo en `native/README.md`.
 
