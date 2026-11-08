@@ -7,6 +7,11 @@ import { StorageAdapter } from './storage.js';
 import { DomAdapter } from './dom.js';
 
 export const FileAdapter = {
+  /* Crea un Blob a partir de trozos (Uint8Array/ArrayBuffer/strings). */
+  createBlob(chunks, type) {
+    try { return new Blob(chunks || [], type ? { type: type } : undefined); }
+    catch (e) { return null; }
+  },
   createObjectURL(blob) {
     try { return URL.createObjectURL(blob); } catch (e) { return ''; }
   },

@@ -14,6 +14,7 @@ export { DomAdapter } from './dom.js';
 export { ImageAdapter } from './images.js';
 export { MediaAdapter } from './media.js';
 export { NotificationAdapter } from './notifications.js';
+export { SocketAdapter } from './socket.js';
 
 /* Ejemplo de cómo se vería para NativeScript (descomentar y comentar las
    líneas de arriba):
@@ -24,4 +25,5 @@ export { NotificationAdapter } from './notifications.js';
    export { ImageAdapter } from './nativescript/images.js';
    export { MediaAdapter } from './nativescript/media.js';
    export { NotificationAdapter } from './nativescript/notifications.js';
+   export { SocketAdapter } from './nativescript/socket.js';
 */

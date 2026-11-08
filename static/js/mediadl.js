@@ -407,8 +407,7 @@ function applySrc(el, objUrl) {
    Se observa el .mframe y NO el elemento: el <audio> va oculto con
    display:none (el player custom se ve) y un IntersectionObserver nunca
    dispara para algo invisible. */
-const io = ('IntersectionObserver' in window)
-  ? new IntersectionObserver(function (ents) {
+const io = DomAdapter.createIntersectionObserver(function (ents) {
       for (let i = 0; i < ents.length; i++) {
         if (!ents[i].isIntersecting) continue;
         const frame = ents[i].target;
@@ -420,8 +419,7 @@ const io = ('IntersectionObserver' in window)
         frame.__dlStart = '';
         if (el && u) startDl(el, u);
       }
-    }, { rootMargin: '200px' })
-  : null;
+    }, { rootMargin: '200px' });
 
 /* W51: elige el derivado compatible ANTES de descargar. Si el navegador
    anuncia WebM/MP3 pero luego falla, chat.js marca el MIME y la siguiente

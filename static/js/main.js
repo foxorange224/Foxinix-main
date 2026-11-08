@@ -7,6 +7,7 @@ import { t, sysText } from './i18n.js';
 import { StorageAdapter } from './platform/storage.js';
 import { FileAdapter } from './platform/files.js';
 import { DomAdapter } from './platform/dom.js';
+import { HttpClient } from './platform/net.js';
 import {
   BootView, LoginView, RegisterView, ProfileView,
   VerifyView, ForgotView, ResetView,
@@ -88,7 +89,7 @@ const Root = {
       bootstrap();
       // W62: check for new version (web + APK)
       setTimeout(() => {
-        fetch(API_BASE + '/version').then(r => r.json()).then(v => {
+        HttpClient.fetch(API_BASE + '/version').then(r => r.json()).then(v => {
           const isAndroid = !!DomAdapter.getNativeBridge();
           const srvWeb = v.web_version || '';
           const srvApk = v.apk_version || '';
@@ -167,8 +168,20 @@ const Root = {
         nativeBridge.downloadApk(apkUrl);
         return;
       }
+      /* GitHub no manda cabeceras CORS: si el APK está en otro origen el
+         fetch falla siempre. En ese caso se navega directamente (la
+         navegación no exige CORS y el navegador descarga el archivo). */
+      if (!DomAdapter.isSameOrigin(apkUrl)) {
+        store.versionDownloading = false;
+        store.toasts.push({
+          id: Date.now(), kind: 'info',
+          msg: 'Se abrirá la descarga del APK en el navegador',
+        });
+        DomAdapter.navigate(apkUrl);
+        return;
+      }
       try {
-        const res = await fetch(apkUrl);
+        const res = await HttpClient.fetch(apkUrl, { timeout: 300000, credentials: 'omit' });
         const total = +res.headers.get('Content-Length') || 0;
         const reader = res.body.getReader();
         let received = 0;
@@ -180,7 +193,7 @@ const Root = {
           received += value.length;
           if (total) store.versionProgress = Math.round((received/total)*100);
         }
-        const blob = new Blob(chunks);
+        const blob = FileAdapter.createBlob(chunks);
         const url = FileAdapter.createObjectURL(blob);
         const a = DomAdapter.createElement('a');
         if (!a) throw new Error('no anchor');
@@ -191,8 +204,16 @@ const Root = {
         store.versionUpdate = false;
         StorageAdapter.setItem('fm.apkVersion', v.apk_version);
       } catch(e) {
+        /* GitHub no manda cabeceras CORS: el fetch del APK falla siempre
+           en el navegador. Como fallback se NAVEGA a la URL: la
+           navegación no exige CORS y el navegador descarga el archivo
+           (Content-Disposition: attachment). */
         store.versionDownloading = false;
-        store.toasts.push({id: Date.now(), kind: 'err', msg: 'Error al descargar actualización' });
+        store.toasts.push({
+          id: Date.now(), kind: 'info',
+          msg: 'Se abrirá la descarga del APK en el navegador',
+        });
+        DomAdapter.navigate(apkUrl);
       }
     };
     /* W94: recarga de versión web bajo el control del usuario. */
@@ -337,7 +358,7 @@ Vue.watch(function () { return store.user && store.user.id; },
    precarga el lote completo de Twemoji si el usuario lo usa (con
    'system' no se descarga NADA de emoji; 'noto' lo baja el cliente
    en idle con prefetchEmojis). */
-if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+if (DomAdapter.hasServiceWorker()) {
   DomAdapter.registerServiceWorker('/sw.js').catch(function () {});
   const tellStyle = function () {
     DomAdapter.postToServiceWorker({ type: 'emo-style', style: store.prefs.emo });

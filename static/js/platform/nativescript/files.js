@@ -9,6 +9,13 @@
 import { knownFolders, File, Folder } from '@nativescript/core/file-system';
 
 export const FileAdapter = {
+  /* En NS el Blob es un polyfill: se construye con los mismos trozos. */
+  createBlob(chunks, type) {
+    try {
+      if (typeof Blob === 'undefined') return null;
+      return new Blob(chunks || [], type ? { type: type } : undefined);
+    } catch (e) { return null; }
+  },
   createObjectURL(blob) {
     /* NativeScript no tiene URL.createObjectURL. Si el blob ya es un
        ArrayBuffer se guarda como archivo temporal y se devuelve su ruta

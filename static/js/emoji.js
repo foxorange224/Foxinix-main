@@ -9,6 +9,7 @@ import { EMO_FILE_NOTO } from './emoji-noto-data.js';
 import { store } from './store.js';
 import { StorageAdapter } from './platform/storage.js';
 import { DomAdapter } from './platform/dom.js';
+import { HttpClient } from './platform/net.js';
 
 /* Nombres de búsqueda (español). No hace falta nombrar todo: los emojis
    sin nombre se encuentran pegando el emoji mismo en el buscador. */
@@ -257,7 +258,7 @@ export function prefetchEmojis() {
     const end = Math.min(i + BATCH, files.length);
     for (; i < end; i++) {
       /* El SW los cachea; el resultado no interesa (best-effort). */
-      fetch(files[i], { cache: 'force-cache' }).catch(function () {});
+      HttpClient.fetch(files[i], { cache: 'force-cache' }).catch(function () {});
     }
     if (i < files.length) setTimeout(function () { idle(slice); }, GAP);
   }

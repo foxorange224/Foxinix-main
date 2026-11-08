@@ -1,6 +1,6 @@
 /* Foxinix — acciones de datos (chats, mensajes). Importa store + api; sin ciclos. */
 import { store, toast, syncUrl } from './store.js';
-import { api, uploadMedia, session, API_BASE, CDN_BASE } from './api.js';
+import { api, uploadMedia, session, API_BASE, CDN_BASE, WEB_BASE } from './api.js';
 import { t } from './i18n.js';
 
 /* Puentes que registra realtime.js para mandar 'seen' por WS (fallback: REST). */
@@ -22,6 +22,8 @@ export function charCount(txt) {
 import { cachedUrl } from './mediadl.js';
 import { FileAdapter } from './platform/files.js';
 import { DomAdapter } from './platform/dom.js';
+import { ImageAdapter } from './platform/images.js';
+import { HttpClient } from './platform/net.js';
 import {
   autoDownload, dlCategory, listDownloads, hooks as dlHooks,
 } from './downloads.js';
@@ -99,11 +101,7 @@ export function preloadImage(url) {
   if (!u) return Promise.resolve();
   const key = u.split('?')[0];
   if (imgPreloads[key]) return imgPreloads[key];
-  imgPreloads[key] = new Promise(function (resolve) {
-    const im = new Image();
-    im.onload = im.onerror = function () { resolve(im); };
-    im.src = u;
-  });
+  imgPreloads[key] = ImageAdapter.preload(u);
   return imgPreloads[key];
 }
 
@@ -134,7 +132,13 @@ export function sortChats() {
     if (pa !== pb) return pb - pa;
     const ta = a.last_message ? a.last_message.created_at : Infinity;
     const tb = b.last_message ? b.last_message.created_at : Infinity;
-    return tb - ta;
+    if (ta !== tb) return tb - ta;
+    /* Desempate por id del último mensaje (monótono): con dos chats en el
+       mismo segundo queda primero lo que pasó después. El server ordena
+       igual. */
+    const ia = a.last_message ? (a.last_message.id || 0) : 0;
+    const ib = b.last_message ? (b.last_message.id || 0) : 0;
+    return ib - ia;
   });
 }
 
@@ -1013,7 +1017,7 @@ var _uploads = {};
    como mensaje de imagen. */
 export async function sendGif(chatId, name) {
   try {
-    const r = await fetch('/static/gifs/' + encodeURIComponent(name));
+    const r = await HttpClient.fetch(WEB_BASE + '/static/gifs/' + encodeURIComponent(name));
     if (!r.ok) throw new Error('gif');
     const blob = await r.blob();
     const file = new File([blob], name, { type: 'image/gif' });
@@ -1026,10 +1030,9 @@ export async function sendGif(chatId, name) {
 /* W22: resolución de una imagen local, para reservar el cuadro durante
    la subida (el server manda width/height en el mensaje final). */
 function probeImg(url, cb) {
-  const im = new Image();
-  im.onload = function () { cb(im.naturalWidth, im.naturalHeight); };
-  im.onerror = function () { cb(0, 0); };
-  im.src = url;
+  ImageAdapter.probeSize(url).then(function (s) {
+    cb(s.width || 0, s.height || 0);
+  }, function () { cb(0, 0); });
 }
 
 /* W66c: ¿es un WebP animado? Mira solo la cabecera VP8X (bit de

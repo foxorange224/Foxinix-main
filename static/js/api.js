@@ -16,6 +16,9 @@ export const API_BASE = 'https://api.foxinix.qzz.io';
 /* W80: CDN de media en subdominio aparte. Las URLs firmadas
    (/media/{kind}/{fname}?exp=&sig=) se sirven desde aquí. */
 export const CDN_BASE = 'https://cdn.foxinix.qzz.io';
+/* Base del sitio (recursos estáticos: GIFs, iconos). En NS no hay
+   document.location, así que la ruta es explícita. */
+export const WEB_BASE = 'https://foxinix.qzz.io';
 
 export const session = {
   access: '', refresh: '', user: null, pendingEmail: '',

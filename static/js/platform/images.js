@@ -8,6 +8,51 @@
 import { DomAdapter } from './dom.js';
 
 export const ImageAdapter = {
+  /* Precarga una imagen. Resuelve con el elemento (o null si no hay
+     soporte). Se usa para no pedir la imagen justo cuando aparece. */
+  preload(url) {
+    return new Promise(function (resolve) {
+      if (!url || typeof Image === 'undefined') { resolve(null); return; }
+      let done = false;
+      const finish = function (im) {
+        if (done) return;
+        done = true;
+        resolve(im);
+      };
+      try {
+        const im = new Image();
+        im.onload = function () { finish(im); };
+        im.onerror = function () { finish(im); };
+        im.src = url;
+      } catch (e) { finish(null); }
+    });
+  },
+
+  /* Tamaño natural de una imagen: {width, height}. Si no se puede
+     cargar, devuelve 0×0. */
+  probeSize(url) {
+    return new Promise(function (resolve) {
+      if (!url || typeof Image === 'undefined') {
+        resolve({ width: 0, height: 0 });
+        return;
+      }
+      let done = false;
+      const finish = function (w, h) {
+        if (done) return;
+        done = true;
+        resolve({ width: w || 0, height: h || 0 });
+      };
+      try {
+        const im = new Image();
+        im.onload = function () {
+          finish(im.naturalWidth || im.width || 0, im.naturalHeight || im.height || 0);
+        };
+        im.onerror = function () { finish(0, 0); };
+        im.src = url;
+      } catch (e) { finish(0, 0); }
+    });
+  },
+
   /* Devuelve una data-URL con la imagen reducida a 48×27 (el CSS la
      escala y le aplica el blur). Si algo falla, devuelve ''. */
   makeSmallDataUrl(url, position) {

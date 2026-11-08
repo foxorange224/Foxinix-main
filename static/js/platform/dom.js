@@ -230,6 +230,19 @@ export const DomAdapter = {
     window.addEventListener('resize', cb);
     return function () { window.removeEventListener('resize', cb); };
   },
+  /* ¿El navegador tiene IntersectionObserver? (descarga perezosa) */
+  hasIntersectionObserver() {
+    if (typeof window === 'undefined') return false;
+    return typeof window.IntersectionObserver === 'function';
+  },
+  /* Crea un IntersectionObserver. Devuelve null si no hay soporte. */
+  createIntersectionObserver(cb, options) {
+    if (!this.hasIntersectionObserver()) return null;
+    try {
+      return new window.IntersectionObserver(cb, options);
+    } catch (e) { return null; }
+  },
+
   /* Observa cambios de tamaño de un elemento (si el navegador lo da). */
   observeResize(el, cb) {
     if (!el || typeof window === 'undefined' || !window.ResizeObserver) {
@@ -414,10 +427,30 @@ export const DomAdapter = {
     if (typeof history === 'undefined') return null;
     try { return history.state; } catch (e) { return null; }
   },
+  /* Resuelve una URL relativa contra una base. Devuelve '' si no se
+     puede resolver. (NS no tiene el global URL: lo resuelve a mano.) */
+  absoluteUrl(url, base) {
+    if (!url) return '';
+    try {
+      return new URL(url, base || this.getLocationHref()).href;
+    } catch (e) { return ''; }
+  },
   /* Atrás en el historial (el popstate recorta la pila interna). */
   historyBack() {
     if (typeof history === 'undefined') return;
     try { history.back(); } catch (e) {}
+  },
+  /* ¿La URL es del mismo origen que la página? */
+  isSameOrigin(url) {
+    if (!url) return false;
+    try {
+      return new URL(url, this.getLocationHref()).origin === this.getLocationOrigin();
+    } catch (e) { return false; }
+  },
+  /* Navega a una URL (descarga de un APK, enlace externo). */
+  navigate(url) {
+    if (!url) return;
+    try { location.href = url; } catch (e) {}
   },
   /* Trae la ventana al frente (p.ej. al recibir un mensaje). */
   focusWindow() {
@@ -445,6 +478,11 @@ export const DomAdapter = {
   },
 
   /* ----- service worker ----- */
+  /* ¿El navegador soporta service workers? (PWA) */
+  hasServiceWorker() {
+    if (typeof navigator === 'undefined') return false;
+    return !!navigator.serviceWorker;
+  },
   registerServiceWorker(path) {
     if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
       return navigator.serviceWorker.register(path).catch(function () {});

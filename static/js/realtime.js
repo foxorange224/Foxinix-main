@@ -13,6 +13,7 @@ import { clearMediaBlobs } from './mediadl.js';
 import { DomAdapter } from './platform/dom.js';
 import { MediaAdapter } from './platform/media.js';
 import { NotificationAdapter } from './platform/notifications.js';
+import { SocketAdapter } from './platform/socket.js';
 
 let ws = null;
 let pingTimer = null;
@@ -142,12 +143,20 @@ function connect() {
   let sock;
   try {
     /* W14: el token viaja como subprotocolo (2.º valor), no en la URL,
-       para que no quede en los logs de acceso del servidor. */
-    sock = new WebSocket(url, ['foxinix', session.access]);
+       para que no quede en los logs de acceso del servidor.
+       En NativeScript el adaptador lo manda en la cabecera
+       X-Foxinix-Token (el plugin sólo envía el primer subprotocolo). */
+    if (!SocketAdapter.isSupported()) {
+      scheduleReconnect();
+      return;
+    }
+    sock = SocketAdapter.create(url, ['foxinix', session.access],
+      { 'X-Foxinix-Token': session.access });
   } catch (e) {
     scheduleReconnect();
     return;
   }
+  if (!sock) { scheduleReconnect(); return; }
   ws = sock;
 
   sock.onopen = function () {
@@ -359,7 +368,7 @@ function dndSilences(m) {
    en ese caso se usa el icono de la app. */
 function absoluteAvatar(url) {
   if (!url || url.indexOf('blob:') === 0 || url.indexOf('data:') === 0) return '';
-  try { return new URL(url, DomAdapter.getLocationHref()).href; } catch (e) { return ''; }
+  return DomAdapter.absoluteUrl(url, DomAdapter.getLocationHref());
 }
 
 /* Para el APK no sirve mediaUrl() si el avatar ya está cacheado como

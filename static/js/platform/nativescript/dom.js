@@ -127,6 +127,8 @@ export const DomAdapter = {
   getKeyboardViewportHeight() { return this.getInnerHeight(); },
   onViewportResize() { return function () {}; },
   observeResize() { return function () {}; },
+  hasIntersectionObserver() { return false; },
+  createIntersectionObserver() { return null; },
   observeResizeAll() { return function () {}; },
   /* Puente nativo: en NS el equivalente es el plugin/plugin de la app. */
   getNativeBridge() { return null; },
@@ -227,8 +229,27 @@ export const DomAdapter = {
   getLocationHash() { return ''; },
   getLocationOrigin() { return ''; },
   getHistoryState() { return null; },
+  /* Resuelve una URL relativa contra una base.
+     NS (Android) no tiene el global URL, así que se resuelve a mano:
+     sólo hacen falta los casos de la app (absoluta, con barra inicial o
+     relativa dentro del mismo origen). */
+  absoluteUrl(url, base) {
+    if (!url) return '';
+    const u = String(url);
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) return u;
+    const b = String(base || '');
+    if (!b) return u;
+    const m = /^([a-z][a-z0-9+.-]*:)\/\/([^/?#]*)([^?#]*)/i.exec(b);
+    if (!m) return u;
+    const origin = m[1] + '//' + m[2];
+    if (u.charAt(0) === '/') return origin + u;
+    const dir = m[3].replace(/[^/]*$/, '');
+    return origin + dir + u;
+  },
   historyBack() {},
   focusWindow() {},
+  isSameOrigin() { return false; },
+  navigate() {},
   requestPersistentStorage() { return Promise.resolve(true); },
   pushState() {},
   replaceState() {},
@@ -242,6 +263,7 @@ export const DomAdapter = {
   },
 
   /* service worker — no existe en NS. */
+  hasServiceWorker() { return false; },
   registerServiceWorker() {
     return Promise.reject(new Error('no SW in NativeScript'));
   },

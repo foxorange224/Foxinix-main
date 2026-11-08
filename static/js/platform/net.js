@@ -10,10 +10,13 @@ export const HttpClient = {
       credentials: 'include',
       headers: {},
     }, opts);
+    /* El timeout se puede ampliar (p.ej. descargar un APK grande). */
+    const ms = Number(http.timeout) > 0 ? Number(http.timeout) : 20000;
+    delete http.timeout;
     const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     if (ctl) {
       http.signal = ctl.signal;
-      http._t = setTimeout(() => ctl.abort(), 20000);
+      http._t = setTimeout(() => ctl.abort(), ms);
     }
     try {
       const res = await fetch(url, http);
