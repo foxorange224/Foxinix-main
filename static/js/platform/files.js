@@ -44,6 +44,47 @@ export const FileAdapter = {
       fr.readAsDataURL(blob);
     });
   },
+  /* Lee un archivo como ArrayBuffer (bytes crudos). */
+  async readFileBytes(file) {
+    if (!file) return null;
+    try {
+      if (file.data instanceof ArrayBuffer) return file.data;
+      if (typeof file.arrayBuffer === 'function') return await file.arrayBuffer();
+      if (typeof FileReader !== 'undefined') {
+        return new Promise((resolve, reject) => {
+          const fr = new FileReader();
+          fr.onload = function () { resolve(fr.result); };
+          fr.onerror = function () { reject(fr.error); };
+          fr.readAsArrayBuffer(file);
+        });
+      }
+    } catch (e) { return null; }
+    return null;
+  },
+  /* Cuerpo para subir un archivo (multipart/form-data, campo "file").
+
+     En la web lo arma el navegador: se manda el FormData tal cual y el
+     navegador pone el boundary en el Content-Type (por eso el
+     contentType va vacío). En NativeScript el polyfill de FormData NO
+     genera multipart (su toString() devuelve "file=..."), así que allí
+     los bytes se construyen a mano (platform/nativescript/files.js). */
+  async buildUploadBody(file) {
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      return { body: fd, contentType: '' };
+    } catch (e) { return null; }
+  },
+  /* Datos de un archivo: {name, size, type}. En la web el archivo ya
+     viene con esos datos; en NS se leen del dispositivo. */
+  describeSource(file) {
+    if (!file) return { name: '', size: 0, type: '' };
+    return {
+      name: file.name || '',
+      size: Number(file.size) || 0,
+      type: file.type || '',
+    };
+  },
 };
 
 /* W19: comprime una imagen de fondo a un máximo de 1280×1280 y la

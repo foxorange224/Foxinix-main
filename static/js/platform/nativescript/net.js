@@ -10,6 +10,7 @@
 
 /* NS 9: `http` ya no tiene export default. */
 import { request, getFile } from '@nativescript/core/http';
+import { FileAdapter } from './files.js';
 
 function headersShim(headers) {
   const h = headers || {};
@@ -25,6 +26,18 @@ function headersShim(headers) {
     has: function (name) { return this.get(name) !== null; },
     raw: h,
   };
+}
+
+/* Cuerpo de la petición: texto tal cual, binario tal cual (el
+   multipart de las subidas va como ArrayBuffer) y el resto como JSON. */
+function encodeBody(body) {
+  if (body === undefined || body === null) return null;
+  if (typeof body === 'string') return body;
+  if (body instanceof ArrayBuffer) return body;
+  if (ArrayBuffer.isView(body)) {
+    return body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength);
+  }
+  return JSON.stringify(body);
 }
 
 function makeResponse(statusCode, content, headers) {
@@ -61,22 +74,31 @@ export const HttpClient = {
   async fetch(url, opts = {}) {
     const method = (opts.method || 'GET').toUpperCase();
     const headers = Object.assign({}, opts.headers || {});
-    /* NS http.request lleva el Content-Type aparte. */
+    const raw = opts.body;
+    /* NS 9: `http.request` NO tiene la opción "contentType": el tipo va
+       como cabecera normal. Antes la cabecera se borraba y se perdía
+       (las peticiones de NS salían sin Content-Type). */
     let contentType = headers['Content-Type'] || headers['content-type'] || '';
-    delete headers['Content-Type'];
-    delete headers['content-type'];
-    if (!contentType && method !== 'GET') contentType = 'application/json';
+    if (contentType) {
+      delete headers['Content-Type'];
+      delete headers['content-type'];
+      headers['Content-Type'] = contentType;
+    } else if (method !== 'GET' && raw !== undefined && raw !== null &&
+      typeof raw !== 'string' && !(raw instanceof ArrayBuffer) &&
+      !ArrayBuffer.isView(raw)) {
+      /* Lo que no es texto ni binario va como JSON. */
+      headers['Content-Type'] = 'application/json';
+    }
 
-    const body = opts.body !== undefined
-      ? (typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body))
-      : null;
+    const body = encodeBody(raw);
 
     const response = await request({
       url: String(url),
       method: method,
       headers: headers,
-      contentType: contentType,
-      body: body,
+      /* OJO: en NS el cuerpo va en `content` (NO en `body`): con `body`
+         la petición salía sin cuerpo (login y mensajes no llegaban). */
+      content: body,
       timeout: opts.timeout || 30000,
     });
 
@@ -89,43 +111,44 @@ export const HttpClient = {
     return res.json();
   },
 
-  upload(file, url, onProgress, ctl) {
-    return new Promise((resolve, reject) => {
-      /* En NS no hay XHR con onprogress: se usa http.request con el
-         archivo como cuerpo. El progreso fino requiere un módulo nativo
-         adicional; en la v1 se informa 0 → 100 al terminar. */
-      if (ctl && ctl.abort) {
-        ctl.abort = function () {
-          const err = new Error('Subida cancelada');
-          err.canceled = true;
-          reject(err);
-        };
-      }
-      const formData = new FormData();
-      formData.append('file', file);
-      request({
-        url: String(url),
-        method: 'POST',
-        headers: {},
-        contentType: 'multipart/form-data',
-        body: formData,
-        timeout: 300000,
-      }).then(response => {
-        const text = response.content ? response.content.toString() : '';
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          try { resolve(JSON.parse(text)); }
-          catch (e) { reject(new Error('Respuesta inválida del servidor')); }
-        } else {
-          let detail = 'Error ' + response.statusCode;
-          try {
-            const d = JSON.parse(text).detail;
-            if (typeof d === 'string') detail = d;
-            else if (d && d.message) detail = d.message;
-          } catch (e) {}
-          reject(new Error(detail));
-        }
-      }).catch(err => reject(new Error('Sin conexión con el servidor')));
+  async upload(file, url, onProgress, ctl, extraHeaders) {
+    /* En NS no hay XHR con onprogress: se usa http.request con el
+       archivo como cuerpo. El progreso fino requiere un módulo nativo
+       adicional; en la v1 se informa 0 → 100 al terminar. */
+    let aborted = false;
+    if (ctl) {
+      ctl.abort = function () {
+        aborted = true;
+        const err = new Error('Subida cancelada');
+        err.canceled = true;
+        throw err;
+      };
+    }
+    const prep = await FileAdapter.buildUploadBody(file);
+    if (!prep || !prep.body) throw new Error('No se pudo leer el archivo');
+    const headers = Object.assign({}, extraHeaders || {});
+    if (prep.contentType) headers['Content-Type'] = prep.contentType;
+    const response = await request({
+      url: String(url),
+      method: 'POST',
+      headers: headers,
+      content: prep.body,
+      timeout: 300000,
     });
+    if (aborted) throw new Error('Subida cancelada');
+    const text = response.content ? response.content.toString() : '';
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (onProgress) onProgress(1);
+      try { return JSON.parse(text); }
+      catch (e) { throw new Error('Respuesta inválida del servidor'); }
+    }
+    let detail = 'Error ' + response.statusCode;
+    try {
+      const d = JSON.parse(text).detail;
+      if (typeof d === 'string') detail = d;
+      else if (d && d.message) detail = d.message;
+    } catch (e) {}
+    throw new Error(detail);
   },
 
   downloadBlob(url, timeout = 120000) {

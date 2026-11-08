@@ -357,6 +357,8 @@ function runDl(url, frame, onDone, explicit) {
     try { xhr.setRequestHeader('X-Fox-Download', '1'); } catch (e) {}
   }
   xhr.onprogress = function (ev) {
+    /* En NS el polyfill de XHR emite 'progress' sin argumentos. */
+    if (!ev) return;
     if (ev.lengthComputable && ev.total > 0) state.total = ev.total;
     if (fg && ev.lengthComputable && ev.total > 0) {
       if (svg) svg.classList.remove('indet');

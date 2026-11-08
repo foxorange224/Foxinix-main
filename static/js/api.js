@@ -7,6 +7,7 @@ import { HttpClient } from './platform/net.js';
 import { StorageAdapter } from './platform/storage.js';
 import { DomAdapter } from './platform/dom.js';
 import { CookieAdapter } from './platform/cookies.js';
+import { FileAdapter } from './platform/files.js';
 
 const SKEY = 'fm.session';
 
@@ -415,14 +416,19 @@ export async function api(method, path, body, opts = {}) {
 /* W27: foto del grupo (multipart; el server valida owner/admin). La lista
    se refresca sola con el evento WS 'chat_updated'. */
 export async function uploadChatAvatar(chatId, file, _retried) {
-  const fd = new FormData();
-  fd.append('file', file);
+  /* El cuerpo multipart lo arma la capa de plataforma: en la web es un
+     FormData (el navegador pone el boundary), en NS son los bytes del
+     archivo con el boundary a mano. */
+  const prep = await FileAdapter.buildUploadBody(file);
+  if (!prep || !prep.body) throw new ApiError(0, 'No se pudo leer el archivo');
+  const headers = authHeaders();
+  if (prep.contentType) headers['Content-Type'] = prep.contentType;
   let res;
   try {
     res = await HttpClient.fetch(API_BASE + '/chats/' + chatId + '/avatar', {
       method: 'POST',
-      headers: authHeaders(),
-      body: fd,
+      headers: headers,
+      body: prep.body,
     });
   } catch (e) {
     throw new ApiError(0, 'Sin conexión con el servidor');
@@ -447,6 +453,11 @@ export function uploadMedia(file, onProgress, ctl) {
   return new Promise((resolve, reject) => {
     let xhr = null;
     let settled = false;
+    /* El cuerpo (multipart) lo prepara la capa de plataforma UNA vez:
+       en NS leer el archivo es asíncrono y no se quiere repetir en el
+       reintento tras el refresh. */
+    let prepared = null;
+    let preparing = null;
     if (ctl) {
       ctl.abort = function () {
         settled = true;
@@ -463,7 +474,11 @@ export function uploadMedia(file, onProgress, ctl) {
       x.setRequestHeader('Authorization', 'Bearer ' + session.access);
       x.timeout = 300000; // 5 min para enlaces lentos
       x.upload.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+        /* OJO: en NS el polyfill de XHR emite 'progress' SIN argumentos
+           (y `upload` es el mismo objeto), así que `e` puede ser undefined:
+           sin esta guarda la excepción deja la subida colgada (el 'load'
+           nunca se dispara). */
+        if (e && e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
       };
       x.onload = () => {
         if (settled) return;
@@ -490,9 +505,28 @@ export function uploadMedia(file, onProgress, ctl) {
       };
       x.onerror = () => { if (!settled) reject(new ApiError(0, 'Sin conexión con el servidor')); };
       x.ontimeout = () => { if (!settled) reject(new ApiError(0, 'La subida tardó demasiado')); };
-      const fd = new FormData();
-      fd.append('file', file);
-      x.send(fd);
+      const go = () => {
+        if (settled) return;
+        try {
+          /* En NS el Content-Type va con el boundary del cuerpo a mano;
+             en la web va vacío (lo pone el navegador). */
+          if (prepared.contentType) x.setRequestHeader('Content-Type', prepared.contentType);
+          x.send(prepared.body);
+        } catch (e) {
+          if (!settled) reject(new ApiError(0, 'No se pudo enviar el archivo'));
+        }
+      };
+      if (prepared) { go(); return; }
+      if (!preparing) {
+        preparing = Promise.resolve(FileAdapter.buildUploadBody(file)).then((p) => {
+          if (!p || !p.body) throw new Error('No se pudo leer el archivo');
+          prepared = p;
+          return p;
+        });
+      }
+      preparing.then(go).catch((e) => {
+        if (!settled) reject(new ApiError(0, (e && e.message) || 'No se pudo leer el archivo'));
+      });
     };
     attempt(false);
   });

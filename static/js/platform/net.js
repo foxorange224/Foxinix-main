@@ -54,7 +54,7 @@ export const HttpClient = {
         x.open('POST', url);
         x.timeout = 300000;
         x.upload.onprogress = (ev) => {
-          if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total);
+          if (ev && ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total);
         };
         x.onload = () => {
           if (settled) return;
