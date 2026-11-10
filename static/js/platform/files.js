@@ -12,6 +12,13 @@ export const FileAdapter = {
     try { return new Blob(chunks || [], type ? { type: type } : undefined); }
     catch (e) { return null; }
   },
+  /* W106: arma el "archivo" que el núcleo sube (multipart). En la web es
+     un File de verdad; en la app nativa (que no tiene File) la
+     implementación de NS lo escribe en un archivo temporal. */
+  async toUploadFile(blob, name, type) {
+    try { return new File([blob], name || 'archivo', { type: type || '' }); }
+    catch (e) { return null; }
+  },
   createObjectURL(blob) {
     try { return URL.createObjectURL(blob); } catch (e) { return ''; }
   },

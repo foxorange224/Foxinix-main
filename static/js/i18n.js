@@ -166,6 +166,8 @@ const EN = {
   'No se pudo guardar el favorito': 'Could not save the favorite',
   'No se pudo quitar el favorito': 'Could not remove the favorite',
   'No se pudo enviar el GIF': 'Could not send the GIF',
+  /* W106: el selector de emojis/stickers/GIFs de la app nativa. */
+  'No se pudo enviar el sticker': 'Could not send the sticker',
   'Video': 'Video',
   'archivo': 'file',
   'No se pudo enviar el archivo': 'Could not send the file',

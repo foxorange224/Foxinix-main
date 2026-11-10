@@ -10,6 +10,10 @@ import { store } from './store.js';
 import { StorageAdapter } from './platform/storage.js';
 import { DomAdapter } from './platform/dom.js';
 import { HttpClient } from './platform/net.js';
+/* W106: el puente de Vue (en la web es window.Vue; en la app nativa lo
+   genera tools/sync-core.mjs). Antes este módulo usaba el global Vue
+   directamente, así que no se podía llevar a la app nativa. */
+import Vue from './vue.js';
 
 /* Nombres de búsqueda (español). No hace falta nombrar todo: los emojis
    sin nombre se encuentran pegando el emoji mismo en el buscador. */

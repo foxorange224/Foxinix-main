@@ -40,6 +40,32 @@ export const FileAdapter = {
       file.remove();
     } catch (e) {}
   },
+  /* W106: arma el "archivo" que el núcleo sube (multipart). En NS no hay
+     File: se escribe el contenido en un archivo temporal y se devuelve el
+     mismo formato que devuelve el selector nativo ({name,size,type,path}). */
+  async toUploadFile(blob, name, type) {
+    try {
+      let bytes = null;
+      if (blob instanceof ArrayBuffer) bytes = blob;
+      else if (blob && blob.buffer instanceof ArrayBuffer) {
+        const v = blob;
+        bytes = v.buffer.slice(v.byteOffset, v.byteOffset + v.byteLength);
+      } else if (blob && typeof blob.arrayBuffer === 'function') {
+        bytes = await blob.arrayBuffer();
+      }
+      if (!bytes || !bytes.byteLength) return null;
+      const safe = String(name || 'archivo').replace(/[\/\\]/g, '_');
+      const temp = knownFolders.temp();
+      const file = temp.getFile('foxinix_up_' + Date.now() + '_' + safe);
+      file.writeSync(bytes);
+      return {
+        name: safe,
+        size: bytes.byteLength,
+        type: type || mimeFromName(safe),
+        path: file.path,
+      };
+    } catch (e) { return null; }
+  },
   /* Guarda un blob en el dispositivo (en NS: en la carpeta de la app). */
   saveBlobToDisk(blob, name) {
     const path = this.createObjectURL(blob);

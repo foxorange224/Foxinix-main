@@ -1030,7 +1030,11 @@ export async function sendGif(chatId, name) {
     const r = await HttpClient.fetch(WEB_BASE + '/static/gifs/' + encodeURIComponent(name));
     if (!r.ok) throw new Error('gif');
     const blob = await r.blob();
-    const file = new File([blob], name, { type: 'image/gif' });
+    /* W106: el "archivo" lo arma la capa de plataforma: en la web es un
+       File; en la app nativa (que no tiene File) se escribe el GIF en un
+       archivo temporal y se sube desde ahí. */
+    const file = await FileAdapter.toUploadFile(blob, name, 'image/gif');
+    if (!file) throw new Error('gif');
     sendMedia(chatId, file, 'image');
   } catch (e) {
     toast('No se pudo enviar el GIF', 'err');

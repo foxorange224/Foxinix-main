@@ -41,8 +41,29 @@ function encodeBody(body) {
 }
 
 function makeResponse(statusCode, content, headers) {
-  const text = content === null || content === undefined
-    ? '' : content.toString();
+  /* En NS 9 el contenido de la respuesta es un MANEJADOR
+     (toArrayBuffer/toString/toJSON…), no el dato pelado. */
+  const isHandler = !!content && typeof content.toArrayBuffer === 'function';
+  let text = '';
+  if (isHandler) {
+    try { text = content.toString(); } catch (e) { text = ''; }
+  } else if (content !== null && content !== undefined) {
+    text = (content instanceof ArrayBuffer) ? '' : String(content);
+  }
+  /* Los bytes crudos (descargas binarias: los GIFs de la biblioteca).
+     Se calculan sólo si se piden, para no copiar cada respuesta en
+     memoria. */
+  let bytes = null;
+  const getBytes = function () {
+    if (bytes !== null) return bytes;
+    try {
+      if (isHandler) bytes = content.toArrayBuffer();
+      else if (content instanceof ArrayBuffer) bytes = content;
+      else if (content && content.buffer instanceof ArrayBuffer) bytes = content.buffer;
+      else bytes = new ArrayBuffer(0);
+    } catch (e) { bytes = new ArrayBuffer(0); }
+    return bytes;
+  };
   const res = {
     status: statusCode,
     ok: statusCode >= 200 && statusCode < 300,
@@ -56,12 +77,10 @@ function makeResponse(statusCode, content, headers) {
     },
     async blob() {
       /* En NS el "blob" es un ArrayBuffer con su tipo MIME. */
-      const buf = content && content.buffer ? content.buffer : new ArrayBuffer(0);
-      return buf;
+      return getBytes();
     },
     async arrayBuffer() {
-      const buf = content && content.buffer ? content.buffer : new ArrayBuffer(0);
-      return buf;
+      return getBytes();
     },
     clone() {
       return makeResponse(statusCode, content, headers);
